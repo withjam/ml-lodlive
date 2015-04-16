@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html style="width: 100%; height: 100%">
+  <head>
+    <title>LodLive Testing</title>
+    <link rel="stylesheet" href="css/font-awesome.min.css">
+    <link rel="stylesheet" href="css/ml-lodlive.css">
+    <style>
+
+    </style>
+  </head>
+
+  <body style="width: 100%; height: 100%">
+
+    <div id="graph" style="width: 100%; height: 100%; border: solid 1px black; overflow: hidden"></div>
+
+    <script src="https://code.jquery.com/jquery-2.1.3.min.js"></script>
+
+    <!-- Would like to remove these deps -->
+    <script src="js/deps/jquery.jcanvas.js"></script>
+    <script src="js/deps/jquery-ui-1.9.2.min.js"></script>
+
+    <!-- core and utils should be all we need to include -->
+    <script src="js/lib/lodlive.core.js"></script>
+    <script src="js/lib/lodlive.utils.js"></script>
+
+    <!-- this is now just a customized options object, might make sense to just pass it in as part of init rather then with the constructor -->
+    <script src="js/profile/profile.marklogic.js"></script>
+    <script>
+      'use strict';
+      //jQuery('#graph').lodlive({ profile: MarkLogicProfile, firstUri: 'http://ieee.org/Concept#Wireless_network' }); 
+      jQuery('#graph').lodlive({ profile: MarkLogicProfile, firstUri: 'http://ieee.org/Concept#Circuit_breakers' }); 
+    </script>
+  </body>
+</html>

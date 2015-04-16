@@ -1,0 +1,9 @@
+mlcp.sh import  \
+  -username admin \
+  -password admin \
+  -host lodlive-ml1  \
+  -port 8041 \
+  -mode local \
+  -input_file_path data/ieee-skos.xml \
+  -input_file_type RDF \
+  -output_uri_prefix /skos/ \
