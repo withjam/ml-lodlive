@@ -2342,7 +2342,12 @@
 		if (jResult.text() == '' && docType == 'bnode') {
 			jResult.text('[blank node]');
 		} else if (jResult.text() == '') {
-			jResult.text(LodLiveUtils.lang('noName'));
+      var titleDef = inst.options.default.document.titleName[thisUri];
+      if(titleDef){
+          jResult.text(titleDef)
+      } else {
+        jResult.text(LodLiveUtils.lang('noName'));
+      }
 		}
 		destBox.append(jResult);
 		var resourceTitle = jResult.text();

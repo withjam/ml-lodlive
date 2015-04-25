@@ -22,14 +22,14 @@
 }
 
 .lodlive-node .lodlive-node-label{ 
-  width: 120px;
-  height: 120px;
+  width: 125px;
+  height: 125px;
   position: relative;
   border-radius: 65px;
   background: none;
   background-color: #369;
-  top: 6px;
-  left: 6px;
+  top: 12px;
+  left: 12px;
   color: #FFF;
 }
 
@@ -64,8 +64,8 @@
 }
 .lodlive-node .actionBox:nth-last-child(-n+4) { top: -3px; left: 45px; }
 .lodlive-node .actionBox:nth-last-child(-n+3) { top: -3px; left: 70px; }
-.lodlive-node .actionBox:nth-last-child(-n+2) { top: 10px; left: 92px; }
-.lodlive-node .actionBox:last-child { top: 30px; left: 110px; }
+.lodlive-node .actionBox:nth-last-child(-n+2) { top: 10px; left: 95px; }
+.lodlive-node .actionBox:last-child { top: 30px; left: 116px; }
 
 .lodlive-node .lodlive-toolbox-wrapper { position: relative; height: 0; width: 0; }
 .lodlive-node .lodlive-toolbox { position: absolute; right: -20px; top: -3em; white-space: nowrap; width: auto; }
