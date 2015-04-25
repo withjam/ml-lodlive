@@ -2,19 +2,23 @@
 <html>
 <head>
   <title>ML LodLive - Extensible RDF Browser</title>
-  <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
   <link rel="stylesheet" href="dist/ml-lodlive.all.css">
+  <style>
+    html, body, #lodlive { height: 100%; width: 100% }
+    .navbar-right { margin-right: 0}
+    .lodlive-docinfo { top: 45px; }
+  </style>
 </head>
 
-<nav class="navbar navbar-inverse navbar-static-top">
-  <div class="container-fluid"></div>
-</nav>
+<div id="lodlive"></div>
 
-<div class="container-fluid">
-  <div class="row">
-    <div class="col-sm-12"><div id="lodlive"></div></div>
+<nav class="navbar navbar-inverse navbar-fixed-top">
+  <div class="container-fluid">
+    <div class="navbar-brand">ml-lodlive</div>
+    <div class="navbar-right navbar-text">v0.1</div>
   </div>
-</div>
+</nav>
 
 <!-- dependencies not in complete -->
 <script src="https://code.jquery.com/jquery-2.1.3.min.js"></script>

@@ -45,7 +45,7 @@ ExampleProfile.default = {
   endpoint : 'http://labs.regesta.com/resourceProxy/',
   document : {
     className : 'standard',
-    titleProperties : ['http://www.w3.org/2000/01/rdf-schema#label']
+    titleProperties : ['http://xmlns.com/foaf/0.1/name']
   }, // http://www.w3.org/2000/01/rdf-schema#label
 };
 
