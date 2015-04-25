@@ -1,8 +1,8 @@
 'use strict';
-var MarkLogicProfile = {};
+var ExampleProfile = {};
 
 // LodLive will match connection by the base URL of the query used, so the key must match the URL 
-MarkLogicProfile.connection = {
+ExampleProfile.connection = {
   // http matches all http requests, so this will be the only connection settings used
  'http:' : {
       description : {
@@ -24,7 +24,7 @@ MarkLogicProfile.connection = {
 };
 
 // here we define the known relationships so that labels will appear
-MarkLogicProfile.arrows = {
+ExampleProfile.arrows = {
   'http://www.w3.org/2002/07/owl#sameAs' : 'isSameAs',
   'http://purl.org/dc/terms/isPartOf' : 'isPartOf',
   'http://purl.org/dc/elements/1.1/type' : 'isType',
@@ -32,7 +32,7 @@ MarkLogicProfile.arrows = {
 };
 
 // this is the default data configuration, this is important.  It informs LodLive how to construct queries and how to read the data that comes back
-MarkLogicProfile.default = {
+ExampleProfile.default = {
   sparql : {
     allClasses : 'SELECT DISTINCT ?object WHERE {[] a ?object}',
     findSubject : 'SELECT DISTINCT ?subject WHERE { {?subject a <{CLASS}>;<http://purl.org/dc/elements/1.1/title> ?object. FILTER(regex(str(?object),\'{VALUE}\',\'i\'))} UNION {?subject a <{CLASS}>;<http://www.w3.org/2000/01/rdf-schema#label> ?object. FILTER(regex(str(?object),\'{VALUE}\',\'i\'))} UNION {?subject a <{CLASS}>;<http://www.w3.org/2004/02/skos/core#prefLabel> ?object. FILTER(regex(str(?object),\'{VALUE}\',\'i\'))} }  LIMIT 1  ',
@@ -49,7 +49,7 @@ MarkLogicProfile.default = {
   }, // http://www.w3.org/2000/01/rdf-schema#label
 };
 
-MarkLogicProfile.UI = {
+ExampleProfile.UI = {
   ignoreBnodes: true,
   nodeIcons: [
     { builtin: 'tools' },
@@ -189,7 +189,7 @@ MarkLogicProfile.UI = {
   }
 };
 
-MarkLogicProfile.endpoints = {
+ExampleProfile.endpoints = {
   all : 'output=json&format=json&timeout=0',
   jsonp: true
 };
