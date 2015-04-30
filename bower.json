@@ -1,0 +1,25 @@
+{
+  "name": "ml-lodlive",
+  "version": "0.1.0",
+  "homepage": "https://github.com/withjam/ml-lodlive",
+  "authors": [
+    "Matt Pileggi <Matt.Pileggi@marklogic.com>"
+  ],
+  "description": "RDF browser and visualization tool.  Inspired by the LodLive library but nearly completely rewritten to be easier to add to PoCs and demos",
+  "main": "dist/ml-lodlive.complete.js",
+  "keywords": [
+    "RDF",
+    "triples",
+    "MarkLogic",
+    "LodLive",
+    "mllodlive"
+  ],
+  "license": "Apache 2.0",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}
