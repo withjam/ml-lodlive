@@ -65,7 +65,7 @@ ExampleProfile.UI = {
     }
   ],
   tools: [
-    { builtin: 'close' },
+    { builtin: 'remove' },
     { builtin: 'rootNode'},
     { builtin: 'expand' }
   ],
