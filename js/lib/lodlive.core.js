@@ -1222,6 +1222,11 @@
 
   LodLive.prototype.removeDoc = function(obj, callback) {
     var inst = this;
+    var isRoot = inst.context.find(".lodlive-node").length == 1;
+    if (isRoot) {
+        alert("Cannot Remove Only Box");
+        return;
+    }
     if (inst.debugOn) {
       start = new Date().getTime();
     }
@@ -1274,7 +1279,7 @@
         }
       });
 
-      inst.context.find('.' + id).each(function() {
+      inst.context.find('div[relmd5=' + id + "]").each(function() {
         var found = $(this);
         found.show();
         found.removeClass('exploded');
@@ -1365,10 +1370,10 @@
             elem.click();
           }
           if (idx < totalElements) {
-            window.setTimeout(onTo, 75);
+            window.setTimeout(onTo, 120);
           }
         };
-        window.setTimeout(onTo, 75);
+        window.setTimeout(onTo, 120);
       }
     },
     'info': {
@@ -1391,7 +1396,7 @@
     'remove': {
       title: 'Remove this node',
       icon: 'fa fa-trash',
-      hander: function(obj, inst) {
+      handler: function(obj, inst) {
         inst.removeDoc(obj);
       }
     },
@@ -1547,16 +1552,17 @@
         success : function(json) {
           json = json.results && json.results.bindings;
           $.each(json, function(key, value) {
-            //TODO: fix this
-            //FIXME: eval is not needed here. Too fatigued to fix it properly yet - saving for later
-            //TODO: definitely fix this
-            if (value.object.type === 'uri') {
-              eval('uris.push({\'' + value['property']['value'] + '\':\'' + escape(value.object.value) + '\'})');
-            } else if (value.object.type == 'bnode') {
-              eval('bnodes.push({\'' + value['property']['value'] + '\':\'' + escape(value.object.value) + '\'})');
-            } else {
-              eval('values.push({\'' + value['property']['value'] + '\':\'' + escape(value.object.value) + '\'})');
-            }
+             //Fixed
+                var key = value[ 'property'][ 'value'];
+                var obj = {};
+                obj[key] = escape(value.object.value);
+                if (value.object.type === 'uri') {
+                    uris.push(obj);
+                } else if (value.object.type == 'bnode') {
+                    bnodes.push(obj);
+                } else {
+                    values.push(obj);
+                }
           });
 
           destBox.html('');
@@ -2342,7 +2348,12 @@
 		if (jResult.text() == '' && docType == 'bnode') {
 			jResult.text('[blank node]');
 		} else if (jResult.text() == '') {
-      var titleDef = inst.options.default.document.titleName[thisUri];
+      var titleDef = "(Error)";
+      try {
+          titleDef = inst.options.default.document.titleName[thisUri];
+      }catch(ex) {
+          titleDef = inst.options.default.document.titleProperties[thisUri];
+      }
       if(titleDef){
           jResult.text(titleDef)
       } else {
