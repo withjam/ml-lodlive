@@ -28,7 +28,7 @@
     return r;
   }
 
-  var DEFAULT_BOX_TEMPLATE = '<div class="boxWrapper lodlive-node defaultBoxTemplate" id="first"><div class="lodlive-node-label box sprite"></div></div>';
+  var DEFAULT_BOX_TEMPLATE = '<div class="boxWrapper lodlive-node defaultBoxTemplate"><div class="ll-node-anchor"></div><div class="lodlive-node-label box sprite"></div></div>';
 
   /** LodLiveProfile constructor - Not sure this is even necessary, a basic object should suffice - I don't think it adds any features or logic
     * @Class LodLiveProfile
@@ -2249,6 +2249,7 @@
 			start = new Date().getTime();
 		}
 		var containerBox = destBox.parent('div');
+    var anchorBox = containerBox.find('.ll-node-anchor');
 		var thisUri = containerBox.attr('rel') || '';
 
 		// recupero il doctype per caricare le configurazioni specifiche
@@ -2735,10 +2736,10 @@
 				page++;
 				var aPage = $('<div class="page page' + page + '" style="display:none"></div>');
 				if (page > 1 && totPages > 1) {
-					aPage.append("<div class=\"pager pagePrev sprite\" data-page=\"page" + (page - 1) + "\" style=\"top:" + (chordsList[0][1] - 8) + "px;left:" + (chordsList[0][0] - 8) + "px\"></div>");
+					aPage.append("<div class=\"llpages pagePrev sprite\" data-page=\"page" + (page - 1) + "\" style=\"top:" + (chordsList[0][1] - 8) + "px;left:" + (chordsList[0][0] - 8) + "px\"></div>");
 				}
 				if (totPages > 1 && page < totPages - 1) {
-					aPage.append("<div class=\"pager pageNext sprite\" data-page=\"page" + (page + 1) + "\" style=\"top:" + (chordsList[15][1] - 8) + "px;left:" + (chordsList[15][0] - 8) + "px\"></div>");
+					aPage.append("<div class=\"llpages pageNext sprite\" data-page=\"page" + (page + 1) + "\" style=\"top:" + (chordsList[15][1] - 8) + "px;left:" + (chordsList[15][0] - 8) + "px\"></div>");
 				}
 				containerBox.append(aPage);
 			}
@@ -2753,11 +2754,11 @@
 			}
 		}
 		containerBox.children('.page1').fadeIn('fast');
-		containerBox.children('.page').children('.pager').click(function() {
-			var pager = $(this);
+		containerBox.children('.page').children('.llpages').click(function() {
+			var llpages = $(this);
 			containerBox.find('.lastClick').removeClass('lastClick').click();
-			pager.parent().fadeOut('fast', null, function() {
-				$(this).parent().children('.' + pager.attr("data-page")).fadeIn('fast');
+			llpages.parent().fadeOut('fast', null, function() {
+				$(this).parent().children('.' + llpages.attr("data-page")).fadeIn('fast');
 			});
 		}); {
       // append the tools
@@ -2769,7 +2770,7 @@
           var obj = $('<div class="actionBox custom"></div>').data('action-handler', opts.handler);
           $('<span></span>').addClass(opts.icon).attr('title',opts.title).appendTo(obj);
         }
-        obj.appendTo(containerBox);
+        obj.appendTo(anchorBox);
       });
 		}
 		if (inst.debugOn) {
