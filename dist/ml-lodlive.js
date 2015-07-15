@@ -28,7 +28,7 @@
     return r;
   }
 
-  var DEFAULT_BOX_TEMPLATE = '<div class="boxWrapper lodlive-node defaultBoxTemplate" id="first"><div class="lodlive-node-label box sprite"></div></div>';
+  var DEFAULT_BOX_TEMPLATE = '<div class="boxWrapper lodlive-node defaultBoxTemplate"><div class="ll-node-anchor"></div><div class="lodlive-node-label box sprite"></div></div>';
 
   /** LodLiveProfile constructor - Not sure this is even necessary, a basic object should suffice - I don't think it adds any features or logic
     * @Class LodLiveProfile
@@ -1222,6 +1222,11 @@
 
   LodLive.prototype.removeDoc = function(obj, callback) {
     var inst = this;
+    var isRoot = inst.context.find(".lodlive-node").length == 1;
+    if (isRoot) {
+        alert("Cannot Remove Only Box");
+        return;
+    }
     if (inst.debugOn) {
       start = new Date().getTime();
     }
@@ -1274,7 +1279,7 @@
         }
       });
 
-      inst.context.find('.' + id).each(function() {
+      inst.context.find('div[relmd5=' + id + "]").each(function() {
         var found = $(this);
         found.show();
         found.removeClass('exploded');
@@ -1365,10 +1370,10 @@
             elem.click();
           }
           if (idx < totalElements) {
-            window.setTimeout(onTo, 75);
+            window.setTimeout(onTo, 120);
           }
         };
-        window.setTimeout(onTo, 75);
+        window.setTimeout(onTo, 120);
       }
     },
     'info': {
@@ -1391,7 +1396,7 @@
     'remove': {
       title: 'Remove this node',
       icon: 'fa fa-trash',
-      hander: function(obj, inst) {
+      handler: function(obj, inst) {
         inst.removeDoc(obj);
       }
     },
@@ -1547,16 +1552,17 @@
         success : function(json) {
           json = json.results && json.results.bindings;
           $.each(json, function(key, value) {
-            //TODO: fix this
-            //FIXME: eval is not needed here. Too fatigued to fix it properly yet - saving for later
-            //TODO: definitely fix this
-            if (value.object.type === 'uri') {
-              eval('uris.push({\'' + value['property']['value'] + '\':\'' + escape(value.object.value) + '\'})');
-            } else if (value.object.type == 'bnode') {
-              eval('bnodes.push({\'' + value['property']['value'] + '\':\'' + escape(value.object.value) + '\'})');
-            } else {
-              eval('values.push({\'' + value['property']['value'] + '\':\'' + escape(value.object.value) + '\'})');
-            }
+             //Fixed
+                var key = value[ 'property'][ 'value'];
+                var obj = {};
+                obj[key] = escape(value.object.value);
+                if (value.object.type === 'uri') {
+                    uris.push(obj);
+                } else if (value.object.type == 'bnode') {
+                    bnodes.push(obj);
+                } else {
+                    values.push(obj);
+                }
           });
 
           destBox.html('');
@@ -2243,6 +2249,7 @@
 			start = new Date().getTime();
 		}
 		var containerBox = destBox.parent('div');
+    var anchorBox = containerBox.find('.ll-node-anchor');
 		var thisUri = containerBox.attr('rel') || '';
 
 		// recupero il doctype per caricare le configurazioni specifiche
@@ -2342,7 +2349,12 @@
 		if (jResult.text() == '' && docType == 'bnode') {
 			jResult.text('[blank node]');
 		} else if (jResult.text() == '') {
-      var titleDef = inst.options.default.document.titleName[thisUri];
+      var titleDef = "(Error)";
+      try {
+          titleDef = inst.options.default.document.titleName[thisUri];
+      }catch(ex) {
+          titleDef = inst.options.default.document.titleProperties[thisUri];
+      }
       if(titleDef){
           jResult.text(titleDef)
       } else {
@@ -2724,10 +2736,10 @@
 				page++;
 				var aPage = $('<div class="page page' + page + '" style="display:none"></div>');
 				if (page > 1 && totPages > 1) {
-					aPage.append("<div class=\"pager pagePrev sprite\" data-page=\"page" + (page - 1) + "\" style=\"top:" + (chordsList[0][1] - 8) + "px;left:" + (chordsList[0][0] - 8) + "px\"></div>");
+					aPage.append("<div class=\"llpages pagePrev sprite\" data-page=\"page" + (page - 1) + "\" style=\"top:" + (chordsList[0][1] - 8) + "px;left:" + (chordsList[0][0] - 8) + "px\"></div>");
 				}
 				if (totPages > 1 && page < totPages - 1) {
-					aPage.append("<div class=\"pager pageNext sprite\" data-page=\"page" + (page + 1) + "\" style=\"top:" + (chordsList[15][1] - 8) + "px;left:" + (chordsList[15][0] - 8) + "px\"></div>");
+					aPage.append("<div class=\"llpages pageNext sprite\" data-page=\"page" + (page + 1) + "\" style=\"top:" + (chordsList[15][1] - 8) + "px;left:" + (chordsList[15][0] - 8) + "px\"></div>");
 				}
 				containerBox.append(aPage);
 			}
@@ -2742,11 +2754,11 @@
 			}
 		}
 		containerBox.children('.page1').fadeIn('fast');
-		containerBox.children('.page').children('.pager').click(function() {
-			var pager = $(this);
+		containerBox.children('.page').children('.llpages').click(function() {
+			var llpages = $(this);
 			containerBox.find('.lastClick').removeClass('lastClick').click();
-			pager.parent().fadeOut('fast', null, function() {
-				$(this).parent().children('.' + pager.attr("data-page")).fadeIn('fast');
+			llpages.parent().fadeOut('fast', null, function() {
+				$(this).parent().children('.' + llpages.attr("data-page")).fadeIn('fast');
 			});
 		}); {
       // append the tools
@@ -2758,7 +2770,7 @@
           var obj = $('<div class="actionBox custom"></div>').data('action-handler', opts.handler);
           $('<span></span>').addClass(opts.icon).attr('title',opts.title).appendTo(obj);
         }
-        obj.appendTo(containerBox);
+        obj.appendTo(anchorBox);
       });
 		}
 		if (inst.debugOn) {
