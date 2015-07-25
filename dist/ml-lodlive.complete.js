@@ -44,6 +44,77 @@
     return lastSlash > lastHash ? str.substring(lastSlash + 1) : str.substring(lastHash + 1);
   };
 
+  function enableDrag(instance) {
+
+    // watch mouse move events on the container to move anything being dragged
+    instance.container.on('mousemove', function(event) {
+      if (instance.ll_dragging) {
+        // dragging a node
+        if (!instance.ll_isdragging) {
+          var divid = instance.ll_dragging.attr('id');
+          instance.ll_isdragging = true;
+          // just started the drag
+          // remove any lines connected to this node
+          // TODO: find a better way to handle lines
+          $('#line-' + divid).clearCanvas();
+          var generatedRev = instance.storeIds['rev' + divid];
+          // find all the generated lines
+          if (generatedRev) {
+            // this finds all lines each drag start, not my favorite but fix later
+            for (var a = 0; a < generatedRev.length; a++) {
+              var generated = instance.storeIds['gen' + generatedRev[a]];
+              $('#line-' + generatedRev[a]).clearCanvas();
+            }
+          }
+        }
+        var cx = event.clientX;
+        var cy = event.clientY;
+        var scrx = instance.context.parent().scrollLeft();
+        var scry = instance.context.parent().scrollTop();
+        instance.ll_dragging.css({ left: cx + scrx - instance.ll_dragoffx, top: cy + scry - instance.ll_dragoffy });
+      } else if (instance.ll_panning) {
+        console.log('panning container', event.x, event.y);
+      }
+      // do nothing otherwise
+    }); 
+
+    instance.container.on('mousedown', '.lodlive-node', function(event) {
+      var node = jQuery(this), divid = node.attr('id');
+      // mark the node as being dragged using event-delegation
+      instance.ll_dragging = node;
+      instance.ll_panning = false;
+      // store offset of event so node moves properly
+      instance.ll_dragoffx = event.offsetX;
+      instance.ll_dragoffy = event.offsetY;
+      event.stopPropagation();
+      event.preventDefault();
+    });
+    instance.container.on('mousedown', function(event) {
+      instance.ll_dragging = false;
+      instance.ll_panning = true;
+      event.stopPropagation();
+      event.preventDefault();
+    });
+    function cancelDrag() {
+        if (instance.ll_dragging) {
+          // redraw the lines TODO: figure out a better way to handle lines
+          instance.drawAllLines(instance.ll_dragging);
+        }
+        instance.ll_isdragging = false;
+        instance.ll_dragging = false;
+        instance.ll_panning = false;
+    }
+    instance.container.on('mouseup', cancelDrag);
+    jQuery(document).on('keydown', function(event) {
+      console.log('keypress', event);
+      if (event.keyCode === 27) {
+        // esc key
+        cancelDrag();
+      }
+    });
+
+  }
+
   // instance methods
 
   /**
@@ -75,6 +146,7 @@
     if (!container.length) {
       throw 'LodLive: no container found';
     }
+    enableDrag(this);
 
   }
 
@@ -116,9 +188,6 @@
       // TODO: let CSS drive color
       counter : Math.floor(Math.random() * 13) + 1
     };
-
-    // attivo le funzioni per il drag
-    this.renewDrag(this.context.children('.boxWrapper'));
 
     // carico il primo documento
     this.openDoc(firstUri, firstBox);
@@ -957,51 +1026,6 @@
     }
   };
 
-  LodLive.prototype.renewDrag = function(aDivList) {
-    var inst = this, generated;
-    if (inst.debugOn) {
-      start = new Date().getTime();
-    }
-
-    aDivList.each(function() {
-      var div = $(this), divid = div.attr('id');
-
-      if (!div.is('.ui-draggable')) {
-
-        //FIXME: need to eliminate or replace draggable which forces dependency on jquery.ui (huge file)
-        div.draggable({
-          stack : '.boxWrapper',
-          containment : 'parent',
-          start : function() {
-
-            inst.context.find('.lodlive-toolbox').remove();
-
-            $('#line-' + divid).clearCanvas();
-
-            var generatedRev = inst.storeIds['rev' + divid];
-
-            if (generatedRev) {
-
-              for (var a = 0; a < generatedRev.length; a++) {
-
-                generated = inst.storeIds['gen' + generatedRev[a]];
-                $('#line-' + generatedRev[a]).clearCanvas();
-              }
-            }
-          },
-          drag : function(event, ui) {
-          },
-          stop : function(event, ui) {
-            inst.drawAllLines($(this));
-          }
-        });
-      }
-    });
-    if (inst.debugOn) {
-      console.debug((new Date().getTime() - start) + '  renewDrag ');
-    }
-  };
-
   LodLive.prototype.centerBox = function(aBox) {
     var inst = this, ch = inst.context.height(), cw = inst.context.width(), bw = aBox.width() || 65, bh = aBox.height() || 65, start;
     if (inst.debugOn) {
@@ -1177,7 +1201,6 @@
         zIndex : 99
       });
 
-      inst.renewDrag(inst.context.children('.boxWrapper'));
       if (inst.debugOn) {
         console.debug((new Date().getTime() - start) + '  addNewDoc 07 ');
       }
@@ -1202,7 +1225,6 @@
         if (inst.debugOn) {
           console.debug((new Date().getTime() - start) + '  addNewDoc 10 ');
         }
-        inst.renewDrag(inst.context.children('.boxWrapper'));
         inst.drawaLine(obj, newObj, propertyName);
       } else {
         if (inst.debugOn) {
