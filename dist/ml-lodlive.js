@@ -48,6 +48,17 @@
 
     // watch mouse move events on the container to move anything being dragged
     instance.container.on('mousemove', function(event) {
+      var cx, cy, scrx, scry, lastx, lasty, diffx, diffy;
+      cx = event.clientX;
+      cy = event.clientY;
+      lastx = instance.ll_lastx;
+      lasty = instance.ll_lasty;
+      diffx = lastx - cx;
+      diffy = lasty - cy;
+      instance.ll_lasty = cy;
+      instance.ll_lastx = cx;
+      scrx = instance.context.parent().scrollLeft();
+      scry = instance.context.parent().scrollTop();
       if (instance.ll_dragging) {
         // dragging a node
         if (!instance.ll_isdragging) {
@@ -67,13 +78,10 @@
             }
           }
         }
-        var cx = event.clientX;
-        var cy = event.clientY;
-        var scrx = instance.context.parent().scrollLeft();
-        var scry = instance.context.parent().scrollTop();
         instance.ll_dragging.css({ left: cx + scrx - instance.ll_dragoffx, top: cy + scry - instance.ll_dragoffy });
       } else if (instance.ll_panning) {
-        console.log('panning container', event.x, event.y);
+        instance.context.parent().scrollLeft( scrx + diffx);
+        instance.context.parent().scrollTop( scry + diffy);
       }
       // do nothing otherwise
     }); 
