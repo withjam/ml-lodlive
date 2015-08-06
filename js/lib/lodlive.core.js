@@ -1657,6 +1657,7 @@
         url : SPARQLquery,
         contentType: 'application/json',
         dataType: inst.getAjaxDataType(),
+        accepts: inst.getAjaxAcceptType(),
         success : function(json) {
           json = json.results && json.results.bindings;
 
@@ -2093,6 +2094,11 @@
     return this.options.endpoints.jsonp ? 'jsonp' : 'json';
   }
 
+  LodLive.prototype.getAjaxAcceptType = function() {
+    // TODO: consider accepting URL as parameter and detect if it requires JSONP or not
+    return this.options.endpoints.jsonp ? 'jsonp' : 'sparql-results+json';
+  }
+
   LodLive.prototype.resolveBnodes = function(val, URI, destBox, jContents) {
     var inst = this;
 
@@ -2106,6 +2112,7 @@
       url : SPARQLquery,
       contentType: 'application/json',
       dataType: inst.getAjaxDataType(),
+      accepts: inst.getAjaxAcceptType(),
       beforeSend : function() {
         destBox.find('span[class=bnode]').html('<img src="img/ajax-loader-black.gif"/>');
 
@@ -2874,8 +2881,9 @@
       //TODO: remove jQuery jsonp dependency
 			$.ajax({
 				url : SPARQLquery,
-        contentType: 'application/json',
-        dataType: inst.getAjaxDataType(),
+                                contentType: 'application/json',
+                                dataType: inst.getAjaxDataType(),
+                                accepts: inst.getAjaxAcceptType(),
 				beforeSend : function() {
 					destBox.children('.box').html('<img style=\"margin-top:' + (destBox.children('.box').height() / 2 - 8) + 'px\" src="img/ajax-loader.gif"/>');
 				},
@@ -2914,8 +2922,9 @@
 						var inverses = [];
 						$.ajax({
 							url : SPARQLquery,
-              contentType: 'application/json',
-              dataType: inst.getAjaxDataType(),
+                                                        contentType: 'application/json',
+                                                        dataType: inst.getAjaxDataType(),
+                                                        accepts: inst.getAjaxAcceptType(),
 							beforeSend : function() {
 								destBox.children('.box').html('<img style=\"margin-top:' + (destBox.children('.box').height() / 2 - 5) + 'px\" src="img/ajax-loader.gif"/>');
 							},
@@ -3147,6 +3156,7 @@
       url : SPARQLquery,
       contentType: 'application/json',
       dataType: inst.getAjaxDataType(),
+      accepts: inst.getAjaxAcceptType(),
       beforeSend : function() {
         destBox.html('<img src="img/ajax-loader.gif"/>');
       },
@@ -3217,6 +3227,7 @@
           timeout : 3000,
           contentType: 'application/json',
           dataType: inst.getAjaxDataType(),
+          accepts: inst.getAjaxAcceptType(),
           beforeSend : function() {
             if (inst.showInfoConsole) {
               inst.queryConsole('log', {
@@ -3310,6 +3321,7 @@
     $.ajax({
       url : SPARQLquery,
       contentType: 'application/json',
+      accepts: inst.getAjaxAcceptType(),
       dataType: inst.getAjaxDataType(),
       beforeSend : function() {
         destBox.html('<img src="img/ajax-loader.gif"/>');
