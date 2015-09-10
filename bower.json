@@ -6,7 +6,10 @@
     "Matt Pileggi <Matt.Pileggi@marklogic.com>"
   ],
   "description": "RDF browser and visualization tool.  Inspired by the LodLive library but nearly completely rewritten to be easier to add to PoCs and demos",
-  "main": "dist/ml-lodlive.complete.js",
+  "main": [
+    "css/ml-lodlive.css",
+    "dist/ml-lodlive.complete.js"
+  ],
   "keywords": [
     "RDF",
     "triples",
