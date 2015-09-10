@@ -574,6 +574,7 @@
     $.ajax({
       url : guessedEndpoint,
       contentType: 'application/json',
+      accepts: inst.options.connection['http:'].accepts,
       dataType: inst.getAjaxDataType(),
       success : function(data) {
 
@@ -1567,6 +1568,7 @@
       $.ajax({
         url : url,
         contentType: 'application/json',
+        accepts: inst.options.connection['http:'].accepts,
         dataType: inst.getAjaxDataType(),
         beforeSend : function() {
           inst.context.append(destBox);
@@ -1656,6 +1658,7 @@
       $.ajax({
         url : SPARQLquery,
         contentType: 'application/json',
+        accepts: inst.options.connection['http:'].accepts,
         dataType: inst.getAjaxDataType(),
         success : function(json) {
           json = json.results && json.results.bindings;
@@ -2105,6 +2108,7 @@
     $.ajax({
       url : SPARQLquery,
       contentType: 'application/json',
+      accepts: inst.options.connection['http:'].accepts,
       dataType: inst.getAjaxDataType(),
       beforeSend : function() {
         destBox.find('span[class=bnode]').html('<img src="img/ajax-loader-black.gif"/>');
@@ -2875,6 +2879,7 @@
 			$.ajax({
 				url : SPARQLquery,
         contentType: 'application/json',
+        accepts: inst.options.connection['http:'].accepts,
         dataType: inst.getAjaxDataType(),
 				beforeSend : function() {
 					destBox.children('.box').html('<img style=\"margin-top:' + (destBox.children('.box').height() / 2 - 8) + 'px\" src="img/ajax-loader.gif"/>');
@@ -2915,6 +2920,7 @@
 						$.ajax({
 							url : SPARQLquery,
               contentType: 'application/json',
+              accepts: inst.options.connection['http:'].accepts,
               dataType: inst.getAjaxDataType(),
 							beforeSend : function() {
 								destBox.children('.box').html('<img style=\"margin-top:' + (destBox.children('.box').height() / 2 - 5) + 'px\" src="img/ajax-loader.gif"/>');
@@ -3030,6 +3036,7 @@
       $.ajax({
         url : url,
         contentType: 'application/json',
+        accepts: inst.options.connection['http:'].accepts,
         dataType: inst.getAjaxDataType(),
         beforeSend : function() {
           destBox.children('.box').html('<img style=\"margin-top:' + (destBox.children('.box').height() / 2 - 8) + 'px\" src="img/ajax-loader.gif"/>');
@@ -3146,6 +3153,7 @@
     $.ajax({
       url : SPARQLquery,
       contentType: 'application/json',
+      accepts: inst.options.connection['http:'].accepts,
       dataType: inst.getAjaxDataType(),
       beforeSend : function() {
         destBox.html('<img src="img/ajax-loader.gif"/>');
@@ -3216,6 +3224,7 @@
           url : SPARQLquery,
           timeout : 3000,
           contentType: 'application/json',
+          accepts: inst.options.connection['http:'].accepts,
           dataType: inst.getAjaxDataType(),
           beforeSend : function() {
             if (inst.showInfoConsole) {
@@ -3310,6 +3319,7 @@
     $.ajax({
       url : SPARQLquery,
       contentType: 'application/json',
+      accepts: inst.options.connection['http:'].accepts,
       dataType: inst.getAjaxDataType(),
       beforeSend : function() {
         destBox.html('<img src="img/ajax-loader.gif"/>');
