@@ -1,7 +1,7 @@
 'use strict';
 var MarkLogicProfile = {};
 
-// LodLive will match connection by the base URL of the query used, so the key must match the URL 
+// LodLive will match connection by the base URL of the query used, so the key must match the URL
 MarkLogicProfile.connection = {
   // http matches all http requests, so this will be the only connection settings used
  'http:' : {
@@ -17,7 +17,7 @@ MarkLogicProfile.connection = {
     // endpoint : "http://localhost:8321/lodlive.xqy",
     endpoint : "http://lodlive-ml1:8040/lodlive.xqy",
     description : {
-      en : "MarkLogic LodLive"  
+      en : "MarkLogic LodLive"
     }
   }
 };
@@ -59,8 +59,8 @@ MarkLogicProfile.UI = {
   nodeIcons: [
     { builtin: 'tools' },
     { builtin: 'docInfo' },
-    { 
-      icon: 'fa fa-thumb-tack', 
+    {
+      icon: 'fa fa-thumb-tack',
       title: 'Pin in SPARQL',
       handler: function(node, inst) {
         var icon = this, pinner = inst.container.find('.rsuite-pinner'), pos, to, uri = node.attr('rel');
@@ -78,7 +78,7 @@ MarkLogicProfile.UI = {
             url: inst.options.connection['http:'].endpoint + '?' + inst.options.endpoints.all + '&query=' +  encodeURIComponent(sparql),
             contentType: 'json',
             dataType: inst.getAjaxDataType(),
-            success: function(resp) { 
+            success: function(resp) {
               var b = resp.results.bindings;
               if (!b.length) {
                 resdiv.html('<div class="noresults">no matches</div>');
@@ -204,7 +204,7 @@ MarkLogicProfile.UI = {
     },
     'http://purl.org/d' : {
         color:'#04BFBF'
-    }    
+    }
   }
 };
 

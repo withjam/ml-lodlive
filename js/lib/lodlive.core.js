@@ -84,7 +84,7 @@
         instance.context.parent().scrollTop( scry + diffy);
       }
       // do nothing otherwise
-    }); 
+    });
 
     instance.container.on('mousedown', '.lodlive-node', function(event) {
       var node = jQuery(this), divid = node.attr('id');
@@ -211,7 +211,7 @@
       start = new Date().getTime();
     }
     // pannello di controllo dell'applicazione
-    
+
     if (action == 'init') {
 
       panel = $('<div class="lodLiveControlPanel"></div>');
@@ -303,8 +303,8 @@
                 case 'inverse': inst.doInverse = checked; break;
                 case 'autoExpand': inst.doInverse = checked; break;
                 case 'autoSameas': inst.doAutoSameas = checked; break;
-                case 'autoCollectImages': 
-                  inst.doCollectImages = checked; 
+                case 'autoCollectImages':
+                  inst.doCollectImages = checked;
                   panel.children('div.lodlive-panel-images').toggleClass('inactive');
                   break;
                 case 'autoDrawMap':
@@ -340,7 +340,7 @@
 
             } else if (child.is('.legend')) {
 
-              
+
               var legend = panel.find('.legenda').children('div').clone();
 
               var counter = 0;
@@ -609,7 +609,7 @@
     if (!msg) msg = '';
     switch(action) {
 
-      case 'init': 
+      case 'init':
         if (!msgPanel.length) {
           msgPanel = $('<div class="lodlive-message-container"></div>');
           inst.container.append(msgPanel);
@@ -661,13 +661,13 @@
     var inst = this, id = inst.hashFunc(toLog.uriId), localId = inst.hashFunc(toLog.id), infoMap = inst.infoPanelMap, panel = infoMap[id];
 
     switch (action) {
-      case 'init': 
+      case 'init':
         panel = inst.context.find('<div id="q' + id + '" class="lodlive-query-console"></div>');
         infoMap[id] = panel;
         inst.infoPanelMap = infoMap;
         break;
 
-      case 'log': 
+      case 'log':
         if (panel && toLog) {
 
           if (toLog.resource) {
@@ -788,7 +788,7 @@
         }
         break;
 
-      case 'remove': 
+      case 'remove':
         delete infoMap[id];
         inst.infoPanelMap = infoMap;
         break;
@@ -866,7 +866,7 @@
 
           imagePanel.children('.amsg').remove(); // why is this conditional, can we just remove it even if the map is empty?
           var counter = 0;
-          
+
           while (mapSize--) {
 
             var prop = mapKeys[mapSize];
@@ -878,7 +878,7 @@
               for (var key in imageMap[prop][a]) {
 
                 if (inst.noImagesMap[prop + counter]) {
-                  
+
                   counter--; // counter could go to -1, logic is strange - is this just for tiling?
 
                 } else if (!imagePanel.children('.img-' + prop + '-' + counter).length) {
@@ -898,7 +898,7 @@
                     'overlayShow' : false
                   });
 
-                  //FIXME: these should be a delegated event on the imagePanel; we don't need a counter to do wrapping; 
+                  //FIXME: these should be a delegated event on the imagePanel; we don't need a counter to do wrapping;
                   img.children('img').error(function() {
                     img.remove();
                     counter--;
@@ -1086,7 +1086,7 @@
         closed.each(function() {
           box = $(moreInfoOnThis);
           var aId = box.attr('relmd5');
-          
+
           //FIXME: not sure I want IDs here but leaving for now
           var newObj = inst.context.children('#' + aId);
 
@@ -1263,7 +1263,7 @@
     }
 
     inst.context.find('.lodlive-toolbox').remove(); // why remove and not hide?
-    
+
     var id = obj.attr('id');
     inst.queryConsole('remove', {
       uriId : obj.attr('rel')
@@ -1327,13 +1327,13 @@
           generatedBy = inst.storeIds['gen' + generatedRev[int]];
 
           if (generatedBy) {
-          
+
             for (int2 = 0; int2 < generatedBy.length; int2++) {
-          
+
               if (generatedBy[int2] === id) {
-          
+
                 generatedBy.splice(int2, 1);
-          
+
               }
             }
           }
@@ -1608,6 +1608,7 @@
         error : function(e, b, v) {
           destBox.html('');
           // not sure what this says, should it be a configurable message?
+          // RESOURCE NOT FOUND
           values = [{
             'http://system/msg' : 'risorsa non trovata: ' + destBox.attr('rel')
           }];
@@ -1737,7 +1738,7 @@
     if (inst.debugOn) {
       console.debug((new Date().getTime() - start) + '  processDraw ');
     }
-    
+
   };
 
   LodLive.prototype.drawAllLines = function(obj) {
@@ -2258,7 +2259,7 @@
 
       }
 
-    } 
+    }
 
     if (inst.debugOn) {
       console.debug((new Date().getTime() - start) + '  getProperty');
@@ -2276,113 +2277,113 @@
   };
 
 
-	LodLive.prototype.format = function(destBox, values, uris, inverses) {
+  LodLive.prototype.format = function(destBox, values, uris, inverses) {
     var inst = this, classMap = inst.classMap, lodLiveProfile = inst.options;
 
-		if (inst.debugOn) {
-			start = new Date().getTime();
-		}
-		var containerBox = destBox.parent('div');
+    if (inst.debugOn) {
+      start = new Date().getTime();
+    }
+    var containerBox = destBox.parent('div');
     var anchorBox = containerBox.find('.ll-node-anchor');
-		var thisUri = containerBox.attr('rel') || '';
+    var thisUri = containerBox.attr('rel') || '';
 
-		// recupero il doctype per caricare le configurazioni specifiche
-		var docType = inst.getJsonValue(uris, 'http://www.w3.org/1999/02/22-rdf-syntax-ns#type', 'default');
-		if (thisUri.indexOf("~~") != -1) {
-			docType = 'bnode';
-		}
-		// carico le configurazioni relative allo stile
-		var aClass = inst.getProperty("document", "className", docType);
-		if (docType == 'bnode') {
-			aClass = 'bnode';
-		}
+    // recupero il doctype per caricare le configurazioni specifiche
+    var docType = inst.getJsonValue(uris, 'http://www.w3.org/1999/02/22-rdf-syntax-ns#type', 'default');
+    if (thisUri.indexOf("~~") != -1) {
+      docType = 'bnode';
+    }
+    // carico le configurazioni relative allo stile
+    var aClass = inst.getProperty("document", "className", docType);
+    if (docType == 'bnode') {
+      aClass = 'bnode';
+    }
 
-		// destBox.addClass(aClass);
-		if (aClass == null || aClass == 'standard' || aClass == '') {
-			if (classMap[docType]) {
-				aClass = classMap[docType];
-			} else {
+    // destBox.addClass(aClass);
+    if (aClass == null || aClass == 'standard' || aClass == '') {
+      if (classMap[docType]) {
+        aClass = classMap[docType];
+      } else {
 
         aClass = 'box' + classMap.counter;
         //FIXME: this is strange, why manually keeping a counter?
         //FIXME:  13 is a magic number, why?
-				if (classMap.counter === 13) {
-					classMap.counter = 1;
-				} else {
-					classMap.counter += 1;
-				}
-				classMap[docType] = aClass;
-			}
-		}
-		containerBox.addClass(aClass);
-		// ed ai path da mostrare nel titolo del box
-		var titles = inst.getProperty("document", "titleProperties", docType);
-		// ed ai path degli oggetti di tipo immagine
-		var images = inst.getProperty("images", "properties", docType);
-		// ed ai path dei link esterni
-		var weblinks = inst.getProperty("weblinks", "properties", docType);
-		// e le latitudini
-		var lats = inst.getProperty("maps", "lats", docType);
-		// e le longitudini
-		var longs = inst.getProperty("maps", "longs", docType);
-		// e punti
-		var points = inst.getProperty("maps", "points", docType);
+        if (classMap.counter === 13) {
+          classMap.counter = 1;
+        } else {
+          classMap.counter += 1;
+        }
+        classMap[docType] = aClass;
+      }
+    }
+    containerBox.addClass(aClass);
+    // ed ai path da mostrare nel titolo del box
+    var titles = inst.getProperty("document", "titleProperties", docType);
+    // ed ai path degli oggetti di tipo immagine
+    var images = inst.getProperty("images", "properties", docType);
+    // ed ai path dei link esterni
+    var weblinks = inst.getProperty("weblinks", "properties", docType);
+    // e le latitudini
+    var lats = inst.getProperty("maps", "lats", docType);
+    // e le longitudini
+    var longs = inst.getProperty("maps", "longs", docType);
+    // e punti
+    var points = inst.getProperty("maps", "points", docType);
 
-		// se la proprieta' e' stata scritta come stringa la trasformo in un
-		// array
-		if ( typeof titles === 'string') {
-			titles = [titles];
-		}
-		if ( typeof images === 'string') {
-			images = [images];
-		}
-		if ( typeof weblinks === 'string') {
-			weblinks = [weblinks];
-		}
-		if ( typeof lats === 'string') {
-			lats = [lats];
-		}
-		if ( typeof longs === 'string') {
-			longs = [longs];
-		}
-		if ( typeof points === 'string') {
-			points = [points];
-		}
+    // se la proprieta' e' stata scritta come stringa la trasformo in un
+    // array
+    if ( typeof titles === 'string') {
+      titles = [titles];
+    }
+    if ( typeof images === 'string') {
+      images = [images];
+    }
+    if ( typeof weblinks === 'string') {
+      weblinks = [weblinks];
+    }
+    if ( typeof lats === 'string') {
+      lats = [lats];
+    }
+    if ( typeof longs === 'string') {
+      longs = [longs];
+    }
+    if ( typeof points === 'string') {
+      points = [points];
+    }
 
-		// gestisco l'inserimento di messaggi di sistema come errori o altro
-		titles.push('http://system/msg');
+    // gestisco l'inserimento di messaggi di sistema come errori o altro
+    titles.push('http://system/msg');
 
-		// aggiungo al box il titolo
-		var result = "<div class=\"boxTitle\"><span class=\"ellipsis_text\">";
-		for (var a = 0; a < titles.length; a++) {
-			var resultArray = inst.getJsonValue(values, titles[a], titles[a].indexOf('http') == 0 ? '' : titles[a]);
-			if (titles[a].indexOf('http') != 0) {
-				if (result.indexOf($.trim(unescape(titles[a])) + " \n") == -1) {
-					result += $.trim(unescape(titles[a])) + " \n";
-				}
-			} else {
-				for (var af = 0; af < resultArray.length; af++) {
-					if (result.indexOf(unescape(resultArray[af]) + " \n") == -1) {
-						result += unescape(resultArray[af]) + " \n";
-					}
-				}
-			}
+    // aggiungo al box il titolo
+    var result = "<div class=\"boxTitle\"><span class=\"ellipsis_text\">";
+    for (var a = 0; a < titles.length; a++) {
+      var resultArray = inst.getJsonValue(values, titles[a], titles[a].indexOf('http') == 0 ? '' : titles[a]);
+      if (titles[a].indexOf('http') != 0) {
+        if (result.indexOf($.trim(unescape(titles[a])) + " \n") == -1) {
+          result += $.trim(unescape(titles[a])) + " \n";
+        }
+      } else {
+        for (var af = 0; af < resultArray.length; af++) {
+          if (result.indexOf(unescape(resultArray[af]) + " \n") == -1) {
+            result += unescape(resultArray[af]) + " \n";
+          }
+        }
+      }
 
-		}
+    }
     var dataEndpoint = containerBox.attr("data-endpoint") || '';
-		if ((values.length == 0 && uris.length == 0) || dataEndpoint.indexOf("http://system/dummy") == 0) {
-			if (containerBox.attr("data-endpoint").indexOf("http://system/dummy") != -1) {
-				containerBox.attr("data-endpoint", LodLiveUtils.lang('endpointNotConfigured'));
-			}
-			if (uris.length == 0 && values.length == 0) {
-				result = "<div class=\"boxTitle\" data-tooltip=\"" + LodLiveUtils.lang('resourceMissing') + "\"><a target=\"_blank\" href=\"" + thisUri + "\"><span class=\"spriteLegenda\"></span>" + thisUri + "</a>";
-			}
-		}
-		result += "</span></div>";
-		var jResult = $(result);
-		if (jResult.text() == '' && docType == 'bnode') {
-			jResult.text('[blank node]');
-		} else if (jResult.text() == '') {
+    if ((values.length == 0 && uris.length == 0) || dataEndpoint.indexOf("http://system/dummy") == 0) {
+      if (containerBox.attr("data-endpoint").indexOf("http://system/dummy") != -1) {
+        containerBox.attr("data-endpoint", LodLiveUtils.lang('endpointNotConfigured'));
+      }
+      if (uris.length == 0 && values.length == 0) {
+        result = "<div class=\"boxTitle\" data-tooltip=\"" + LodLiveUtils.lang('resourceMissing') + "\"><a target=\"_blank\" href=\"" + thisUri + "\"><span class=\"spriteLegenda\"></span>" + thisUri + "</a>";
+      }
+    }
+    result += "</span></div>";
+    var jResult = $(result);
+    if (jResult.text() == '' && docType == 'bnode') {
+      jResult.text('[blank node]');
+    } else if (jResult.text() == '') {
       var titleDef = "(Error)";
       try {
           titleDef = inst.options.default.document.titleName[thisUri];
@@ -2394,407 +2395,407 @@
       } else {
         jResult.text(LodLiveUtils.lang('noName'));
       }
-		}
-		destBox.append(jResult);
-		var resourceTitle = jResult.text();
+    }
+    destBox.append(jResult);
+    var resourceTitle = jResult.text();
     jResult.data('tooltip', resourceTitle);
 
-		destBox.hover(function() {
+    destBox.hover(function() {
         var msgTitle = jResult.text();
         console.log('destbox hover title', msgTitle);
-			inst.msg(msgTitle, 'show', 'fullInfo', containerBox.attr("data-endpoint"));
-		}, function() {
-			inst.msg(null, 'hide');
-		});
+      inst.msg(msgTitle, 'show', 'fullInfo', containerBox.attr("data-endpoint"));
+    }, function() {
+      inst.msg(null, 'hide');
+    });
 
-		// calcolo le uri e le url dei documenti correlati
-		var connectedDocs = [];
-		var invertedDocs = [];
-		var propertyGroup = {};
-		var propertyGroupInverted = {};
+    // calcolo le uri e le url dei documenti correlati
+    var connectedDocs = [];
+    var invertedDocs = [];
+    var propertyGroup = {};
+    var propertyGroupInverted = {};
 
-		var connectedImages = [];
-		var connectedLongs = [];
-		var connectedLats = [];
+    var connectedImages = [];
+    var connectedLongs = [];
+    var connectedLats = [];
 
-		var sameDocControl = [];
-		$.each(uris, function(key, value) {
-			for (var akey in value) {
+    var sameDocControl = [];
+    $.each(uris, function(key, value) {
+      for (var akey in value) {
 
-				// escludo la definizione della classe, le proprieta'
-				// relative alle immagini ed ai link web
-				if (lodLiveProfile.uriSubstitutor) {
-					$.each(lodLiveProfile.uriSubstitutor, function(skey, svalue) {
-						value[akey] = value[akey].replace(svalue.findStr, svalue.replaceStr);
-					});
-				}
-				if ($.inArray(akey, images) > -1) {
+        // escludo la definizione della classe, le proprieta'
+        // relative alle immagini ed ai link web
+        if (lodLiveProfile.uriSubstitutor) {
+          $.each(lodLiveProfile.uriSubstitutor, function(skey, svalue) {
+            value[akey] = value[akey].replace(svalue.findStr, svalue.replaceStr);
+          });
+        }
+        if ($.inArray(akey, images) > -1) {
           //FIXME: replace eval
-					eval('connectedImages.push({\'' + value[akey] + '\':\'' + escape(resourceTitle) + '\'})');
+          eval('connectedImages.push({\'' + value[akey] + '\':\'' + escape(resourceTitle) + '\'})');
 
-				} else if ($.inArray(akey, weblinks) == -1) {
+        } else if ($.inArray(akey, weblinks) == -1) {
 
-					// controllo se trovo la stessa relazione in una
-					// proprieta' diversa
-					if ($.inArray(value[akey], sameDocControl) > -1) {
+          // controllo se trovo la stessa relazione in una
+          // proprieta' diversa
+          if ($.inArray(value[akey], sameDocControl) > -1) {
 
-						var aCounter = 0;
-						$.each(connectedDocs, function(key2, value2) {
-							for (var akey2 in value2) {
-								if (value2[akey2] == value[akey]) {
-									eval('connectedDocs[' + aCounter + '] = {\'' + akey2 + ' | ' + akey + '\':\'' + value[akey] + '\'}');
-								}
-							}
-							aCounter++;
-						});
+            var aCounter = 0;
+            $.each(connectedDocs, function(key2, value2) {
+              for (var akey2 in value2) {
+                if (value2[akey2] == value[akey]) {
+                  eval('connectedDocs[' + aCounter + '] = {\'' + akey2 + ' | ' + akey + '\':\'' + value[akey] + '\'}');
+                }
+              }
+              aCounter++;
+            });
 
-					} else {
+          } else {
             //FIXME: replace eval
-						eval('connectedDocs.push({\'' + akey + '\':\'' + value[akey] + '\'})');
-						sameDocControl.push(value[akey]);
-					}
+            eval('connectedDocs.push({\'' + akey + '\':\'' + value[akey] + '\'})');
+            sameDocControl.push(value[akey]);
+          }
 
-				}
-			}
+        }
+      }
 
-		});
+    });
 
-		if (inverses) {
-			sameDocControl = [];
-			$.each(inverses, function(key, value) {
-				for (var akey in value) {
-					if (docType == 'bnode' && value[akey].indexOf("~~") != -1) {
-						continue;
-					}
-					if (lodLiveProfile.uriSubstitutor) {
-						$.each(lodLiveProfile.uriSubstitutor, function(skey, svalue) {
-							value[akey] = value[akey].replace(escape(svalue.findStr), escape(svalue.replaceStr));
-						});
-					}
-					// controllo se trovo la stessa relazione in una
-					// proprieta' diversa
-					if ($.inArray(value[akey], sameDocControl) > -1) {
-						var aCounter = 0;
-						$.each(invertedDocs, function(key2, value2) {
-							for (var akey2 in value2) {
-								if (value2[akey2] == value[akey]) {
-									var theKey = akey2;
-									if (akey2 != akey) {
-										theKey = akey2 + ' | ' + akey;
-									}
-									eval('invertedDocs[' + aCounter + '] = {\'' + theKey + '\':\'' + value[akey] + '\'}');
-									return false;
-								}
-							}
-							aCounter++;
-						});
-					} else {
-						eval('invertedDocs.push({\'' + akey + '\':\'' + value[akey] + '\'})');
-						sameDocControl.push(value[akey]);
-					}
+    if (inverses) {
+      sameDocControl = [];
+      $.each(inverses, function(key, value) {
+        for (var akey in value) {
+          if (docType == 'bnode' && value[akey].indexOf("~~") != -1) {
+            continue;
+          }
+          if (lodLiveProfile.uriSubstitutor) {
+            $.each(lodLiveProfile.uriSubstitutor, function(skey, svalue) {
+              value[akey] = value[akey].replace(escape(svalue.findStr), escape(svalue.replaceStr));
+            });
+          }
+          // controllo se trovo la stessa relazione in una
+          // proprieta' diversa
+          if ($.inArray(value[akey], sameDocControl) > -1) {
+            var aCounter = 0;
+            $.each(invertedDocs, function(key2, value2) {
+              for (var akey2 in value2) {
+                if (value2[akey2] == value[akey]) {
+                  var theKey = akey2;
+                  if (akey2 != akey) {
+                    theKey = akey2 + ' | ' + akey;
+                  }
+                  eval('invertedDocs[' + aCounter + '] = {\'' + theKey + '\':\'' + value[akey] + '\'}');
+                  return false;
+                }
+              }
+              aCounter++;
+            });
+          } else {
+            eval('invertedDocs.push({\'' + akey + '\':\'' + value[akey] + '\'})');
+            sameDocControl.push(value[akey]);
+          }
 
-				}
-			});
-		}
-		if (inst.doDrawMap) {
-			for (var a = 0; a < points.length; a++) {
-				var resultArray = inst.getJsonValue(values, points[a], points[a]);
-				for (var af = 0; af < resultArray.length; af++) {
-					if (resultArray[af].indexOf(" ") != -1) {
-						eval('connectedLongs.push(\'' + unescape(resultArray[af].split(" ")[1]) + '\')');
-						eval('connectedLats.push(\'' + unescape(resultArray[af].split(" ")[0]) + '\')');
-					} else if (resultArray[af].indexOf("-") != -1) {
-						eval('connectedLongs.push(\'' + unescape(resultArray[af].split("-")[1]) + '\')');
-						eval('connectedLats.push(\'' + unescape(resultArray[af].split("-")[0]) + '\')');
-					}
-				}
-			}
-			for (var a = 0; a < longs.length; a++) {
-				var resultArray = inst.getJsonValue(values, longs[a], longs[a]);
-				for (var af = 0; af < resultArray.length; af++) {
-					eval('connectedLongs.push(\'' + unescape(resultArray[af]) + '\')');
-				}
-			}
-			for (var a = 0; a < lats.length; a++) {
-				var resultArray = inst.getJsonValue(values, lats[a], lats[a]);
-				for (var af = 0; af < resultArray.length; af++) {
-					eval('connectedLats.push(\'' + unescape(resultArray[af]) + '\')');
-				}
-			}
+        }
+      });
+    }
+    if (inst.doDrawMap) {
+      for (var a = 0; a < points.length; a++) {
+        var resultArray = inst.getJsonValue(values, points[a], points[a]);
+        for (var af = 0; af < resultArray.length; af++) {
+          if (resultArray[af].indexOf(" ") != -1) {
+            eval('connectedLongs.push(\'' + unescape(resultArray[af].split(" ")[1]) + '\')');
+            eval('connectedLats.push(\'' + unescape(resultArray[af].split(" ")[0]) + '\')');
+          } else if (resultArray[af].indexOf("-") != -1) {
+            eval('connectedLongs.push(\'' + unescape(resultArray[af].split("-")[1]) + '\')');
+            eval('connectedLats.push(\'' + unescape(resultArray[af].split("-")[0]) + '\')');
+          }
+        }
+      }
+      for (var a = 0; a < longs.length; a++) {
+        var resultArray = inst.getJsonValue(values, longs[a], longs[a]);
+        for (var af = 0; af < resultArray.length; af++) {
+          eval('connectedLongs.push(\'' + unescape(resultArray[af]) + '\')');
+        }
+      }
+      for (var a = 0; a < lats.length; a++) {
+        var resultArray = inst.getJsonValue(values, lats[a], lats[a]);
+        for (var af = 0; af < resultArray.length; af++) {
+          eval('connectedLats.push(\'' + unescape(resultArray[af]) + '\')');
+        }
+      }
 
-			if (connectedLongs.length > 0 && connectedLats.length > 0) {
-				var mapsMap = inst.mapsMap;
-				mapsMap[containerBox.attr("id")] = {
-					longs : connectedLongs[0],
-					lats : connectedLats[0],
-					title : thisUri + "\n" + escape(resourceTitle)
-				};
-				inst.updateMapPanel(inst.context.find('.lodlive-controlPanel'));
-			}
-		}
-		if (inst.doCollectImages) {
-			if (connectedImages.length > 0) {
-				var imagesMap = inst.imagesMap;
-				imagesMap[containerBox.attr("id")] = connectedImages;
-				inst.updateImagePanel(inst.context.find('.lodlive-controlPanel'));
-			}
-		}
-		var totRelated = connectedDocs.length + invertedDocs.length;
+      if (connectedLongs.length > 0 && connectedLats.length > 0) {
+        var mapsMap = inst.mapsMap;
+        mapsMap[containerBox.attr("id")] = {
+          longs : connectedLongs[0],
+          lats : connectedLats[0],
+          title : thisUri + "\n" + escape(resourceTitle)
+        };
+        inst.updateMapPanel(inst.context.find('.lodlive-controlPanel'));
+      }
+    }
+    if (inst.doCollectImages) {
+      if (connectedImages.length > 0) {
+        var imagesMap = inst.imagesMap;
+        imagesMap[containerBox.attr("id")] = connectedImages;
+        inst.updateImagePanel(inst.context.find('.lodlive-controlPanel'));
+      }
+    }
+    var totRelated = connectedDocs.length + invertedDocs.length;
 
-		// se le proprieta' da mostrare sono troppe cerco di accorpare
-		// quelle uguali
-		if (totRelated > 16) {
-			$.each(connectedDocs, function(key, value) {
-				for (var akey in value) {
-					if (propertyGroup[akey]) {
-						var t = propertyGroup[akey];
-						t.push(value[akey]);
-						propertyGroup[akey] = t;
-					} else {
-						propertyGroup[akey] = [value[akey]];
-					}
-				}
-			});
-			$.each(invertedDocs, function(key, value) {
-				for (var akey in value) {
-					if (propertyGroupInverted[akey]) {
-						var t = propertyGroupInverted[akey];
-						t.push(value[akey]);
-						propertyGroupInverted[akey] = t;
-					} else {
-						propertyGroupInverted[akey] = [value[akey]];
-					}
-				}
-			});
-			totRelated = 0;
-			for (var prop in propertyGroup) {
-				if (propertyGroup.hasOwnProperty(prop)) {
-					totRelated++;
-				}
-			}
-			for (var prop in propertyGroupInverted) {
-				if (propertyGroupInverted.hasOwnProperty(prop)) {
-					totRelated++;
-				}
-			}
-		}
+    // se le proprieta' da mostrare sono troppe cerco di accorpare
+    // quelle uguali
+    if (totRelated > 16) {
+      $.each(connectedDocs, function(key, value) {
+        for (var akey in value) {
+          if (propertyGroup[akey]) {
+            var t = propertyGroup[akey];
+            t.push(value[akey]);
+            propertyGroup[akey] = t;
+          } else {
+            propertyGroup[akey] = [value[akey]];
+          }
+        }
+      });
+      $.each(invertedDocs, function(key, value) {
+        for (var akey in value) {
+          if (propertyGroupInverted[akey]) {
+            var t = propertyGroupInverted[akey];
+            t.push(value[akey]);
+            propertyGroupInverted[akey] = t;
+          } else {
+            propertyGroupInverted[akey] = [value[akey]];
+          }
+        }
+      });
+      totRelated = 0;
+      for (var prop in propertyGroup) {
+        if (propertyGroup.hasOwnProperty(prop)) {
+          totRelated++;
+        }
+      }
+      for (var prop in propertyGroupInverted) {
+        if (propertyGroupInverted.hasOwnProperty(prop)) {
+          totRelated++;
+        }
+      }
+    }
 
-		// calcolo le parti in cui dividere il cerchio per posizionare i
-		// link
-		// var chordsList = this.lodlive('circleChords',
-		// destBox.width() / 2 + 12, ((totRelated > 1 ? totRelated - 1 :
-		// totRelated) * 2) + 4, destBox.position().left + destBox.width() /
-		// 2, destBox.position().top + destBox.height() / 2, totRelated +
-		// 4);
+    // calcolo le parti in cui dividere il cerchio per posizionare i
+    // link
+    // var chordsList = this.lodlive('circleChords',
+    // destBox.width() / 2 + 12, ((totRelated > 1 ? totRelated - 1 :
+    // totRelated) * 2) + 4, destBox.position().left + destBox.width() /
+    // 2, destBox.position().top + destBox.height() / 2, totRelated +
+    // 4);
     //
-		var chordsList = inst.circleChords(75, 24, destBox.position().left + 65, destBox.position().top + 65);
-		var chordsListGrouped = inst.circleChords(95, 36, destBox.position().left + 65, destBox.position().top + 65);
-		// aggiungo al box i link ai documenti correlati
-		var a = 1;
-		var inserted = {};
-		var counter = 0;
-		var innerCounter = 1;
+    var chordsList = inst.circleChords(75, 24, destBox.position().left + 65, destBox.position().top + 65);
+    var chordsListGrouped = inst.circleChords(95, 36, destBox.position().left + 65, destBox.position().top + 65);
+    // aggiungo al box i link ai documenti correlati
+    var a = 1;
+    var inserted = {};
+    var counter = 0;
+    var innerCounter = 1;
 
-		var objectList = [];
-		var innerObjectList = [];
-		$.each(connectedDocs, function(key, value) {
-			if (counter == 16) {
-				counter = 0;
-			}
-			if (a == 1) {
-			} else if (a == 15) {
-				a = 1;
-			}
-			for (var akey in value) {
-				var obj = null;
-				if (propertyGroup[akey] && propertyGroup[akey].length > 1) {
-					if (!inserted[akey]) {
-						innerCounter = 1;
-						inserted[akey] = true;
-						var objBox = $("<div class=\"groupedRelatedBox\" rel=\"" + MD5(akey) + "\" data-property=\"" + akey + "\"  data-title=\"" + akey + " \n " + (propertyGroup[akey].length) + " " + LodLiveUtils.lang('connectedResources') + "\" ></div>");
-						objBox.css(inst.getRelationshipCSS(akey));
+    var objectList = [];
+    var innerObjectList = [];
+    $.each(connectedDocs, function(key, value) {
+      if (counter == 16) {
+        counter = 0;
+      }
+      if (a == 1) {
+      } else if (a == 15) {
+        a = 1;
+      }
+      for (var akey in value) {
+        var obj = null;
+        if (propertyGroup[akey] && propertyGroup[akey].length > 1) {
+          if (!inserted[akey]) {
+            innerCounter = 1;
+            inserted[akey] = true;
+            var objBox = $("<div class=\"groupedRelatedBox\" rel=\"" + MD5(akey) + "\" data-property=\"" + akey + "\"  data-title=\"" + akey + " \n " + (propertyGroup[akey].length) + " " + LodLiveUtils.lang('connectedResources') + "\" ></div>");
+            objBox.css(inst.getRelationshipCSS(akey));
             // containerBox.append(objBox);
-						var akeyArray = akey.split(" ");
-						if (unescape(propertyGroup[akey][0]).indexOf('~~') != -1) {
-							objBox.addClass('isBnode');
-						} else {
-							for (var i = 0; i < akeyArray.length; i++) {
-								if (lodLiveProfile.arrows[akeyArray[i]]) {
-									objBox.addClass(lodLiveProfile.arrows[akeyArray[i]]);
-								}
-							}
-						}
-						objBox.css({
+            var akeyArray = akey.split(" ");
+            if (unescape(propertyGroup[akey][0]).indexOf('~~') != -1) {
+              objBox.addClass('isBnode');
+            } else {
+              for (var i = 0; i < akeyArray.length; i++) {
+                if (lodLiveProfile.arrows[akeyArray[i]]) {
+                  objBox.addClass(lodLiveProfile.arrows[akeyArray[i]]);
+                }
+              }
+            }
+            objBox.css({
               'top':  (chordsList[a][1] - 8) + 'px',
               'left': (chordsList[a][0] - 8) + 'px'
             });
-						objectList.push(objBox);
+            objectList.push(objBox);
 
-						a++;
-						counter++;
-					}
+            a++;
+            counter++;
+          }
 
-					if (innerCounter < 25) {
-						obj = $("<div class=\"aGrouped relatedBox " + MD5(akey) + " " + MD5(unescape(value[akey])) + "\" rel=\"" + unescape(value[akey]) + "\"  data-title=\"" + akey + " \n " + unescape(value[akey]) + "\" ></div>");
-						// containerBox.append(obj);
-						obj.attr('style', 'display:none;position:absolute;top:' + (chordsListGrouped[innerCounter][1] - 8) + 'px;left:' + (chordsListGrouped[innerCounter][0] - 8) + 'px');
-						obj.attr("data-circlePos", innerCounter);
-						obj.attr("data-circleParts", 36);
-						obj.attr("data-circleid", containerBox.attr('id'));
-					}
-	
-					innerCounter++;
-				} else {
-					obj = $("<div class=\"relatedBox " + MD5(unescape(value[akey])) + "\" rel=\"" + unescape(value[akey]) + "\"   data-title=\"" + akey + ' \n ' + unescape(value[akey]) + "\" ></div>");
-					// containerBox.append(obj);
-					obj.attr('style', 'top:' + (chordsList[a][1] - 8) + 'px;left:' + (chordsList[a][0] - 8) + 'px');
-					obj.attr("data-circlePos", a);
-					obj.attr("data-circleParts", 24);
-					a++;
-					counter++;
-				}
-				if (obj) {
-					obj.attr("data-circleid", containerBox.attr('id'));
-					obj.attr("data-property", akey);
+          if (innerCounter < 25) {
+            obj = $("<div class=\"aGrouped relatedBox " + MD5(akey) + " " + MD5(unescape(value[akey])) + "\" rel=\"" + unescape(value[akey]) + "\"  data-title=\"" + akey + " \n " + unescape(value[akey]) + "\" ></div>");
+            // containerBox.append(obj);
+            obj.attr('style', 'display:none;position:absolute;top:' + (chordsListGrouped[innerCounter][1] - 8) + 'px;left:' + (chordsListGrouped[innerCounter][0] - 8) + 'px');
+            obj.attr("data-circlePos", innerCounter);
+            obj.attr("data-circleParts", 36);
+            obj.attr("data-circleid", containerBox.attr('id'));
+          }
+
+          innerCounter++;
+        } else {
+          obj = $("<div class=\"relatedBox " + MD5(unescape(value[akey])) + "\" rel=\"" + unescape(value[akey]) + "\"   data-title=\"" + akey + ' \n ' + unescape(value[akey]) + "\" ></div>");
+          // containerBox.append(obj);
+          obj.attr('style', 'top:' + (chordsList[a][1] - 8) + 'px;left:' + (chordsList[a][0] - 8) + 'px');
+          obj.attr("data-circlePos", a);
+          obj.attr("data-circleParts", 24);
+          a++;
+          counter++;
+        }
+        if (obj) {
+          obj.attr("data-circleid", containerBox.attr('id'));
+          obj.attr("data-property", akey);
           obj.css(inst.getRelationshipCSS(akey));
-					// se si tratta di un  Bnode applico una classe diversa
-					var akeyArray = akey.split(" ");
-					if (obj.attr('rel').indexOf('~~') != -1) {
-						obj.addClass('isBnode');
-					} else {
-						for (var i = 0; i < akeyArray.length; i++) {
-							if (lodLiveProfile.arrows[akeyArray[i]]) {
-								obj.addClass(lodLiveProfile.arrows[akeyArray[i]]);
-							}
-						}
-					}
-					if (obj.hasClass("aGrouped")) {
-						innerObjectList.push(obj);
-					} else {
-						objectList.push(obj);
-					}
-				}
-			}
+          // se si tratta di un  Bnode applico una classe diversa
+          var akeyArray = akey.split(" ");
+          if (obj.attr('rel').indexOf('~~') != -1) {
+            obj.addClass('isBnode');
+          } else {
+            for (var i = 0; i < akeyArray.length; i++) {
+              if (lodLiveProfile.arrows[akeyArray[i]]) {
+                obj.addClass(lodLiveProfile.arrows[akeyArray[i]]);
+              }
+            }
+          }
+          if (obj.hasClass("aGrouped")) {
+            innerObjectList.push(obj);
+          } else {
+            objectList.push(obj);
+          }
+        }
+      }
 
-		});
+    });
 
-		inserted = {};
-		$.each(invertedDocs, function(key, value) {
-			if (counter == 16) {
-				counter = 0;
-			}
-			if (a == 1) {
-			} else if (a == 15) {
-				a = 1;
-			}
-			for (var akey in value) {
-				var obj = null;
-				if (propertyGroupInverted[akey] && propertyGroupInverted[akey].length > 1) {
-					if (!inserted[akey]) {
-						innerCounter = 1;
-						inserted[akey] = true;
+    inserted = {};
+    $.each(invertedDocs, function(key, value) {
+      if (counter == 16) {
+        counter = 0;
+      }
+      if (a == 1) {
+      } else if (a == 15) {
+        a = 1;
+      }
+      for (var akey in value) {
+        var obj = null;
+        if (propertyGroupInverted[akey] && propertyGroupInverted[akey].length > 1) {
+          if (!inserted[akey]) {
+            innerCounter = 1;
+            inserted[akey] = true;
 
-						var objBox = $("<div class=\"groupedRelatedBox inverse\" rel=\"" + MD5(akey) + "-i\"   data-property=\"" + akey + "\" data-title=\"" + akey + " \n " + (propertyGroupInverted[akey].length) + " " + LodLiveUtils.lang('connectedResources') + "\" ></div>");
+            var objBox = $("<div class=\"groupedRelatedBox inverse\" rel=\"" + MD5(akey) + "-i\"   data-property=\"" + akey + "\" data-title=\"" + akey + " \n " + (propertyGroupInverted[akey].length) + " " + LodLiveUtils.lang('connectedResources') + "\" ></div>");
             objBox.css(inst.getRelationshipCSS(akey));
-						// containerBox.append(objBox);
-						var akeyArray = akey.split(" ");
-						if (unescape(propertyGroupInverted[akey][0]).indexOf('~~') != -1) {
-							objBox.addClass('isBnode');
-						} else {
-							for (var i = 0; i < akeyArray.length; i++) {
-								if (lodLiveProfile.arrows[akeyArray[i]]) {
-									objBox.addClass(lodLiveProfile.arrows[akeyArray[i]]);
-								}
-							}
-						}
-						objBox.css({
+            // containerBox.append(objBox);
+            var akeyArray = akey.split(" ");
+            if (unescape(propertyGroupInverted[akey][0]).indexOf('~~') != -1) {
+              objBox.addClass('isBnode');
+            } else {
+              for (var i = 0; i < akeyArray.length; i++) {
+                if (lodLiveProfile.arrows[akeyArray[i]]) {
+                  objBox.addClass(lodLiveProfile.arrows[akeyArray[i]]);
+                }
+              }
+            }
+            objBox.css({
               'top': + (chordsList[a][1] - 8) + 'px',
               'left': + (chordsList[a][0] - 8) + 'px'
             });
 
-						objectList.push(objBox);
-						a++;
-						counter++;
-					}
+            objectList.push(objBox);
+            a++;
+            counter++;
+          }
 
-					if (innerCounter < 25) {
-						var destUri = unescape(value[akey].indexOf('~~') == 0 ? thisUri + value[akey] : value[akey]);
-						obj = $("<div class=\"aGrouped relatedBox inverse " + MD5(akey) + "-i " + MD5(unescape(value[akey])) + " \" rel=\"" + destUri + "\"  data-title=\"" + akey + " \n " + unescape(value[akey]) + "\" ></div>");
-						// containerBox.append(obj);
-						obj.attr('style', 'display:none;position:absolute;top:' + (chordsListGrouped[innerCounter][1] - 8) + 'px;left:' + (chordsListGrouped[innerCounter][0] - 8) + 'px');
-						obj.attr("data-circlePos", innerCounter);
-						obj.attr("data-circleParts", 36);
-						obj.attr("data-circleId", containerBox.attr('id'));
-					}
+          if (innerCounter < 25) {
+            var destUri = unescape(value[akey].indexOf('~~') == 0 ? thisUri + value[akey] : value[akey]);
+            obj = $("<div class=\"aGrouped relatedBox inverse " + MD5(akey) + "-i " + MD5(unescape(value[akey])) + " \" rel=\"" + destUri + "\"  data-title=\"" + akey + " \n " + unescape(value[akey]) + "\" ></div>");
+            // containerBox.append(obj);
+            obj.attr('style', 'display:none;position:absolute;top:' + (chordsListGrouped[innerCounter][1] - 8) + 'px;left:' + (chordsListGrouped[innerCounter][0] - 8) + 'px');
+            obj.attr("data-circlePos", innerCounter);
+            obj.attr("data-circleParts", 36);
+            obj.attr("data-circleId", containerBox.attr('id'));
+          }
 
-					innerCounter++;
-				} else {
-					obj = $("<div class=\"relatedBox inverse " + MD5(unescape(value[akey])) + "\" rel=\"" + unescape(value[akey]) + "\"   data-title=\"" + akey + ' \n ' + unescape(value[akey]) + "\" ></div>");
-					// containerBox.append(obj);
-					obj.attr('style', 'top:' + (chordsList[a][1] - 8) + 'px;left:' + (chordsList[a][0] - 8) + 'px');
-					obj.attr("data-circlePos", a);
-					obj.attr("data-circleParts", 24);
-					a++;
-					counter++;
-				}
-				if (obj) {
-					obj.attr("data-circleId", containerBox.attr('id'));
-					obj.attr("data-property", akey);
+          innerCounter++;
+        } else {
+          obj = $("<div class=\"relatedBox inverse " + MD5(unescape(value[akey])) + "\" rel=\"" + unescape(value[akey]) + "\"   data-title=\"" + akey + ' \n ' + unescape(value[akey]) + "\" ></div>");
+          // containerBox.append(obj);
+          obj.attr('style', 'top:' + (chordsList[a][1] - 8) + 'px;left:' + (chordsList[a][0] - 8) + 'px');
+          obj.attr("data-circlePos", a);
+          obj.attr("data-circleParts", 24);
+          a++;
+          counter++;
+        }
+        if (obj) {
+          obj.attr("data-circleId", containerBox.attr('id'));
+          obj.attr("data-property", akey);
           obj.css(inst.getRelationshipCSS(akey));
-					// se si tratta di un sameas applico una classe diversa
-					var akeyArray = akey.split(" ");
+          // se si tratta di un sameas applico una classe diversa
+          var akeyArray = akey.split(" ");
 
-					if (obj.attr('rel').indexOf('~~') != -1) {
-						obj.addClass('isBnode');
-					} else {
-						for (var i = 0; i < akeyArray.length; i++) {
-							if (lodLiveProfile.arrows[akeyArray[i]]) {
-								obj.addClass(lodLiveProfile.arrows[akeyArray[i]]);
-							}
-						}
-					}
+          if (obj.attr('rel').indexOf('~~') != -1) {
+            obj.addClass('isBnode');
+          } else {
+            for (var i = 0; i < akeyArray.length; i++) {
+              if (lodLiveProfile.arrows[akeyArray[i]]) {
+                obj.addClass(lodLiveProfile.arrows[akeyArray[i]]);
+              }
+            }
+          }
 
-					if (obj.hasClass("aGrouped")) {
-						innerObjectList.push(obj);
-					} else {
-						objectList.push(obj);
-					}
-				}
-			}
+          if (obj.hasClass("aGrouped")) {
+            innerObjectList.push(obj);
+          } else {
+            objectList.push(obj);
+          }
+        }
+      }
 
-		});
-		var page = 0;
-		var totPages = objectList.length > 14 ? (objectList.length / 14 + (objectList.length % 14 > 0 ? 1 : 0)) : 1;
-		for (var i = 0; i < objectList.length; i++) {
-			if (i % 14 == 0) {
-				page++;
-				var aPage = $('<div class="page page' + page + '" style="display:none"></div>');
-				if (page > 1 && totPages > 1) {
-					aPage.append("<div class=\"llpages pagePrev sprite\" data-page=\"page" + (page - 1) + "\" style=\"top:" + (chordsList[0][1] - 8) + "px;left:" + (chordsList[0][0] - 8) + "px\"></div>");
-				}
-				if (totPages > 1 && page < totPages - 1) {
-					aPage.append("<div class=\"llpages pageNext sprite\" data-page=\"page" + (page + 1) + "\" style=\"top:" + (chordsList[15][1] - 8) + "px;left:" + (chordsList[15][0] - 8) + "px\"></div>");
-				}
-				containerBox.append(aPage);
-			}
-			containerBox.children('.page' + page).append(objectList[i]);
-		}
-		page = 0;
-		totPages = innerObjectList.length / 24 + (innerObjectList.length % 24 > 0 ? 1 : 0);
-		if (innerObjectList.length > 0) {
-			containerBox.append('<div class="innerPage"></div>');
-			for (var i = 0; i < innerObjectList.length; i++) {
-				containerBox.children('.innerPage').append(innerObjectList[i]);
-			}
-		}
-		containerBox.children('.page1').fadeIn('fast');
-		containerBox.children('.page').children('.llpages').click(function() {
-			var llpages = $(this);
-			containerBox.find('.lastClick').removeClass('lastClick').click();
-			llpages.parent().fadeOut('fast', null, function() {
-				$(this).parent().children('.' + llpages.attr("data-page")).fadeIn('fast');
-			});
-		}); {
+    });
+    var page = 0;
+    var totPages = objectList.length > 14 ? (objectList.length / 14 + (objectList.length % 14 > 0 ? 1 : 0)) : 1;
+    for (var i = 0; i < objectList.length; i++) {
+      if (i % 14 == 0) {
+        page++;
+        var aPage = $('<div class="page page' + page + '" style="display:none"></div>');
+        if (page > 1 && totPages > 1) {
+          aPage.append("<div class=\"llpages pagePrev sprite\" data-page=\"page" + (page - 1) + "\" style=\"top:" + (chordsList[0][1] - 8) + "px;left:" + (chordsList[0][0] - 8) + "px\"></div>");
+        }
+        if (totPages > 1 && page < totPages - 1) {
+          aPage.append("<div class=\"llpages pageNext sprite\" data-page=\"page" + (page + 1) + "\" style=\"top:" + (chordsList[15][1] - 8) + "px;left:" + (chordsList[15][0] - 8) + "px\"></div>");
+        }
+        containerBox.append(aPage);
+      }
+      containerBox.children('.page' + page).append(objectList[i]);
+    }
+    page = 0;
+    totPages = innerObjectList.length / 24 + (innerObjectList.length % 24 > 0 ? 1 : 0);
+    if (innerObjectList.length > 0) {
+      containerBox.append('<div class="innerPage"></div>');
+      for (var i = 0; i < innerObjectList.length; i++) {
+        containerBox.children('.innerPage').append(innerObjectList[i]);
+      }
+    }
+    containerBox.children('.page1').fadeIn('fast');
+    containerBox.children('.page').children('.llpages').click(function() {
+      var llpages = $(this);
+      containerBox.find('.lastClick').removeClass('lastClick').click();
+      llpages.parent().fadeOut('fast', null, function() {
+        $(this).parent().children('.' + llpages.attr("data-page")).fadeIn('fast');
+      });
+    }); {
       // append the tools
       jQuery.each(inst.UI.nodeIcons, function(index) {
         var opts = this, obj;
@@ -2806,11 +2807,11 @@
         }
         obj.appendTo(anchorBox);
       });
-		}
-		if (inst.debugOn) {
-			console.debug((new Date().getTime() - start) + '	format ');
-		}
-	};
+    }
+    if (inst.debugOn) {
+      console.debug((new Date().getTime() - start) + '  format ');
+    }
+  };
 
   var _builtinTools = {
     'docInfo': '<div class="actionBox docInfo" rel="docInfo"><span class="fa fa-list"></span></div>',
@@ -2820,203 +2821,203 @@
   LodLive.prototype.openDoc = function(anUri, destBox, fromInverse) {
     var inst = this;
 
-    if (!anUri) { 
+    if (!anUri) {
       $.error('LodLive: no uri for openDoc');
     }
 
-		if (inst.debugOn) {
-			start = new Date().getTime();
-		}
+    if (inst.debugOn) {
+      start = new Date().getTime();
+    }
 
-		var uris = [];
-		var values = [];
-		if (inst.showInfoConsole) {
-			inst.queryConsole('init', {
-				uriId : anUri
-			});
-			inst.queryConsole('log', {
-				uriId : anUri,
-				resource : anUri
-			});
-		}
+    var uris = [];
+    var values = [];
+    if (inst.showInfoConsole) {
+      inst.queryConsole('init', {
+        uriId : anUri
+      });
+      inst.queryConsole('log', {
+        uriId : anUri,
+        resource : anUri
+      });
+    }
 
     if (inst.debugOn) console.log('composing query with anUri', anUri);
     //TODO: composeQuery looks like a static function, look into it
-		var SPARQLquery = inst.composeQuery(anUri, 'documentUri');
+    var SPARQLquery = inst.composeQuery(anUri, 'documentUri');
 
-		if (inst.doStats) {
-			methods.doStats(anUri);
-		}
+    if (inst.doStats) {
+      methods.doStats(anUri);
+    }
 
-		if (SPARQLquery.indexOf("endpoint=") != -1) {
+    if (SPARQLquery.indexOf("endpoint=") != -1) {
 
-			var endpoint = SPARQLquery.substring(SPARQLquery.indexOf("endpoint=") + 9);
-			endpoint = endpoint.substring(0, endpoint.indexOf("&"));
-			destBox.attr("data-endpoint", endpoint);
+      var endpoint = SPARQLquery.substring(SPARQLquery.indexOf("endpoint=") + 9);
+      endpoint = endpoint.substring(0, endpoint.indexOf("&"));
+      destBox.attr("data-endpoint", endpoint);
 
-		} else {
+    } else {
 
-			destBox.attr("data-endpoint", SPARQLquery.substring(0, SPARQLquery.indexOf("?")));
+      destBox.attr("data-endpoint", SPARQLquery.substring(0, SPARQLquery.indexOf("?")));
 
-		}
+    }
     //TODO: is system/dummy just a flag that it should guess? If so, maybe just set a property on the query object called shouldGuess = true
-		if (SPARQLquery.indexOf("http://system/dummy") == 0) {
+    if (SPARQLquery.indexOf("http://system/dummy") == 0) {
 
-			// guessing endpoint from URI
-			inst.guessingEndpoint(anUri, function() {
+      // guessing endpoint from URI
+      inst.guessingEndpoint(anUri, function() {
 
-				inst.openDoc(anUri, destBox, fromInverse);
+        inst.openDoc(anUri, destBox, fromInverse);
 
-			}, function() {
+      }, function() {
 
-				inst.parseRawResource(destBox, anUri, fromInverse);
+        inst.parseRawResource(destBox, anUri, fromInverse);
 
-			});
+      });
 
-		} else {
+    } else {
 
       //TODO: remove jQuery jsonp dependency
-			$.ajax({
-				url : SPARQLquery,
+      $.ajax({
+        url : SPARQLquery,
         contentType: 'application/json',
         accepts: inst.options.connection['http:'].accepts,
         dataType: inst.getAjaxDataType(),
-				beforeSend : function() {
-					destBox.children('.box').html('<img style=\"margin-top:' + (destBox.children('.box').height() / 2 - 8) + 'px\" src="img/ajax-loader.gif"/>');
-				},
-				success : function(json) {
+        beforeSend : function() {
+          destBox.children('.box').html('<img style=\"margin-top:' + (destBox.children('.box').height() / 2 - 8) + 'px\" src="img/ajax-loader.gif"/>');
+        },
+        success : function(json) {
           // console.log('sparql success', json);
-					json = json.results && json.results.bindings;
-					var conta = 0;
-					$.each(json, function(key, value) {
+          json = json.results && json.results.bindings;
+          var conta = 0;
+          $.each(json, function(key, value) {
             var newVal = {}, newUri = {};
             conta++;
-						if (value.object.type === 'uri' || value.object.type === 'bnode') {
-							if (value.object.value != anUri && (value.object.type !== 'bnode' || !inst.ignoreBnodes)) {
+            if (value.object.type === 'uri' || value.object.type === 'bnode') {
+              if (value.object.value != anUri && (value.object.type !== 'bnode' || !inst.ignoreBnodes)) {
                 newUri[value.property.value] = (value.object.type === 'bnode') ? escape(anUri + '~~' + value.object.value) : escape(value.object.value);
                 uris.push(newUri);
-							}
-						} else {
+              }
+            } else {
               newVal[value.property.value] = escape(value.object.value);
               values.push(newVal);
-						}
+            }
 
-					});
-					if (inst.showInfoConsole) {
-						inst.queryConsole('log', {
-							founded : conta,
-							id : SPARQLquery,
-							uriId : anUri
-						});
-					}
-					if (inst.debugOn) {
-						console.debug((new Date().getTime() - start) + '	openDoc eval uris & values');
-					}
-					destBox.children('.box').html('');
-					if (inst.doInverse) {
-						SPARQLquery = inst.composeQuery(anUri, 'inverse');
+          });
+          if (inst.showInfoConsole) {
+            inst.queryConsole('log', {
+              founded : conta,
+              id : SPARQLquery,
+              uriId : anUri
+            });
+          }
+          if (inst.debugOn) {
+            console.debug((new Date().getTime() - start) + '  openDoc eval uris & values');
+          }
+          destBox.children('.box').html('');
+          if (inst.doInverse) {
+            SPARQLquery = inst.composeQuery(anUri, 'inverse');
 
-						var inverses = [];
-						$.ajax({
-							url : SPARQLquery,
+            var inverses = [];
+            $.ajax({
+              url : SPARQLquery,
               contentType: 'application/json',
               accepts: inst.options.connection['http:'].accepts,
               dataType: inst.getAjaxDataType(),
-							beforeSend : function() {
-								destBox.children('.box').html('<img style=\"margin-top:' + (destBox.children('.box').height() / 2 - 5) + 'px\" src="img/ajax-loader.gif"/>');
-							},
-							success : function(json) {
-								json = json['results']['bindings'];
-								var conta = 0;
-								$.each(json, function(key, value) {
-									conta++;
+              beforeSend : function() {
+                destBox.children('.box').html('<img style=\"margin-top:' + (destBox.children('.box').height() / 2 - 5) + 'px\" src="img/ajax-loader.gif"/>');
+              },
+              success : function(json) {
+                json = json['results']['bindings'];
+                var conta = 0;
+                $.each(json, function(key, value) {
+                  conta++;
                   //TODO: replace evals
-									eval('inverses.push({\'' + value['property']['value'] + '\':\'' + (value.object.type == 'bnode' ? anUri + '~~' : '') + escape(value.object.value) + '\'})');
-								});
+                  eval('inverses.push({\'' + value['property']['value'] + '\':\'' + (value.object.type == 'bnode' ? anUri + '~~' : '') + escape(value.object.value) + '\'})');
+                });
 
-								if (inst.showInfoConsole) {
+                if (inst.showInfoConsole) {
 
-									inst.queryConsole('log', {
-										founded : conta,
-										id : SPARQLquery,
-										uriId : anUri
-									});
+                  inst.queryConsole('log', {
+                    founded : conta,
+                    id : SPARQLquery,
+                    uriId : anUri
+                  });
 
-								}
+                }
 
-								if (inst.debugOn) {
-									console.debug((new Date().getTime() - start) + '	openDoc inverse eval uris ');
-								}
+                if (inst.debugOn) {
+                  console.debug((new Date().getTime() - start) + '  openDoc inverse eval uris ');
+                }
 
-								var callback = function() {
-									destBox.children('.box').html('');
-									inst.format(destBox.children('.box'), values, uris, inverses);
-									inst.addClick(destBox, fromInverse ? function() {
+                var callback = function() {
+                  destBox.children('.box').html('');
+                  inst.format(destBox.children('.box'), values, uris, inverses);
+                  inst.addClick(destBox, fromInverse ? function() {
                     //TODO: dynamic selector across the entire doc here seems strange, what are the the possibilities?  Is it only a DOM element?
-										try {
+                    try {
                       //TODO: find out if we only pass jquery objects in as fromInverse, no need to wrap it again
-											$(fromInverse).click();
-										} catch (e) {
-										}
-									} : null);
-									if (inst.doAutoExpand) {
-										inst.autoExpand(destBox);
-									}
-								};
+                      $(fromInverse).click();
+                    } catch (e) {
+                    }
+                  } : null);
+                  if (inst.doAutoExpand) {
+                    inst.autoExpand(destBox);
+                  }
+                };
 
-								if (inst.doAutoSameas) {
-									var counter = 0;
-									var tot = Object.keys(lodLiveProfile).length;
-									inst.findInverseSameAs(anUri, counter, inverses, callback, tot);
-								} else {
-									callback();
-								}
+                if (inst.doAutoSameas) {
+                  var counter = 0;
+                  var tot = Object.keys(lodLiveProfile).length;
+                  inst.findInverseSameAs(anUri, counter, inverses, callback, tot);
+                } else {
+                  callback();
+                }
 
-							},
-							error : function(e, b, v) {
-								destBox.children('.box').html('');
-								inst.format(destBox.children('.box'), values, uris);
-								if (inst.showInfoConsole) {
-									inst.queryConsole('log', {
-										error : 'error',
-										id : SPARQLquery,
-										uriId : anUri
-									});
-								}
-								inst.addClick(destBox, fromInverse ? function() {
-									try {
-										$(fromInverse).click();
-									} catch (e) {
-									}
-								} : null);
-								if (inst.doAutoExpand) {
-									inst.autoExpand(destBox);
-								}
-							}
-						});
-					} else {
-						inst.format(destBox.children('.box'), values, uris);
-						inst.addClick(destBox, fromInverse ? function() {
-							try {
-								$(fromInverse).click();
-							} catch (e) {
-							}
-						} : null);
-						if (inst.doAutoExpand) {
-							inst.autoExpand(destBox);
-						}
-					}
-				},
-				error : function(e, b, v) {
-					inst.errorBox(destBox);
-				}
-			});
+              },
+              error : function(e, b, v) {
+                destBox.children('.box').html('');
+                inst.format(destBox.children('.box'), values, uris);
+                if (inst.showInfoConsole) {
+                  inst.queryConsole('log', {
+                    error : 'error',
+                    id : SPARQLquery,
+                    uriId : anUri
+                  });
+                }
+                inst.addClick(destBox, fromInverse ? function() {
+                  try {
+                    $(fromInverse).click();
+                  } catch (e) {
+                  }
+                } : null);
+                if (inst.doAutoExpand) {
+                  inst.autoExpand(destBox);
+                }
+              }
+            });
+          } else {
+            inst.format(destBox.children('.box'), values, uris);
+            inst.addClick(destBox, fromInverse ? function() {
+              try {
+                $(fromInverse).click();
+              } catch (e) {
+              }
+            } : null);
+            if (inst.doAutoExpand) {
+              inst.autoExpand(destBox);
+            }
+          }
+        },
+        error : function(e, b, v) {
+          inst.errorBox(destBox);
+        }
+      });
 
-		}
-		if (inst.debugOn) {
-			console.debug((new Date().getTime() - start) + '	openDoc');
-		}
-	};
+    }
+    if (inst.debugOn) {
+      console.debug((new Date().getTime() - start) + '  openDoc');
+    }
+  };
 
   LodLive.prototype.parseRawResource = function(destBox, resource, fromInverse) {
 
@@ -3423,7 +3424,7 @@
     window.LodLive = LodLive;
   }
 
-	/* end lines*/;
+  /* end lines*/;
   /**
     * jQuery plugin for initializing a LodLive instance.  This will initialize a new LodLive instance for each matched element.
     * @param {object | string=} options for legacy support this can be a string which is the method, \n
@@ -3439,7 +3440,7 @@
     * More complex instances can be created by passing in more options: \n
     *   selector.lodlive({ profile: someProfileInstance, hashFunc: someHashingFunction, firstURI: 'string URI to load first'});
     */
-	jQuery.fn.lodlive = function(options) {
+  jQuery.fn.lodlive = function(options) {
     // if no arguments are provided, then we attempt to return the instance on what is assumed to be a single element match
     if (!arguments.length) {
       return this.data('lodlive-instance');
@@ -3468,6 +3469,6 @@
       }
 
     });
-	};
+  };
 
 })(jQuery);
