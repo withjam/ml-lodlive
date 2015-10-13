@@ -1,8 +1,10 @@
 {
-  "name": "lodlive-builder",
-  "version": "0.1.1",
-  "repository": "https://github.com/withjam/LodLive.git",
-  "dependencies": {
+  "name": "ml-lodlive",
+  "version": "0.3.1",
+  "repository": "https://github.com/withjam/ml-lodlive.git",
+  "license": "Apache-2.0",
+  "devDependencies": {
+    "gulp": "^3.9.0",
     "gulp-add-src": "^0.2.0",
     "gulp-concat": "^2.4.3",
     "gulp-gzip": "0.0.8",
