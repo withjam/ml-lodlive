@@ -18,16 +18,6 @@
 
   var jwin = $(window), jbody = $(document.body);
 
-  // simple MD5 implementation to eliminate dependencies, can still pass in MD5 (or some other algorithm) as options.hashFunc if desired
-  function hashFunc(str) {
-    if (!str) { return str; }
-    for(var r=0, i=0; i<str.length; i++) {
-      r = (r<<5) - r+str.charCodeAt(i);
-      r &= r;
-    }
-    return r;
-  }
-
   var DEFAULT_BOX_TEMPLATE = '<div class="boxWrapper lodlive-node defaultBoxTemplate"><div class="ll-node-anchor"></div><div class="lodlive-node-label box sprite"></div></div>';
 
   /** LodLiveProfile constructor - Not sure this is even necessary, a basic object should suffice - I don't think it adds any features or logic
@@ -166,7 +156,8 @@
     this.mapsMap = {};
     this.infoPanelMap = {};
     this.connection = {};
-    this.hashFunc = this.options.hashFunc || hashFunc;
+    // simple MD5 implementation to eliminate dependencies, can still pass in MD5 (or some other algorithm) if desired
+    this.hashFunc = this.options.hashFunc || LodLiveUtils.hashFunc;
     this.innerPageMap = {};
     this.storeIds = {};
     this.boxTemplate =  this.options.boxTemplate || DEFAULT_BOX_TEMPLATE;
@@ -623,7 +614,7 @@
     msg = msg.replace(/http:\/\/.+~~/g, '');
     msg = msg.replace(/nodeID:\/\/.+~~/g, '');
     msg = msg.replace(/_:\/\/.+~~/g, '');
-    msg = breakLines(msg); //TODO: find where this is - no globals
+    msg = LodLiveUtils.breakLines(msg);
     msg = msg.replace(/\|/g, '<br />');
 
     msgs = msg.split(' \n ');
@@ -2612,7 +2603,7 @@
           if (!inserted[akey]) {
             innerCounter = 1;
             inserted[akey] = true;
-            var objBox = $("<div class=\"groupedRelatedBox\" rel=\"" + MD5(akey) + "\" data-property=\"" + akey + "\"  data-title=\"" + akey + " \n " + (propertyGroup[akey].length) + " " + LodLiveUtils.lang('connectedResources') + "\" ></div>");
+            var objBox = $("<div class=\"groupedRelatedBox\" rel=\"" + inst.hashFunc(akey) + "\" data-property=\"" + akey + "\"  data-title=\"" + akey + " \n " + (propertyGroup[akey].length) + " " + LodLiveUtils.lang('connectedResources') + "\" ></div>");
             objBox.css(inst.getRelationshipCSS(akey));
             // containerBox.append(objBox);
             var akeyArray = akey.split(" ");
@@ -2636,7 +2627,7 @@
           }
 
           if (innerCounter < 25) {
-            obj = $("<div class=\"aGrouped relatedBox " + MD5(akey) + " " + MD5(unescape(value[akey])) + "\" rel=\"" + unescape(value[akey]) + "\"  data-title=\"" + akey + " \n " + unescape(value[akey]) + "\" ></div>");
+            obj = $("<div class=\"aGrouped relatedBox " + inst.hashFunc(akey) + " " + inst.hashFunc(unescape(value[akey])) + "\" rel=\"" + unescape(value[akey]) + "\"  data-title=\"" + akey + " \n " + unescape(value[akey]) + "\" ></div>");
             // containerBox.append(obj);
             obj.attr('style', 'display:none;position:absolute;top:' + (chordsListGrouped[innerCounter][1] - 8) + 'px;left:' + (chordsListGrouped[innerCounter][0] - 8) + 'px');
             obj.attr("data-circlePos", innerCounter);
@@ -2646,7 +2637,7 @@
 
           innerCounter++;
         } else {
-          obj = $("<div class=\"relatedBox " + MD5(unescape(value[akey])) + "\" rel=\"" + unescape(value[akey]) + "\"   data-title=\"" + akey + ' \n ' + unescape(value[akey]) + "\" ></div>");
+          obj = $("<div class=\"relatedBox " + inst.hashFunc(unescape(value[akey])) + "\" rel=\"" + unescape(value[akey]) + "\"   data-title=\"" + akey + ' \n ' + unescape(value[akey]) + "\" ></div>");
           // containerBox.append(obj);
           obj.attr('style', 'top:' + (chordsList[a][1] - 8) + 'px;left:' + (chordsList[a][0] - 8) + 'px');
           obj.attr("data-circlePos", a);
@@ -2695,7 +2686,7 @@
             innerCounter = 1;
             inserted[akey] = true;
 
-            var objBox = $("<div class=\"groupedRelatedBox inverse\" rel=\"" + MD5(akey) + "-i\"   data-property=\"" + akey + "\" data-title=\"" + akey + " \n " + (propertyGroupInverted[akey].length) + " " + LodLiveUtils.lang('connectedResources') + "\" ></div>");
+            var objBox = $("<div class=\"groupedRelatedBox inverse\" rel=\"" + inst.hashFunc(akey) + "-i\"   data-property=\"" + akey + "\" data-title=\"" + akey + " \n " + (propertyGroupInverted[akey].length) + " " + LodLiveUtils.lang('connectedResources') + "\" ></div>");
             objBox.css(inst.getRelationshipCSS(akey));
             // containerBox.append(objBox);
             var akeyArray = akey.split(" ");
@@ -2720,7 +2711,7 @@
 
           if (innerCounter < 25) {
             var destUri = unescape(value[akey].indexOf('~~') == 0 ? thisUri + value[akey] : value[akey]);
-            obj = $("<div class=\"aGrouped relatedBox inverse " + MD5(akey) + "-i " + MD5(unescape(value[akey])) + " \" rel=\"" + destUri + "\"  data-title=\"" + akey + " \n " + unescape(value[akey]) + "\" ></div>");
+            obj = $("<div class=\"aGrouped relatedBox inverse " + inst.hashFunc(akey) + "-i " + inst.hashFunc(unescape(value[akey])) + " \" rel=\"" + destUri + "\"  data-title=\"" + akey + " \n " + unescape(value[akey]) + "\" ></div>");
             // containerBox.append(obj);
             obj.attr('style', 'display:none;position:absolute;top:' + (chordsListGrouped[innerCounter][1] - 8) + 'px;left:' + (chordsListGrouped[innerCounter][0] - 8) + 'px');
             obj.attr("data-circlePos", innerCounter);
@@ -2730,7 +2721,7 @@
 
           innerCounter++;
         } else {
-          obj = $("<div class=\"relatedBox inverse " + MD5(unescape(value[akey])) + "\" rel=\"" + unescape(value[akey]) + "\"   data-title=\"" + akey + ' \n ' + unescape(value[akey]) + "\" ></div>");
+          obj = $("<div class=\"relatedBox inverse " + inst.hashFunc(unescape(value[akey])) + "\" rel=\"" + unescape(value[akey]) + "\"   data-title=\"" + akey + ' \n ' + unescape(value[akey]) + "\" ></div>");
           // containerBox.append(obj);
           obj.attr('style', 'top:' + (chordsList[a][1] - 8) + 'px;left:' + (chordsList[a][0] - 8) + 'px');
           obj.attr("data-circlePos", a);
