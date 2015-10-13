@@ -37,7 +37,7 @@
       x : x1,
       y : y1
     }).drawLine({
-      strokeStyle : "#000",
+      strokeStyle : '#000',
       strokeWidth : 1,
       strokeCap : 'bevel',
       x1 : x1 - 60,
@@ -58,15 +58,15 @@
     // inserisco l'etichetta
     // add the label
     canvas.drawText({
-      fillStyle : "#000",
-      strokeStyle : "#000",
+      fillStyle : '#000',
+      strokeStyle : '#000',
       x : (x2bis + x1 + ((x1 + 60) > x2 ? -60 : +60)) / 2,
       y : (y1 + y1 - ((x1 + 60) > x2 ? 18 : -18)) / 2,
-      text : ((x1 + 60) > x2 ? " « " : "") + label + ((x1 + 60) > x2 ? "" : " » "),
-      align : "center",
+      text : ((x1 + 60) > x2 ? ' « ' : '') + label + ((x1 + 60) > x2 ? '' : ' » '),
+      align : 'center',
       strokeWidth : 0.01,
       fontSize : 11,
-      fontFamily : "'Open Sans',Verdana"
+      fontFamily : '"Open Sans",Verdana'
     }).restoreCanvas().restoreCanvas();
 
     // ed inserisco la freccia per determinarne il verso della relazione
@@ -84,7 +84,7 @@
     var boty = (y2 + Math.sin(angle2) * h) - 60 * Math.sin(lineangle);
 
     canvas.drawLine({
-      strokeStyle : "#000",
+      strokeStyle : '#000',
       strokeWidth : 1,
       x1 : fromx,
       y1 : fromy,
@@ -92,7 +92,7 @@
       y2 : boty
     });
     canvas.drawLine({
-      strokeStyle : "#000",
+      strokeStyle : '#000',
       strokeWidth : 1,
       x1 : fromx,
       y1 : fromy,
@@ -145,7 +145,7 @@ $.fn.setBackgroundPosition = function(pos) {
   backPos = $.trim(backPos.replace(/  /g, ' '));
 
   try {
-    var backPosArray = backPos.split(" ");
+    var backPosArray = backPos.split(' ');
     if (pos.x || pos.x == 0) {
       backPosArray[0] = pos.x + 'px';
     }
@@ -153,9 +153,9 @@ $.fn.setBackgroundPosition = function(pos) {
       backPosArray[1] = pos.y + 'px';
     }
     if (hasString) {
-      backPos = "left " + backPosArray[0] + " top " + backPosArray[1];
+      backPos = 'left ' + backPosArray[0] + ' top ' + backPosArray[1];
     } else {
-      backPos = backPosArray[0] + " " + backPosArray[1];
+      backPos = backPosArray[0] + ' ' + backPosArray[1];
     }
   } catch (e) {
     alert(e);

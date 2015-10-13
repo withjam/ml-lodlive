@@ -1048,7 +1048,7 @@
     inst.context.parent().scrollLeft(cw / 2 - inst.context.parent().width() / 2 + 60);
     console.log(inst.context.parent().scrollTop());
     //window.scrollBy(cw / 2 - jwin.width() / 2 + 25, ch / 2 - jwin.height() / 2 + 65);
-    aBox.css(props)
+    aBox.css(props);
 
       aBox.animate({ opacity: 1}, 1000);
 
@@ -1244,9 +1244,9 @@
 
   LodLive.prototype.removeDoc = function(obj, callback) {
     var inst = this;
-    var isRoot = inst.context.find(".lodlive-node").length == 1;
+    var isRoot = inst.context.find('.lodlive-node').length == 1;
     if (isRoot) {
-        alert("Cannot Remove Only Box");
+        alert('Cannot Remove Only Box');
         return;
     }
     if (inst.debugOn) {
@@ -1301,7 +1301,7 @@
         }
       });
 
-      inst.context.find('div[relmd5=' + id + "]").each(function() {
+      inst.context.find('div[relmd5=' + id + ']').each(function() {
         var found = $(this);
         found.show();
         found.removeClass('exploded');
@@ -1693,26 +1693,27 @@
 
     var lineStyle = 'standardLine';
     //FIXME:  don't use IDs
-    if (inst.context.find("#" + toId).length > 0) {
+    if (inst.context.find('#' + toId).length > 0) {
 
-      label = canvas.attr("data-propertyName-" + toId);
+      label = canvas.attr('data-propertyName-' + toId);
 
-      var labeArray = label.split("\|");
+      // TODO: literal regexp?
+      var labeArray = label.split('\|');
 
-      label = "\n";
+      label = '\n';
 
       for (var o = 0; o < labeArray.length; o++) {
 
         if (lodLiveProfile.arrows[$.trim(labeArray[o])]) {
-          lineStyle = inst.options.arrows[$.trim(labeArray[o])] + "Line";
+          lineStyle = inst.options.arrows[$.trim(labeArray[o])] + 'Line';
         }
 
         var shortKey = LodLive.shortenKey(labeArray[o]);
         var lastHash = shortKey.lastIndexOf('#');
         var lastSlash = shortKey.lastIndexOf('/');
 
-        if (label.indexOf("\n" + shortKey + "\n") == -1) {
-          label += shortKey + "\n";
+        if (label.indexOf('\n' + shortKey + '\n') == -1) {
+          label += shortKey + '\n';
         }
       }
     }
@@ -1770,17 +1771,17 @@
 
     var pos1 = from.position();
     var pos2 = to.position();
-    var aCanvas = $("#line-" + from.attr("id"));
+    var aCanvas = $('#line-' + from.attr('id'));
     // console.debug(new Date().getTime()+'moving - '+(new Date())+" -
     // #line-" +
     // from.attr("id") + "-" + to.attr("id"))
     if (aCanvas.length == 1) {
       if (propertyName) {
-        aCanvas.attr("data-propertyName-" + to.attr("id"), propertyName);
+        aCanvas.attr('data-propertyName-' + to.attr('id'), propertyName);
       }
-      inst.processDraw(pos1.left + from.width() / 2, pos1.top + from.height() / 2, pos2.left + to.width() / 2, pos2.top + to.height() / 2, aCanvas, to.attr("id"));
+      inst.processDraw(pos1.left + from.width() / 2, pos1.top + from.height() / 2, pos2.left + to.width() / 2, pos2.top + to.height() / 2, aCanvas, to.attr('id'));
     } else {
-      aCanvas = $("<canvas data-propertyName-" + to.attr("id") + "=\"" + propertyName + "\" height=\"" + inst.context.height() + "\" width=\"" + inst.context.width() + "\" id=\"line-" + from.attr("id") + "\"></canvas>");
+      aCanvas = $('<canvas data-propertyName-' + to.attr('id') + '="' + propertyName + '" height="' + inst.context.height() + '" width="' + inst.context.width() + '" id="line-' + from.attr('id') + '"></canvas>');
       inst.context.append(aCanvas);
       aCanvas.css({
         'position' : 'absolute',
@@ -1788,7 +1789,7 @@
         'top' : 0,
         'left' : 0
       });
-      inst.processDraw(pos1.left + from.width() / 2, pos1.top + from.height() / 2, pos2.left + to.width() / 2, pos2.top + to.height() / 2, aCanvas, to.attr("id"));
+      inst.processDraw(pos1.left + from.width() / 2, pos1.top + from.height() / 2, pos2.left + to.width() / 2, pos2.top + to.height() / 2, aCanvas, to.attr('id'));
     }
 
     if (inst.debugOn) {
@@ -1800,7 +1801,7 @@
     var inst = this;
 
     if (inst.debugOn) {
-      console.debug("formatDoc " + 0);
+      console.debug('formatDoc ' + 0);
       start = new Date().getTime();
     }
 
@@ -1808,14 +1809,14 @@
     // recupero il doctype per caricare le configurazioni specifiche
     var docType = inst.getJsonValue(uris, 'http://www.w3.org/1999/02/22-rdf-syntax-ns#type', 'default');
     // carico le configurazioni relative allo stile
-    destBox.addClass(inst.getProperty("document", "className", docType));
+    destBox.addClass(inst.getProperty('document', 'className', docType));
     // ed ai path degli oggetti di tipo immagine
-    var images = inst.getProperty("images", "properties", docType);
+    var images = inst.getProperty('images', 'properties', docType);
     // ed ai path dei link esterni
-    var weblinks = inst.getProperty("weblinks", "properties", docType);
+    var weblinks = inst.getProperty('weblinks', 'properties', docType);
     // ed eventuali configurazioni delle proprietÃ  da mostrare
     // TODO: fare in modo che sia sempre possibile mettere il dominio come fallback
-    var propertiesMapper = inst.getProperty("document", "propertiesMapper", URI.replace(/(http:\/\/[^\/]+\/).+/, "$1"));
+    var propertiesMapper = inst.getProperty('document', 'propertiesMapper', URI.replace(/(http:\/\/[^\/]+\/).+/, '$1'));
 
     // se la proprieta' e' stata scritta come stringa la trasformo in un
     // array
@@ -1826,7 +1827,7 @@
       weblinks = [weblinks];
     }
 
-    var result = "<div></div>";
+    var result = '<div></div>';
     var jResult = $(result);
     // destBox.append(jResult);
 
@@ -1841,7 +1842,7 @@
     });
 
     if (inst.debugOn) {
-      console.debug("formatDoc " + 1);
+      console.debug('formatDoc ' + 1);
     }
     // calcolo le uri e le url dei documenti correlati
     var connectedImages = [];
@@ -1867,7 +1868,7 @@
     });
 
     if (inst.debugOn) {
-      console.debug("formatDoc " + 2);
+      console.debug('formatDoc ' + 2);
     }
 
     // aggiungo al box le immagini correlate
@@ -1876,40 +1877,40 @@
       imagesj = $('<div class="section" style="height:80px"></div>');
       $.each(connectedImages, function(key, value) {
         for (var akey in value) {
-          imagesj.append("<a class=\"relatedImage\" href=\"" + unescape(value[akey]) + "\"><img src=\"" + unescape(value[akey]) + "\"/></a> ");
+          imagesj.append('<a class="relatedImage" href="' + unescape(value[akey]) + '"><img src="' + unescape(value[akey]) + '"/></a>');
         }
       });
     }
 
     if (inst.debugOn) {
-      console.debug("formatDoc " + 3);
+      console.debug('formatDoc ' + 3);
     }
 
     var webLinkResult = null;
     // aggiungo al box i link esterni correlati
     if (connectedWeblinks.length > 0) {
-      webLinkResult = "<div class=\"section\"><ul style=\"padding:0;margin:0;display:block;overflow:hidden;tex-overflow:ellipses\">";
+      webLinkResult = '<div class="section"><ul style="padding:0;margin:0;display:block;overflow:hidden;tex-overflow:ellipses">';
       $.each(connectedWeblinks, function(key, value) {
         for (var akey in value) {
-          webLinkResult += "<li><a class=\"relatedLink\" target=\"_blank\" data-title=\"" + akey + " \n " + unescape(value[akey]) + "\" href=\"" + unescape(value[akey]) + "\">" + unescape(value[akey]) + "</a></li>";
+          webLinkResult += '<li><a class="relatedLink" target="_blank" data-title="' + akey + ' \n ' + unescape(value[akey]) + '" href="' + unescape(value[akey]) + '">' + unescape(value[akey]) + '</a></li>';
         }
       });
-      webLinkResult += "</ul></div>";
+      webLinkResult += '</ul></div>';
       // jContents.append(webLinkResult);
     }
 
     if (inst.debugOn) {
-      console.debug("formatDoc " + 4);
+      console.debug('formatDoc ' + 4);
     }
     // aggiungo al box le informazioni descrittive della risorsa
     var jContents = $('<div></div>');
 
     if (inst.debugOn) {
-      console.debug("formatDoc " + 5);
+      console.debug('formatDoc ' + 5);
     }
 
     if (types.length > 0) {
-      var jSection = $("<div class=\"section\"><label data-title=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#type\">type</label><div></div></div>");
+      var jSection = $('<div class="section"><label data-title="http://www.w3.org/1999/02/22-rdf-syntax-ns#type">type</label><div></div></div>');
 
       jSection.find('label').each(function() {
         var lbl = $(this);
@@ -1923,14 +1924,14 @@
       for (var int = 0; int < types.length; int++) {
         var shortKey = LodLive.shortenKey(types[int]);
         // is this really appended to ALL children divs or we looking for something specific?
-        jSection.children('div').append("<span title=\"" + types[int] + "\">" + shortKey + " </span>");
+        jSection.children('div').append('<span title="' + types[int] + '">' + shortKey + ' </span>');
       }
 
       jContents.append(jSection);
     }
 
     if (inst.debugOn) {
-      console.debug("formatDoc " + 6);
+      console.debug('formatDoc ' + 6);
     }
 
     if (imagesj) {
@@ -1951,7 +1952,7 @@
     }
 
     if (inst.debugOn) {
-      console.debug("formatDoc " + 7);
+      console.debug('formatDoc ' + 7);
     }
 
     if (propertiesMapper) {
@@ -1962,7 +1963,7 @@
             if (filter == akey) {
               var shortKey = label;
               try {
-                var jSection = $("<div class=\"section\"><label data-title=\"" + akey + "\">" + shortKey + "</label><div>" + unescape(value[akey]) + "</div></div>");
+                var jSection = $('<div class="section"><label data-title="' + akey + '">' + shortKey + '</label><div>' + unescape(value[akey]) + '</div></div>');
                 jSection.find('label').each(function() {
                   $(this).hover(function() {
                     inst.msg($(this).attr('data-title'), 'show');
@@ -1995,7 +1996,7 @@
           }
           try {
 
-            var jSection = $("<div class=\"section\"><label data-title=\"" + akey + "\">" + shortKey + "</label><div>" + unescape(value[akey]) + "</div></div>");
+            var jSection = $('<div class="section"><label data-title="' + akey + '">' + shortKey + '</label><div>' + unescape(value[akey]) + '</div></div>');
             jSection.find('label').each(function() {
               $(this).hover(function() {
                 inst.msg($(this).attr('data-title'), 'show');
@@ -2017,7 +2018,7 @@
         for (var akey in value) {
           var shortKey = LodLive.shortenKey(akey);
 
-          var jBnode = $("<div class=\"section\"><label data-title=\"" + akey + "\">" + shortKey + "</label><span class=\"bnode\"></span></div><div class=\"separ sprite\"></div>");
+          var jBnode = $('<div class="section"><label data-title="' + akey + '">' + shortKey + '</label><span class="bnode"></span></div><div class="separ sprite"></div>');
           jBnode.find('label').each(function() {
             $(this).hover(function() {
               inst.msg($(this).attr('data-title'), 'show');
@@ -2032,7 +2033,7 @@
     }
 
     if (contents.length == 0 && bnodes.length == 0) {
-      var jSection = $("<div class=\"section\"><label data-title=\"" + LodLiveUtils.lang('resourceMissingDoc') + "\"></label><div>" + LodLiveUtils.lang('resourceMissingDoc') + "</div></div><div class=\"separ sprite\"></div>");
+      var jSection = $('<div class="section"><label data-title="' + LodLiveUtils.lang('resourceMissingDoc') + '"></label><div>' + LodLiveUtils.lang('resourceMissingDoc') + '</div></div><div class="separ sprite"></div>');
       jSection.find('label').each(function() {
         $(this).hover(function() {
           inst.msg($(this).attr('data-title'), 'show');
@@ -2049,7 +2050,7 @@
 
     // aggiungo le funzionalita' per la visualizzazione delle immagini
     //FIXME: consolidate this
-    jContents.find(".relatedImage").each(function() {
+    jContents.find('.relatedImage').each(function() {
       $(this).fancybox({
         'transitionIn' : 'elastic',
         'transitionOut' : 'elastic',
@@ -2072,8 +2073,8 @@
           }
         });
         $(this).error(function() {
-          $(this).attr("title", LodLiveUtils.lang('noImage') + " \n" + $(this).attr("src"));
-          $(this).attr("src", "img/immagine-vuota-" + $.jStorage.get('selectedLanguage') + ".png");
+          $(this).attr('title', LodLiveUtils.lang('noImage') + ' \n' + $(this).attr('src'));
+          $(this).attr('src', 'img/immagine-vuota-' + $.jStorage.get('selectedLanguage') + '.png');
         });
       });
     });
@@ -2086,7 +2087,7 @@
   LodLive.prototype.getAjaxDataType = function() {
     // TODO: consider accepting URL as parameter and detect if it requires JSONP or not
     return this.options.endpoints.jsonp ? 'jsonp' : 'json';
-  }
+  };
 
   LodLive.prototype.resolveBnodes = function(val, URI, destBox, jContents) {
     var inst = this;
@@ -2114,7 +2115,7 @@
           if (value.object.type == 'uri') {
 
           } else if (value.object.type == 'bnode') {
-            var jBnode = $("<span><label data-title=\"" + value.property.value + "\"> / " + shortKey + "</label><span class=\"bnode\"></span></span>");
+            var jBnode = $('<span><label data-title="' + value.property.value + '"> / ' + shortKey + '</label><span class="bnode"></span></span>');
             jBnode.find('label').each(function() {
               $(this).hover(function() {
                 inst.msg($(this).attr('data-title'), 'show');
@@ -2122,10 +2123,10 @@
                 inst.msg(null, 'hide');
               });
             });
-            destBox.find('span[class=bnode]').attr("class", "").append(jBnode);
+            destBox.find('span[class=bnode]').attr('class', '').append(jBnode);
             inst.resolveBnodes(value.object.value, URI, destBox, jContents);
           } else {
-            destBox.find('span[class=bnode]').append('<div><em title="' + value.property.value + '">' + shortKey + "</em>: " + value.object.value + '</div>');
+            destBox.find('span[class=bnode]').append('<div><em title="' + value.property.value + '">' + shortKey + '</em>: ' + value.object.value + '</div>');
             // destBox.find('span[class=bnode]').attr("class",
             // "");
           }
@@ -2135,9 +2136,9 @@
               height : $(window).height() - 40,
               color : '#fff'
             });
-            jContents.parent().find("div.separLast").remove();
+            jContents.parent().find('div.separLast').remove();
           } else {
-            jContents.parent().append("<div class=\"separLast\"></div>");
+            jContents.parent().append('<div class="separLast"></div>');
           }
         });
       },
@@ -2280,11 +2281,11 @@
 
     // recupero il doctype per caricare le configurazioni specifiche
     var docType = inst.getJsonValue(uris, 'http://www.w3.org/1999/02/22-rdf-syntax-ns#type', 'default');
-    if (thisUri.indexOf("~~") != -1) {
+    if (thisUri.indexOf('~~') != -1) {
       docType = 'bnode';
     }
     // carico le configurazioni relative allo stile
-    var aClass = inst.getProperty("document", "className", docType);
+    var aClass = inst.getProperty('document', 'className', docType);
     if (docType == 'bnode') {
       aClass = 'bnode';
     }
@@ -2308,17 +2309,17 @@
     }
     containerBox.addClass(aClass);
     // ed ai path da mostrare nel titolo del box
-    var titles = inst.getProperty("document", "titleProperties", docType);
+    var titles = inst.getProperty('document', 'titleProperties', docType);
     // ed ai path degli oggetti di tipo immagine
-    var images = inst.getProperty("images", "properties", docType);
+    var images = inst.getProperty('images', 'properties', docType);
     // ed ai path dei link esterni
-    var weblinks = inst.getProperty("weblinks", "properties", docType);
+    var weblinks = inst.getProperty('weblinks', 'properties', docType);
     // e le latitudini
-    var lats = inst.getProperty("maps", "lats", docType);
+    var lats = inst.getProperty('maps', 'lats', docType);
     // e le longitudini
-    var longs = inst.getProperty("maps", "longs", docType);
+    var longs = inst.getProperty('maps', 'longs', docType);
     // e punti
-    var points = inst.getProperty("maps", "points", docType);
+    var points = inst.getProperty('maps', 'points', docType);
 
     // se la proprieta' e' stata scritta come stringa la trasformo in un
     // array
@@ -2345,44 +2346,44 @@
     titles.push('http://system/msg');
 
     // aggiungo al box il titolo
-    var result = "<div class=\"boxTitle\"><span class=\"ellipsis_text\">";
+    var result = '<div class="boxTitle"><span class="ellipsis_text">';
     for (var a = 0; a < titles.length; a++) {
       var resultArray = inst.getJsonValue(values, titles[a], titles[a].indexOf('http') == 0 ? '' : titles[a]);
       if (titles[a].indexOf('http') != 0) {
-        if (result.indexOf($.trim(unescape(titles[a])) + " \n") == -1) {
-          result += $.trim(unescape(titles[a])) + " \n";
+        if (result.indexOf($.trim(unescape(titles[a])) + ' \n') == -1) {
+          result += $.trim(unescape(titles[a])) + ' \n';
         }
       } else {
         for (var af = 0; af < resultArray.length; af++) {
-          if (result.indexOf(unescape(resultArray[af]) + " \n") == -1) {
-            result += unescape(resultArray[af]) + " \n";
+          if (result.indexOf(unescape(resultArray[af]) + ' \n') == -1) {
+            result += unescape(resultArray[af]) + ' \n';
           }
         }
       }
 
     }
-    var dataEndpoint = containerBox.attr("data-endpoint") || '';
-    if ((values.length == 0 && uris.length == 0) || dataEndpoint.indexOf("http://system/dummy") == 0) {
-      if (containerBox.attr("data-endpoint").indexOf("http://system/dummy") != -1) {
-        containerBox.attr("data-endpoint", LodLiveUtils.lang('endpointNotConfigured'));
+    var dataEndpoint = containerBox.attr('data-endpoint') || '';
+    if ((values.length == 0 && uris.length == 0) || dataEndpoint.indexOf('http://system/dummy') == 0) {
+      if (containerBox.attr('data-endpoint').indexOf('http://system/dummy') != -1) {
+        containerBox.attr('data-endpoint', LodLiveUtils.lang('endpointNotConfigured'));
       }
       if (uris.length == 0 && values.length == 0) {
-        result = "<div class=\"boxTitle\" data-tooltip=\"" + LodLiveUtils.lang('resourceMissing') + "\"><a target=\"_blank\" href=\"" + thisUri + "\"><span class=\"spriteLegenda\"></span>" + thisUri + "</a>";
+        result = '<div class="boxTitle" data-tooltip="' + LodLiveUtils.lang('resourceMissing') + '"><a target="_blank" href="' + thisUri + '"><span class="spriteLegenda"></span>' + thisUri + '</a>';
       }
     }
-    result += "</span></div>";
+    result += '</span></div>';
     var jResult = $(result);
     if (jResult.text() == '' && docType == 'bnode') {
       jResult.text('[blank node]');
     } else if (jResult.text() == '') {
-      var titleDef = "(Error)";
+      var titleDef = '(Error)';
       try {
           titleDef = inst.options.default.document.titleName[thisUri];
       }catch(ex) {
           titleDef = inst.options.default.document.titleProperties[thisUri];
       }
       if(titleDef){
-          jResult.text(titleDef)
+          jResult.text(titleDef);
       } else {
         jResult.text(LodLiveUtils.lang('noName'));
       }
@@ -2394,7 +2395,7 @@
     destBox.hover(function() {
         var msgTitle = jResult.text();
         console.log('destbox hover title', msgTitle);
-      inst.msg(msgTitle, 'show', 'fullInfo', containerBox.attr("data-endpoint"));
+      inst.msg(msgTitle, 'show', 'fullInfo', containerBox.attr('data-endpoint'));
     }, function() {
       inst.msg(null, 'hide');
     });
@@ -2455,7 +2456,7 @@
       sameDocControl = [];
       $.each(inverses, function(key, value) {
         for (var akey in value) {
-          if (docType == 'bnode' && value[akey].indexOf("~~") != -1) {
+          if (docType == 'bnode' && value[akey].indexOf('~~') != -1) {
             continue;
           }
           if (lodLiveProfile.uriSubstitutor) {
@@ -2492,12 +2493,12 @@
       for (var a = 0; a < points.length; a++) {
         var resultArray = inst.getJsonValue(values, points[a], points[a]);
         for (var af = 0; af < resultArray.length; af++) {
-          if (resultArray[af].indexOf(" ") != -1) {
-            eval('connectedLongs.push(\'' + unescape(resultArray[af].split(" ")[1]) + '\')');
-            eval('connectedLats.push(\'' + unescape(resultArray[af].split(" ")[0]) + '\')');
-          } else if (resultArray[af].indexOf("-") != -1) {
-            eval('connectedLongs.push(\'' + unescape(resultArray[af].split("-")[1]) + '\')');
-            eval('connectedLats.push(\'' + unescape(resultArray[af].split("-")[0]) + '\')');
+          if (resultArray[af].indexOf(' ') != -1) {
+            eval('connectedLongs.push(\'' + unescape(resultArray[af].split(' ')[1]) + '\')');
+            eval('connectedLats.push(\'' + unescape(resultArray[af].split(' ')[0]) + '\')');
+          } else if (resultArray[af].indexOf('-') != -1) {
+            eval('connectedLongs.push(\'' + unescape(resultArray[af].split('-')[1]) + '\')');
+            eval('connectedLats.push(\'' + unescape(resultArray[af].split('-')[0]) + '\')');
           }
         }
       }
@@ -2516,10 +2517,10 @@
 
       if (connectedLongs.length > 0 && connectedLats.length > 0) {
         var mapsMap = inst.mapsMap;
-        mapsMap[containerBox.attr("id")] = {
+        mapsMap[containerBox.attr('id')] = {
           longs : connectedLongs[0],
           lats : connectedLats[0],
-          title : thisUri + "\n" + escape(resourceTitle)
+          title : thisUri + '\n' + escape(resourceTitle)
         };
         inst.updateMapPanel(inst.context.find('.lodlive-controlPanel'));
       }
@@ -2527,7 +2528,7 @@
     if (inst.doCollectImages) {
       if (connectedImages.length > 0) {
         var imagesMap = inst.imagesMap;
-        imagesMap[containerBox.attr("id")] = connectedImages;
+        imagesMap[containerBox.attr('id')] = connectedImages;
         inst.updateImagePanel(inst.context.find('.lodlive-controlPanel'));
       }
     }
@@ -2603,10 +2604,10 @@
           if (!inserted[akey]) {
             innerCounter = 1;
             inserted[akey] = true;
-            var objBox = $("<div class=\"groupedRelatedBox\" rel=\"" + inst.hashFunc(akey) + "\" data-property=\"" + akey + "\"  data-title=\"" + akey + " \n " + (propertyGroup[akey].length) + " " + LodLiveUtils.lang('connectedResources') + "\" ></div>");
+            var objBox = $('<div class="groupedRelatedBox" rel="' + inst.hashFunc(akey) + '" data-property="' + akey + '"  data-title="' + akey + ' \n ' + (propertyGroup[akey].length) + ' ' + LodLiveUtils.lang('connectedResources') + '" ></div>');
             objBox.css(inst.getRelationshipCSS(akey));
             // containerBox.append(objBox);
-            var akeyArray = akey.split(" ");
+            var akeyArray = akey.split(' ');
             if (unescape(propertyGroup[akey][0]).indexOf('~~') != -1) {
               objBox.addClass('isBnode');
             } else {
@@ -2627,30 +2628,30 @@
           }
 
           if (innerCounter < 25) {
-            obj = $("<div class=\"aGrouped relatedBox " + inst.hashFunc(akey) + " " + inst.hashFunc(unescape(value[akey])) + "\" rel=\"" + unescape(value[akey]) + "\"  data-title=\"" + akey + " \n " + unescape(value[akey]) + "\" ></div>");
+            obj = $('<div class="aGrouped relatedBox ' + inst.hashFunc(akey) + ' ' + inst.hashFunc(unescape(value[akey])) + '" rel="' + unescape(value[akey]) + '"  data-title="' + akey + ' \n ' + unescape(value[akey]) + '" ></div>');
             // containerBox.append(obj);
             obj.attr('style', 'display:none;position:absolute;top:' + (chordsListGrouped[innerCounter][1] - 8) + 'px;left:' + (chordsListGrouped[innerCounter][0] - 8) + 'px');
-            obj.attr("data-circlePos", innerCounter);
-            obj.attr("data-circleParts", 36);
-            obj.attr("data-circleid", containerBox.attr('id'));
+            obj.attr('data-circlePos', innerCounter);
+            obj.attr('data-circleParts', 36);
+            obj.attr('data-circleid', containerBox.attr('id'));
           }
 
           innerCounter++;
         } else {
-          obj = $("<div class=\"relatedBox " + inst.hashFunc(unescape(value[akey])) + "\" rel=\"" + unescape(value[akey]) + "\"   data-title=\"" + akey + ' \n ' + unescape(value[akey]) + "\" ></div>");
+          obj = $('<div class="relatedBox ' + inst.hashFunc(unescape(value[akey])) + '" rel="' + unescape(value[akey]) + '"   data-title="' + akey + ' \n ' + unescape(value[akey]) + '" ></div>');
           // containerBox.append(obj);
           obj.attr('style', 'top:' + (chordsList[a][1] - 8) + 'px;left:' + (chordsList[a][0] - 8) + 'px');
-          obj.attr("data-circlePos", a);
-          obj.attr("data-circleParts", 24);
+          obj.attr('data-circlePos', a);
+          obj.attr('data-circleParts', 24);
           a++;
           counter++;
         }
         if (obj) {
-          obj.attr("data-circleid", containerBox.attr('id'));
-          obj.attr("data-property", akey);
+          obj.attr('data-circleid', containerBox.attr('id'));
+          obj.attr('data-property', akey);
           obj.css(inst.getRelationshipCSS(akey));
           // se si tratta di un  Bnode applico una classe diversa
-          var akeyArray = akey.split(" ");
+          var akeyArray = akey.split(' ');
           if (obj.attr('rel').indexOf('~~') != -1) {
             obj.addClass('isBnode');
           } else {
@@ -2660,7 +2661,7 @@
               }
             }
           }
-          if (obj.hasClass("aGrouped")) {
+          if (obj.hasClass('aGrouped')) {
             innerObjectList.push(obj);
           } else {
             objectList.push(obj);
@@ -2686,10 +2687,10 @@
             innerCounter = 1;
             inserted[akey] = true;
 
-            var objBox = $("<div class=\"groupedRelatedBox inverse\" rel=\"" + inst.hashFunc(akey) + "-i\"   data-property=\"" + akey + "\" data-title=\"" + akey + " \n " + (propertyGroupInverted[akey].length) + " " + LodLiveUtils.lang('connectedResources') + "\" ></div>");
+            var objBox = $('<div class="groupedRelatedBox inverse" rel="' + inst.hashFunc(akey) + '-i"   data-property="' + akey + '" data-title="' + akey + ' \n ' + (propertyGroupInverted[akey].length) + ' ' + LodLiveUtils.lang('connectedResources') + '" ></div>');
             objBox.css(inst.getRelationshipCSS(akey));
             // containerBox.append(objBox);
-            var akeyArray = akey.split(" ");
+            var akeyArray = akey.split(' ');
             if (unescape(propertyGroupInverted[akey][0]).indexOf('~~') != -1) {
               objBox.addClass('isBnode');
             } else {
@@ -2711,30 +2712,30 @@
 
           if (innerCounter < 25) {
             var destUri = unescape(value[akey].indexOf('~~') == 0 ? thisUri + value[akey] : value[akey]);
-            obj = $("<div class=\"aGrouped relatedBox inverse " + inst.hashFunc(akey) + "-i " + inst.hashFunc(unescape(value[akey])) + " \" rel=\"" + destUri + "\"  data-title=\"" + akey + " \n " + unescape(value[akey]) + "\" ></div>");
+            obj = $('<div class="aGrouped relatedBox inverse ' + inst.hashFunc(akey) + '-i ' + inst.hashFunc(unescape(value[akey])) + ' " rel="' + destUri + '"  data-title="' + akey + ' \n ' + unescape(value[akey]) + '" ></div>');
             // containerBox.append(obj);
             obj.attr('style', 'display:none;position:absolute;top:' + (chordsListGrouped[innerCounter][1] - 8) + 'px;left:' + (chordsListGrouped[innerCounter][0] - 8) + 'px');
-            obj.attr("data-circlePos", innerCounter);
-            obj.attr("data-circleParts", 36);
-            obj.attr("data-circleId", containerBox.attr('id'));
+            obj.attr('data-circlePos', innerCounter);
+            obj.attr('data-circleParts', 36);
+            obj.attr('data-circleId', containerBox.attr('id'));
           }
 
           innerCounter++;
         } else {
-          obj = $("<div class=\"relatedBox inverse " + inst.hashFunc(unescape(value[akey])) + "\" rel=\"" + unescape(value[akey]) + "\"   data-title=\"" + akey + ' \n ' + unescape(value[akey]) + "\" ></div>");
+          obj = $('<div class="relatedBox inverse ' + inst.hashFunc(unescape(value[akey])) + '" rel="' + unescape(value[akey]) + '"   data-title="' + akey + ' \n ' + unescape(value[akey]) + '" ></div>');
           // containerBox.append(obj);
           obj.attr('style', 'top:' + (chordsList[a][1] - 8) + 'px;left:' + (chordsList[a][0] - 8) + 'px');
-          obj.attr("data-circlePos", a);
-          obj.attr("data-circleParts", 24);
+          obj.attr('data-circlePos', a);
+          obj.attr('data-circleParts', 24);
           a++;
           counter++;
         }
         if (obj) {
-          obj.attr("data-circleId", containerBox.attr('id'));
-          obj.attr("data-property", akey);
+          obj.attr('data-circleId', containerBox.attr('id'));
+          obj.attr('data-property', akey);
           obj.css(inst.getRelationshipCSS(akey));
           // se si tratta di un sameas applico una classe diversa
-          var akeyArray = akey.split(" ");
+          var akeyArray = akey.split(' ');
 
           if (obj.attr('rel').indexOf('~~') != -1) {
             obj.addClass('isBnode');
@@ -2746,7 +2747,7 @@
             }
           }
 
-          if (obj.hasClass("aGrouped")) {
+          if (obj.hasClass('aGrouped')) {
             innerObjectList.push(obj);
           } else {
             objectList.push(obj);
@@ -2762,10 +2763,10 @@
         page++;
         var aPage = $('<div class="page page' + page + '" style="display:none"></div>');
         if (page > 1 && totPages > 1) {
-          aPage.append("<div class=\"llpages pagePrev sprite\" data-page=\"page" + (page - 1) + "\" style=\"top:" + (chordsList[0][1] - 8) + "px;left:" + (chordsList[0][0] - 8) + "px\"></div>");
+          aPage.append('<div class="llpages pagePrev sprite" data-page="page' + (page - 1) + '" style="top:' + (chordsList[0][1] - 8) + 'px;left:' + (chordsList[0][0] - 8) + 'px"></div>');
         }
         if (totPages > 1 && page < totPages - 1) {
-          aPage.append("<div class=\"llpages pageNext sprite\" data-page=\"page" + (page + 1) + "\" style=\"top:" + (chordsList[15][1] - 8) + "px;left:" + (chordsList[15][0] - 8) + "px\"></div>");
+          aPage.append('<div class="llpages pageNext sprite" data-page="page' + (page + 1) + '" style="top:' + (chordsList[15][1] - 8) + 'px;left:' + (chordsList[15][0] - 8) + 'px"></div>');
         }
         containerBox.append(aPage);
       }
@@ -2784,7 +2785,7 @@
       var llpages = $(this);
       containerBox.find('.lastClick').removeClass('lastClick').click();
       llpages.parent().fadeOut('fast', null, function() {
-        $(this).parent().children('.' + llpages.attr("data-page")).fadeIn('fast');
+        $(this).parent().children('.' + llpages.attr('data-page')).fadeIn('fast');
       });
     }); {
       // append the tools
@@ -2807,7 +2808,7 @@
   var _builtinTools = {
     'docInfo': '<div class="actionBox docInfo" rel="docInfo"><span class="fa fa-list"></span></div>',
     'tools': '<div class="actionBox tools" rel="tools"><span class="fa fa-cog"></span></div>'
-  }
+  };
 
   LodLive.prototype.openDoc = function(anUri, destBox, fromInverse) {
     var inst = this;
@@ -2840,19 +2841,19 @@
       methods.doStats(anUri);
     }
 
-    if (SPARQLquery.indexOf("endpoint=") != -1) {
+    if (SPARQLquery.indexOf('endpoint=') != -1) {
 
-      var endpoint = SPARQLquery.substring(SPARQLquery.indexOf("endpoint=") + 9);
-      endpoint = endpoint.substring(0, endpoint.indexOf("&"));
-      destBox.attr("data-endpoint", endpoint);
+      var endpoint = SPARQLquery.substring(SPARQLquery.indexOf('endpoint=') + 9);
+      endpoint = endpoint.substring(0, endpoint.indexOf('&'));
+      destBox.attr('data-endpoint', endpoint);
 
     } else {
 
-      destBox.attr("data-endpoint", SPARQLquery.substring(0, SPARQLquery.indexOf("?")));
+      destBox.attr('data-endpoint', SPARQLquery.substring(0, SPARQLquery.indexOf('?')));
 
     }
     //TODO: is system/dummy just a flag that it should guess? If so, maybe just set a property on the query object called shouldGuess = true
-    if (SPARQLquery.indexOf("http://system/dummy") == 0) {
+    if (SPARQLquery.indexOf('http://system/dummy') == 0) {
 
       // guessing endpoint from URI
       inst.guessingEndpoint(anUri, function() {
@@ -3017,7 +3018,7 @@
     if (lodLiveProfile['default']) {
       // attivo lo sparql interno basato su sesame
       var res = LodLiveUtils.getSparqlConf('documentUri', lodLiveProfile['default'], lodLiveProfile).replace(/\{URI\}/ig, resource);
-      var url = lodLiveProfile['default'].endpoint + "?uri=" + encodeURIComponent(resource) + "&query=" + encodeURIComponent(res);
+      var url = lodLiveProfile['default'].endpoint + '?uri=' + encodeURIComponent(resource) + '&query=' + encodeURIComponent(res);
       if (inst.showInfoConsole) {
         inst.queryConsole('log', {
           title : LodLiveUtils.lang('endpointNotConfiguredSoInternal'),
@@ -3120,12 +3121,12 @@
   LodLive.prototype.errorBox = function(destBox) {
     var inst = this;
 
-    destBox.children('.box').addClass("errorBox");
+    destBox.children('.box').addClass('errorBox');
     destBox.children('.box').html('');
-    var jResult = $("<div class=\"boxTitle\"><span>" + LodLiveUtils.lang('enpointNotAvailable') + "</span></div>");
+    var jResult = $('<div class="boxTitle"><span>' + LodLiveUtils.lang('enpointNotAvailable') + '</span></div>');
     destBox.children('.box').append(jResult);
     destBox.children('.box').hover(function() {
-      inst.msg(LodLiveUtils.lang('enpointNotAvailableOrSLow'), 'show', 'fullInfo', destBox.attr("data-endpoint"));
+      inst.msg(LodLiveUtils.lang('enpointNotAvailableOrSLow'), 'show', 'fullInfo', destBox.attr('data-endpoint'));
     }, function() {
       inst.msg(null, 'hide');
     });
@@ -3156,7 +3157,7 @@
         $.each(json, function(key, value) {
           var aclass = json[key].object.value;
           if (aclass.indexOf('http://www.openlinksw.com/') == -1) {
-            aclass = aclass.replace(/http:\/\//, "");
+            aclass = aclass.replace(/http:\/\//, '');
             classes.push(aclass);
           }
 
@@ -3186,7 +3187,7 @@
       // what is the intent of matching the counter to the argument?  Are we trying to simulate numerical index of object properties when order is not guaranteed? Why not by name?
       if (innerCounter === counter) {
         var skip = false;
-        var keySplit = key.split(",");
+        var keySplit = key.split(',');
         if (!value.useForInverseSameAs) {
           skip = true;
         } else {
@@ -3207,9 +3208,9 @@
           return false;
         }
 
-        var SPARQLquery = value.endpoint + "?" + (value.endpointType ? lodLiveProfile.endpoints[value.endpointType] : lodLiveProfile.endpoints.all) + "&query=" + escape(LodLiveUtils.getSparqlConf('inverseSameAs', value, lodLiveProfile).replace(/\{URI\}/g, anUri));
+        var SPARQLquery = value.endpoint + '?' + (value.endpointType ? lodLiveProfile.endpoints[value.endpointType] : lodLiveProfile.endpoints.all) + '&query=' + escape(LodLiveUtils.getSparqlConf('inverseSameAs', value, lodLiveProfile).replace(/\{URI\}/g, anUri));
         if (value.proxy) {
-          SPARQLquery = value.proxy + '?endpoint=' + value.endpoint + "&" + (value.endpointType ? lodLiveProfile.endpoints[value.endpointType] : lodLiveProfile.endpoints.all) + "&query=" + escape(LodLiveUtils.getSparqlConf('inverseSameAs', value, lodLiveProfile).replace(/\{URI\}/g, anUri));
+          SPARQLquery = value.proxy + '?endpoint=' + value.endpoint + '&' + (value.endpointType ? lodLiveProfile.endpoints[value.endpointType] : lodLiveProfile.endpoints.all) + '&query=' + escape(LodLiveUtils.getSparqlConf('inverseSameAs', value, lodLiveProfile).replace(/\{URI\}/g, anUri));
         }
 
         $.ajax({
@@ -3294,12 +3295,12 @@
 
     $.each(lodLiveProfile.connection, function(key, value) {
 
-      var keySplit = key.split(",");
+      var keySplit = key.split(',');
       for (var a = 0; a < keySplit.length; a++) {
         if (SPARQLquery.indexOf(keySplit[a]) != -1) {
-          SPARQLquery = value.endpoint + "?" + (value.endpointType ? lodLiveProfile.endpoints[value.endpointType] : lodLiveProfile.endpoints.all) + "&query=" + escape(LodLiveUtils.getSparqlConf('findSubject', value, lodLiveProfile).replace(/\{CLASS\}/g, selectedClass).replace(/\{VALUE\}/g, selectedValue));
+          SPARQLquery = value.endpoint + '?' + (value.endpointType ? lodLiveProfile.endpoints[value.endpointType] : lodLiveProfile.endpoints.all) + '&query=' + escape(LodLiveUtils.getSparqlConf('findSubject', value, lodLiveProfile).replace(/\{CLASS\}/g, selectedClass).replace(/\{VALUE\}/g, selectedValue));
           if (value.proxy) {
-            SPARQLquery = value.proxy + "?endpoint=" + value.endpoint + "&" + (value.endpointType ? lodLiveProfile.endpoints[value.endpointType] : lodLiveProfile.endpoints.all) + "&query=" + escape(LodLiveUtils.getSparqlConf('findSubject', value, lodLiveProfile).replace(/\{CLASS\}/g, selectedClass).replace(/\{VALUE\}/g, selectedValue));
+            SPARQLquery = value.proxy + '?endpoint=' + value.endpoint + '&' + (value.endpointType ? lodLiveProfile.endpoints[value.endpointType] : lodLiveProfile.endpoints.all) + '&query=' + escape(LodLiveUtils.getSparqlConf('findSubject', value, lodLiveProfile).replace(/\{CLASS\}/g, selectedClass).replace(/\{VALUE\}/g, selectedValue));
           }
         }
       }
@@ -3348,7 +3349,7 @@
       x : x1,
       y : y1
     }).drawLine({
-      strokeStyle : "#fff",
+      strokeStyle : '#fff',
       strokeWidth : 1,
       strokeCap : 'bevel',
       x1 : x1 - 60,
@@ -3366,15 +3367,15 @@
     }
     label = $.trim(label).replace(/\n/g, ', ');
     canvas.drawText({// inserisco l'etichetta
-      fillStyle : "#606060",
-      strokeStyle : "#606060",
+      fillStyle : '#606060',
+      strokeStyle : '#606060',
       x : (x2bis + x1 + ((x1 + 60) > x2 ? -60 : +60)) / 2,
       y : (y1 + y1 - ((x1 + 60) > x2 ? 18 : -18)) / 2,
       text : label ,
-      align : "center",
+      align : 'center',
       strokeWidth : 0.01,
       fontSize : 11,
-      fontFamily : "'Open Sans',Verdana"
+      fontFamily : '"Open Sans",Verdana'
     }).restoreCanvas().restoreCanvas();
     //TODO:  why is this called twice?
 
@@ -3393,7 +3394,7 @@
     var boty = (y2 + Math.sin(angle2) * h) - 60 * Math.sin(lineangle);
 
     canvas.drawLine({
-      strokeStyle : "#fff",
+      strokeStyle : '#fff',
       strokeWidth : 1,
       x1 : fromx,
       y1 : fromy,
@@ -3401,7 +3402,7 @@
       y2 : boty
     });
     canvas.drawLine({
-      strokeStyle : "#fff",
+      strokeStyle : '#fff',
       strokeWidth : 1,
       x1 : fromx,
       y1 : fromy,

@@ -15,9 +15,9 @@ MarkLogicProfile.connection = {
       inverseSameAs : 'SELECT DISTINCT * WHERE {{?object <http://www.w3.org/2002/07/owl#sameAs> <{URI}> } UNION { ?object <http://www.w3.org/2004/02/skos/core#exactMatch> <{URI}>}}'
     },
     // endpoint : "http://localhost:8321/lodlive.xqy",
-    endpoint : "http://lodlive-ml1:8040/lodlive.xqy",
+    endpoint : 'http://lodlive-ml1:8040/lodlive.xqy',
     description : {
-      en : "MarkLogic LodLive"
+      en : 'MarkLogic LodLive'
     }
   }
 };
@@ -28,8 +28,8 @@ MarkLogicProfile.arrows = {
   'http://purl.org/dc/terms/isPartOf'      : 'isPartOf',
   'http://purl.org/dc/elements/1.1/type'   : 'isType',
   'http://www.w3.org/1999/02/22-rdf-syntax-ns#type' : 'isType',
-  "http://ieee.org/concept/coContrib"      : 'Contributor To',
-  "http://ieee.org/concept/hasAffiliation" : 'Has Affiliation',
+  'http://ieee.org/concept/coContrib'      : 'Contributor To',
+  'http://ieee.org/concept/hasAffiliation' : 'Has Affiliation',
 };
 
 // this is the default data configuration, this is important.  It informs LodLive how to construct queries and how to read the data that comes back
