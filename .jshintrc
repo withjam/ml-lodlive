@@ -12,9 +12,16 @@
   "unused": "vars",
   "strict": true,
   "trailing": true,
+  "maxerr": 200,
   "globals": {
     "angular": false,
     "google": false,
-    "$": false
+    "$": false,
+    "jQuery": false,
+    "console": false,
+    "alert": false,
+    "LodLiveUtils": false,
+    "escape": false,
+    "unescape": false
   }
 }

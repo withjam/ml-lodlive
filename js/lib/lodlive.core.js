@@ -1,4 +1,3 @@
-'use strict';
 /*
  *
  * lodLive 1.0
@@ -15,6 +14,7 @@
  */
 
 (function($) {
+  'use strict';
 
   var jwin = $(window), jbody = $(document.body);
 
@@ -198,6 +198,7 @@
 
   LodLive.prototype.controlPanel = function(action) {
     var inst = this, panel = inst.controlPanelDiv;
+    var start;
     if (this.debugOn) {
       start = new Date().getTime();
     }
@@ -282,6 +283,7 @@
           anUl.append('<li>&#160;</li>');
           anUl.append('<li class="reload"><span  class="spriteLegenda"></span>' + LodLiveUtils.lang('restart') + '</li>');
           anUl.children('.reload').click(function() {
+            // TODO: what is context supposed to be?
             context.lodlive('close');
           });
           anUl.children('li[data-value]').click(function() {
@@ -437,7 +439,7 @@
 
           } else if (panelChild.is('.images')) {
 
-            var imagePanel = panel2Contet.find('.lodlive-images-container');
+            var imagePanel = panel2Content.find('.lodlive-images-container');
 
             if (!imagePanel.length) {
 
@@ -495,6 +497,7 @@
   LodLive.prototype.composeQuery = function(resource, module, testURI) {
     var  url, res, endpoint, inst = this, lodLiveProfile = inst.options;
 
+    var start;
     if (inst.debugOn) {
       start = new Date().getTime();
     }
@@ -1059,7 +1062,7 @@
   };
 
   LodLive.prototype.autoExpand = function(obj) {
-    var inst = this, start;
+    var inst = this, start, box;
     if (inst.debugOn) {
       start = new Date().getTime();
     }
@@ -1075,6 +1078,7 @@
         }
 
         closed.each(function() {
+          // TODO: where do we find moreInfoOnThis? (lol)
           box = $(moreInfoOnThis);
           var aId = box.attr('relmd5');
 
@@ -1215,7 +1219,7 @@
         }
         inst.drawaLine(obj, newObj, propertyName);
       } else {
-        if (debugOn) {
+        if (inst.debugOn) {
           console.debug((new Date().getTime() - start) + '  addNewDoc 09 ');
         }
         inst.openDoc(rel, newObj, fromInverse);
@@ -1249,6 +1253,7 @@
         alert('Cannot Remove Only Box');
         return;
     }
+    var start;
     if (inst.debugOn) {
       start = new Date().getTime();
     }
@@ -1433,6 +1438,7 @@
 
   LodLive.prototype.addClick = function(obj, callback) {
     var inst = this;
+    var start;
     if (inst.debugOn) {
       start = new Date().getTime();
     }
@@ -1533,6 +1539,7 @@
 
   LodLive.prototype.parseRawResourceDoc = function(destBox, URI) {
     var inst = this;
+    var start;
     if (inst.debugOn) {
       start = new Date().getTime();
     }
@@ -1671,6 +1678,7 @@
           inst.formatDoc(docInfo, values, uris, bnodes, URI);
         },
         error : function(e, b, v) {
+          // TODO: where do we get destBox?
           destBox.html('');
           values = [{
             'http://system/msg' : 'Could not find document: ' + destBox.attr('rel')
@@ -1800,6 +1808,7 @@
   LodLive.prototype.formatDoc = function(destBox, values, uris, bnodes, URI) {
     var inst = this;
 
+    var start;
     if (inst.debugOn) {
       console.debug('formatDoc ' + 0);
       start = new Date().getTime();
@@ -2092,6 +2101,7 @@
   LodLive.prototype.resolveBnodes = function(val, URI, destBox, jContents) {
     var inst = this;
 
+    var start;
     if (inst.debugOn) {
       start = new Date().getTime();
     }
@@ -2157,6 +2167,7 @@
   //TODO: this doesn't need to be on the prototype since it's a stateless utility function - are the metrics necessary?
   LodLive.prototype.circleChords = function(radius, steps, centerX, centerY, breakAt, onlyElement) {
     var inst = this;
+    var start;
     if (inst.debugOn) {
       start = new Date().getTime();
     }
@@ -2189,6 +2200,7 @@
 
   LodLive.prototype.getJsonValue = function(map, key, defaultValue) {
     var inst = this;
+    var start;
     if (inst.debugOn) {
       start = new Date().getTime();
     }
@@ -2220,6 +2232,7 @@
   LodLive.prototype.getProperty = function(area, prop, context) {
     var inst = this, lodLiveProfile = inst.options;
 
+    var start;
     if (inst.debugOn) {
       start = new Date().getTime();
     }
@@ -2272,6 +2285,7 @@
   LodLive.prototype.format = function(destBox, values, uris, inverses) {
     var inst = this, classMap = inst.classMap, lodLiveProfile = inst.options;
 
+    var start;
     if (inst.debugOn) {
       start = new Date().getTime();
     }
@@ -2812,11 +2826,14 @@
 
   LodLive.prototype.openDoc = function(anUri, destBox, fromInverse) {
     var inst = this;
+    // assuming this based on other methods ...
+    var lodLiveProfile = inst.options;
 
     if (!anUri) {
       $.error('LodLive: no uri for openDoc');
     }
 
+    var start;
     if (inst.debugOn) {
       start = new Date().getTime();
     }
@@ -2838,6 +2855,7 @@
     var SPARQLquery = inst.composeQuery(anUri, 'documentUri');
 
     if (inst.doStats) {
+      // TODO: what is methods?
       methods.doStats(anUri);
     }
 
@@ -3014,6 +3032,10 @@
   LodLive.prototype.parseRawResource = function(destBox, resource, fromInverse) {
 
     var inst = this, values = [], uris = [], lodLiveProfile = inst.options;
+    var start;
+    if (inst.debugOn) {
+      start = new Date().getTime();
+    }
 
     if (lodLiveProfile['default']) {
       // attivo lo sparql interno basato su sesame
@@ -3136,6 +3158,7 @@
   LodLive.prototype.allClasses = function(SPARQLquery, destBox, destSelect, template) {
     var inst = this;
 
+    var start;
     if (inst.debugOn) {
       start = new Date().getTime();
     }
@@ -3179,6 +3202,7 @@
   LodLive.prototype.findInverseSameAs = function(anUri, counter, inverse, callback, tot) {
     var inst = this, lodLiveProfile = inst.options;
 
+    var start;
     if (inst.debugOn) {
       start = new Date().getTime();
     }
@@ -3289,6 +3313,7 @@
   LodLive.prototype.findSubject = function(SPARQLquery, selectedClass, selectedValue, destBox, destInput) {
     var inst = this, lodLiveProfile = inst.options;
 
+    var start;
     if (inst.debugOn) {
       start = new Date().getTime();
     }
@@ -3451,12 +3476,12 @@
         ele.data('lodlive-instance', ll);
         ll.init(options.firstUri); // pass in this element and the complete options
 
-      } else if (LodLive.prototype.hasOwnProperty(method) && ele.data('lodlive-instance')) {
+      } else if (LodLive.prototype.hasOwnProperty(options.method) && ele.data('lodlive-instance')) {
 
-        ll[method].apply(ll, method.args || []); // if calling a method with arguments, the options should contain a property named 'args';
+        ll[options.method].apply(ll, options.method.args || []); // if calling a method with arguments, the options should contain a property named 'args';
       } else {
 
-        jQuery.error('Method ' + method + ' does not exist on jQuery.lodlive');
+        jQuery.error('Method ' + options.method + ' does not exist on jQuery.lodlive');
 
       }
 
