@@ -1,7 +1,7 @@
 'use strict';
 var MarkLogicProfile = {};
 
-// LodLive will match connection by the base URL of the query used, so the key must match the URL 
+// LodLive will match connection by the base URL of the query used, so the key must match the URL
 MarkLogicProfile.connection = {
   // http matches all http requests, so this will be the only connection settings used
  'http:' : {
@@ -15,9 +15,9 @@ MarkLogicProfile.connection = {
       inverseSameAs : 'SELECT DISTINCT * WHERE {{?object <http://www.w3.org/2002/07/owl#sameAs> <{URI}> } UNION { ?object <http://www.w3.org/2004/02/skos/core#exactMatch> <{URI}>}}'
     },
     // endpoint : "http://localhost:8321/lodlive.xqy",
-    endpoint : "http://lodlive-ml1:8040/lodlive.xqy",
+    endpoint : 'http://lodlive-ml1:8040/lodlive.xqy',
     description : {
-      en : "MarkLogic LodLive"  
+      en : 'MarkLogic LodLive'
     }
   }
 };
@@ -28,8 +28,8 @@ MarkLogicProfile.arrows = {
   'http://purl.org/dc/terms/isPartOf'      : 'isPartOf',
   'http://purl.org/dc/elements/1.1/type'   : 'isType',
   'http://www.w3.org/1999/02/22-rdf-syntax-ns#type' : 'isType',
-  "http://ieee.org/concept/coContrib"      : 'Contributor To',
-  "http://ieee.org/concept/hasAffiliation" : 'Has Affiliation',
+  'http://ieee.org/concept/coContrib'      : 'Contributor To',
+  'http://ieee.org/concept/hasAffiliation' : 'Has Affiliation',
 };
 
 // this is the default data configuration, this is important.  It informs LodLive how to construct queries and how to read the data that comes back
@@ -59,8 +59,8 @@ MarkLogicProfile.UI = {
   nodeIcons: [
     { builtin: 'tools' },
     { builtin: 'docInfo' },
-    { 
-      icon: 'fa fa-thumb-tack', 
+    {
+      icon: 'fa fa-thumb-tack',
       title: 'Pin in SPARQL',
       handler: function(node, inst) {
         var icon = this, pinner = inst.container.find('.rsuite-pinner'), pos, to, uri = node.attr('rel');
@@ -78,7 +78,7 @@ MarkLogicProfile.UI = {
             url: inst.options.connection['http:'].endpoint + '?' + inst.options.endpoints.all + '&query=' +  encodeURIComponent(sparql),
             contentType: 'json',
             dataType: inst.getAjaxDataType(),
-            success: function(resp) { 
+            success: function(resp) {
               var b = resp.results.bindings;
               if (!b.length) {
                 resdiv.html('<div class="noresults">no matches</div>');
@@ -204,7 +204,7 @@ MarkLogicProfile.UI = {
     },
     'http://purl.org/d' : {
         color:'#04BFBF'
-    }    
+    }
   }
 };
 

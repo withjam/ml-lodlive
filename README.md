@@ -8,13 +8,13 @@ Dependencies
 
 Requires: jQuery > 1.9/2.0  (you must include this in your site if it's not in use already)
 
-Includes: jQuery.ui (for drag and drop interactions), jQuery.canvas (for drawing connecting lines)
+Includes: jQuery.canvas (for drawing connecting lines)
 
 
 Installation
 ============
 
-
+*TODO*
 
 
 Dataset
@@ -30,6 +30,7 @@ Apache 2.0
 Credits
 ===============
 
-Based on the [https://github.com/dvcama/LodLive "LodLive"] library 
+Based on the [LodLive](https://github.com/dvcama/LodLive) library
+
 [![Bitdeli Badge](https://d2weczhvl823v0.cloudfront.net/withjam/ml-lodlive/trend.png)](https://bitdeli.com/free "Bitdeli Badge")
 

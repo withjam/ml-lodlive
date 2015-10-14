@@ -1,7 +1,7 @@
 'use strict';
 var ExampleProfile = {};
 
-// LodLive will match connection by the base URL of the query used, so the key must match the URL 
+// LodLive will match connection by the base URL of the query used, so the key must match the URL
 ExampleProfile.connection = {
   // http matches all http requests, so this will be the only connection settings used
  'http:' : {
@@ -55,8 +55,8 @@ ExampleProfile.UI = {
   nodeIcons: [
     { builtin: 'tools' },
     { builtin: 'docInfo' },
-    { 
-      icon: 'fa fa-refresh', 
+    {
+      icon: 'fa fa-refresh',
       title: 'Randomize node color',
       handler: function(node, inst) {
         // http://www.paulirish.com/2009/random-hex-color-code-snippets/
