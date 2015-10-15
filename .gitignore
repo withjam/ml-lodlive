@@ -1,3 +1,4 @@
 *.project
 node_modules/
 ml-lodlive.tar.gz
+coverage
