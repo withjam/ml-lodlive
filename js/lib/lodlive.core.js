@@ -631,7 +631,6 @@
     $.jStorage.set('doAutoSameas', $.jStorage.get('doAutoSameas', true));
     $.jStorage.set('doCollectImages', $.jStorage.get('doCollectImages', true));
     $.jStorage.set('doDrawMap', $.jStorage.get('doDrawMap', true));
-    $.jStorage.set('showInfoConsole', $.jStorage.get('showInfoConsole', true));
     */
 
     var firstBox = $(this.boxTemplate);
@@ -943,155 +942,6 @@
 
   LodLive.prototype.close = function() {
     document.location = document.location.pathname; // remove the query string
-  };
-
-  //FIXME: replace globalInfoPanelMap
-  LodLive.prototype.queryConsole = function(action, toLog) {
-    var inst = this, id = inst.hashFunc(toLog.uriId), localId = inst.hashFunc(toLog.id), infoMap = inst.infoPanelMap, panel = infoMap[id];
-
-    switch (action) {
-      case 'init':
-        panel = inst.context.find('<div id="q' + id + '" class="lodlive-query-console"></div>');
-        infoMap[id] = panel;
-        inst.infoPanelMap = infoMap;
-        break;
-
-      case 'log':
-        if (panel && toLog) {
-
-          if (toLog.resource) {
-
-            panel.append('<h3 class="sprite"><span>' + toLog.resource + '</span><a class="sprite">&#160;</a></h3>');
-
-            panel.on('click', 'h3 a', function() {
-
-              inst.queryConsole('close', {
-                uriId : toLog.uriId
-              });
-            }).hover(function() {
-              $(this).setBackgroundPosition({
-                x : -641
-              });
-            }, function() {
-              $(this).setBackgroundPosition({
-                x : -611
-              });
-            });
-
-          }
-
-          if (toLog.title) {
-            var h4 = $('<h4 class="t' + localId + ' sprite"><span>' + toLog.title + '</span></h4>');
-            panel.append(h4);
-            h4.hover(function() {
-              h4.setBackgroundPosition({
-                y : -700
-              });
-            }, function() {
-              h4.setBackgroundPosition({
-                y : -650
-              });
-            });
-
-            h4.click(function() {
-
-              if (h4.data('show')) {
-
-                h4.data('show', false);
-                h4.setBackgroundPosition({
-                  x : -680
-                });
-                h4.removeClass('slideOpen');
-                h4.next('div').slideToggle();
-
-              } else {
-
-                h4.data('show', true);
-                h4.setBackgroundPosition({
-                  x : -1290
-                });
-                panel.find('.slideOpen').click();
-                h4.addClass('slideOpen');
-                h4.next('div').slideToggle();
-              }
-            });
-          }
-
-          if (toLog.text) {
-            var aDiv = $('<div><span><span class="contentArea">' + (toLog.text).replace(/</gi, '&lt;').replace(/>/gi, '&gt;') + '</span></span></div>');
-            var aEndpoint = $.trim(panel.find('h4.t' + localId).clone().find('strong').remove().end().text()); //TODO: this looks like it could be simplified
-
-            //FIXME: use regex to support http and https
-            if (aEndpoint.indexOf('http:') === 0) {
-
-              var aLink = $('<span class="linkArea sprite" title="' + LodLiveUtils.lang('executeThisQuery') + '"></span>');
-
-              aLink.click(function() {
-                window.open(aEndpoint + '?query=' + encodeURIComponent(toLog.text));
-              });
-
-              aLink.hover(function() {
-                aLink.setBackgroundPosition({
-                  x : -630
-                });
-              }, function() {
-                aLink.setBackgroundPosition({
-                  x : -610
-                });
-              });
-
-              aDiv.children('span').prepend(aLink);
-            }
-
-            aDiv.css({
-              opacity : 0.95
-            });
-
-            panel.append(aDiv);
-
-          }
-
-          if (toLog.error) {
-
-            panel.find('h4.t' + localId + ' > span').append('<strong style="float:right">' + LodLiveUtils.lang('endpointNotAvailable') + '</strong>');
-
-          }
-
-          // what is this?
-          if ( typeof toLog.founded == typeof 0) {
-
-            if (!toLog.founded) {
-
-              panel.find('h4.t' + localId + ' > span').append('<strong style="float:right">' + LodLiveUtils.lang('propsNotFound') + '</strong>');
-
-            } else {
-
-              panel.find('h4.t' + localId + ' > span').append('<strong style="float:right">' + toLog.founded + ' ' + LodLiveUtils.lang('propsFound') + ' </strong>');
-
-            }
-
-          }
-          infoMap[id] = panel;
-          globalInfoPanelMap = infoMap;
-
-        }
-        break;
-
-      case 'remove':
-        delete infoMap[id];
-        inst.infoPanelMap = infoMap;
-        break;
-
-      case 'show':
-        inst.context.append(panel); //TODO: why are we detaching and re-attaching?
-        break;
-
-      case 'close':
-        panel.detach();
-        break;
-
-    }
-
   };
 
   LodLive.prototype.updateMapPanel = function(panel) {
@@ -1556,9 +1406,6 @@
     inst.context.find('.lodlive-toolbox').remove(); // why remove and not hide?
 
     var id = obj.attr('id');
-    inst.queryConsole('remove', {
-      uriId : obj.attr('rel')
-    });
     inst.context.find('#line-' + id).clearCanvas();
 
     var generatedRev = inst.storeIds['rev' + id];
@@ -1702,9 +1549,7 @@
       title: 'More info',
       icon: 'fa fa-info-circle',
       handler: function(obj, inst) {
-        inst.queryConsole('show', {
-          uriId : obj.attr('rel')
-        });
+        // TODO: ?
       }
     },
     'rootNode': {
@@ -2961,15 +2806,6 @@
 
     var uris = [];
     var values = [];
-    if (inst.showInfoConsole) {
-      inst.queryConsole('init', {
-        uriId : anUri
-      });
-      inst.queryConsole('log', {
-        uriId : anUri,
-        resource : anUri
-      });
-    }
 
     if (inst.debugOn) console.log('composing query with anUri', anUri);
 
@@ -3018,13 +2854,7 @@
             }
 
           });
-          if (inst.showInfoConsole) {
-            inst.queryConsole('log', {
-              founded : conta,
-              id : SPARQLquery,
-              uriId : anUri
-            });
-          }
+
           if (inst.debugOn) {
             console.debug((new Date().getTime() - start) + '  openDoc eval uris & values');
           }
@@ -3053,14 +2883,6 @@
                   //TODO: replace evals
                   eval('inverses.push({\'' + value['property']['value'] + '\':\'' + (value.object.type == 'bnode' ? anUri + '~~' : '') + escape(value.object.value) + '\'})');
                 });
-
-                // if (inst.showInfoConsole) {
-                //   inst.queryConsole('log', {
-                //     founded : conta,
-                //     id : SPARQLquery,
-                //     uriId : anUri
-                //   });
-                // }
 
                 if (inst.debugOn) {
                   console.debug((new Date().getTime() - start) + '  openDoc inverse eval uris ');
@@ -3098,13 +2920,7 @@
                 // destBox.children('.box').html('');
 
                 inst.format(destBox.children('.box'), values, uris);
-                // if (inst.showInfoConsole) {
-                //   inst.queryConsole('log', {
-                //     error : 'error',
-                //     id : SPARQLquery,
-                //     uriId : anUri
-                //   });
-                // }
+
                 inst.addClick(destBox, fromInverse ? function() {
                   try {
                     $(fromInverse).click();
@@ -3180,16 +2996,6 @@
         inst.httpClient(SPARQLquery, {
           // TODO: is this necessary?
           timeout : 3000,
-          beforeSend : function() {
-            if (inst.showInfoConsole) {
-              inst.queryConsole('log', {
-                title : value.endpoint,
-                text : LodLiveUtils.getSparqlConf('inverseSameAs', value, lodLiveProfile).replace(/\{URI\}/g, anUri),
-                id : SPARQLquery,
-                uriId : anUri
-              });
-            }
-          },
           success : function(json) {
             json = json['results']['bindings'];
             var conta = 0;
@@ -3201,13 +3007,7 @@
                 eval('inverse.splice(1,0,{\'' + 'http://www.w3.org/2002/07/owl#sameAs' + '\':\'' + escape(value.object.value) + '\'})');
               }
             });
-            if (inst.showInfoConsole) {
-              inst.queryConsole('log', {
-                founded : conta,
-                id : SPARQLquery,
-                uriId : anUri
-              });
-            }
+
             counter++;
             //TODO:  why callbacks and not just return?
             if (counter < tot) {
@@ -3218,14 +3018,6 @@
           },
 
           error : function(e, b, v) {
-
-            if (inst.showInfoConsole) {
-              inst.queryConsole('log', {
-                error : 'error',
-                id : SPARQLquery,
-                uriId : anUri
-              });
-            }
             counter++;
             if (counter < tot) {
               inst.findInverseSameAs(anUri, counter, inverse, callback, tot);
