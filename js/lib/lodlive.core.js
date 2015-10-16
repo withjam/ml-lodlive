@@ -20,6 +20,46 @@
 
   var DEFAULT_BOX_TEMPLATE = '<div class="boxWrapper lodlive-node defaultBoxTemplate"><div class="ll-node-anchor"></div><div class="lodlive-node-label box sprite"></div></div>';
 
+  /* experimental HTTP Client component */
+
+  var httpClientFactory = {
+    create: function(accepts, dataType) {
+      // console.log('httpClientFactory create')
+      return function httpClient(url, params, callbacks) {
+        // console.log('httpClient')
+
+        // TODO: parse params arg
+        if (!callbacks) {
+          callbacks = params;
+          params = ''
+        }
+
+        var fullUrl = url + params;
+        var afterSend;
+
+        $.ajax({
+          url : fullUrl,
+          contentType: 'application/json',
+          accepts: accepts,
+          dataType: dataType,
+          // ugly
+          // timeout: callbacks.timeout || null,
+          beforeSend: function() {
+            if (callbacks.beforeSend) afterSend = callbacks.beforeSend();
+          },
+          success: function() {
+            if (afterSend) afterSend();
+            if (callbacks.success) callbacks.success.apply(null, arguments);
+          },
+          error: function() {
+            if (afterSend) afterSend();
+            if (callbacks.error) callbacks.error.apply(null, arguments);
+          }
+        });
+      }
+    }
+  };
+
   /** LodLiveProfile constructor - Not sure this is even necessary, a basic object should suffice - I don't think it adds any features or logic
     * @Class LodLiveProfile
     */
@@ -134,6 +174,11 @@
     if (this.UI.nodeHover) {
       this.msg = this.UI.nodeHover;
     }
+
+    this.httpClient = httpClientFactory.create(
+      this.options.connection['http:'].accepts,
+      this.getAjaxDataType()
+    );
 
     // container elements
     this.container = container.css('position', 'relative');
@@ -1562,11 +1607,7 @@
         });
       }
 
-      $.ajax({
-        url : url,
-        contentType: 'application/json',
-        accepts: inst.options.connection['http:'].accepts,
-        dataType: inst.getAjaxDataType(),
+      inst.httpClient(url, {
         beforeSend : function() {
           inst.context.append(destBox);
           destBox.html('<img style=\"margin-left:' + (destBox.width() / 2) + 'px;margin-top:147px\" src="img/ajax-loader-gray.gif"/>');
@@ -1653,11 +1694,7 @@
 
     } else {
 
-      $.ajax({
-        url : SPARQLquery,
-        contentType: 'application/json',
-        accepts: inst.options.connection['http:'].accepts,
-        dataType: inst.getAjaxDataType(),
+      inst.httpClient(SPARQLquery, {
         success : function(json) {
           json = json.results && json.results.bindings;
 
@@ -2107,11 +2144,7 @@
 
     var SPARQLquery = inst.composeQuery(val, 'bnode', URI);
 
-    $.ajax({
-      url : SPARQLquery,
-      contentType: 'application/json',
-      accepts: inst.options.connection['http:'].accepts,
-      dataType: inst.getAjaxDataType(),
+    inst.httpClient(SPARQLquery, {
       beforeSend : function() {
         destBox.find('span[class=bnode]').html('<img src="img/ajax-loader-black.gif"/>');
 
@@ -2888,12 +2921,7 @@
 
     } else {
 
-      //TODO: remove jQuery jsonp dependency
-      $.ajax({
-        url : SPARQLquery,
-        contentType: 'application/json',
-        accepts: inst.options.connection['http:'].accepts,
-        dataType: inst.getAjaxDataType(),
+      inst.httpClient(SPARQLquery, {
         beforeSend : function() {
           destBox.children('.box').html('<img style=\"margin-top:' + (destBox.children('.box').height() / 2 - 8) + 'px\" src="img/ajax-loader.gif"/>');
         },
@@ -2930,11 +2958,8 @@
             SPARQLquery = inst.composeQuery(anUri, 'inverse');
 
             var inverses = [];
-            $.ajax({
-              url : SPARQLquery,
-              contentType: 'application/json',
-              accepts: inst.options.connection['http:'].accepts,
-              dataType: inst.getAjaxDataType(),
+
+            inst.httpClient(SPARQLquery, {
               beforeSend : function() {
                 destBox.children('.box').html('<img style=\"margin-top:' + (destBox.children('.box').height() / 2 - 5) + 'px\" src="img/ajax-loader.gif"/>');
               },
@@ -3050,11 +3075,8 @@
           uriId : resource
         });
       }
-      $.ajax({
-        url : url,
-        contentType: 'application/json',
-        accepts: inst.options.connection['http:'].accepts,
-        dataType: inst.getAjaxDataType(),
+
+      inst.httpClient(url, {
         beforeSend : function() {
           destBox.children('.box').html('<img style=\"margin-top:' + (destBox.children('.box').height() / 2 - 8) + 'px\" src="img/ajax-loader.gif"/>');
         },
@@ -3168,11 +3190,8 @@
     //TODO: if composeQuery is a static utility function then this can be as well
     SPARQLquery = inst.composeQuery(SPARQLquery, 'allClasses');
     var classes = [];
-    $.ajax({
-      url : SPARQLquery,
-      contentType: 'application/json',
-      accepts: inst.options.connection['http:'].accepts,
-      dataType: inst.getAjaxDataType(),
+
+    inst.httpClient(SPARQLquery, {
       beforeSend : function() {
         destBox.html('<img src="img/ajax-loader.gif"/>');
       },
@@ -3239,12 +3258,9 @@
           SPARQLquery = value.proxy + '?endpoint=' + value.endpoint + '&' + (value.endpointType ? lodLiveProfile.endpoints[value.endpointType] : lodLiveProfile.endpoints.all) + '&query=' + escape(LodLiveUtils.getSparqlConf('inverseSameAs', value, lodLiveProfile).replace(/\{URI\}/g, anUri));
         }
 
-        $.ajax({
-          url : SPARQLquery,
+        inst.httpClient(SPARQLquery, {
+          // TODO: is this necessary?
           timeout : 3000,
-          contentType: 'application/json',
-          accepts: inst.options.connection['http:'].accepts,
-          dataType: inst.getAjaxDataType(),
           beforeSend : function() {
             if (inst.showInfoConsole) {
               inst.queryConsole('log', {
@@ -3336,11 +3352,7 @@
 
     var values = [];
 
-    $.ajax({
-      url : SPARQLquery,
-      contentType: 'application/json',
-      accepts: inst.options.connection['http:'].accepts,
-      dataType: inst.getAjaxDataType(),
+    inst.httpClient(SPARQLquery, {
       beforeSend : function() {
         destBox.html('<img src="img/ajax-loader.gif"/>');
       },
