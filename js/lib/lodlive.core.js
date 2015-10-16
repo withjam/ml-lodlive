@@ -135,6 +135,13 @@
       this.msg = this.UI.nodeHover;
     }
 
+    var httpClientFactory = require('../../src/http-client.js');
+
+    this.httpClient = httpClientFactory.create(
+      this.options.connection['http:'].accepts,
+      this.getAjaxDataType()
+    );
+
     // container elements
     this.container = container.css('position', 'relative');
     this.context = jQuery('<div class="lodlive-graph-context"></div>').appendTo(container).wrap('<div class="lodlive-graph-container"></div>');
@@ -890,11 +897,7 @@
         });
       }
 
-      $.ajax({
-        url : url,
-        contentType: 'application/json',
-        accepts: inst.options.connection['http:'].accepts,
-        dataType: inst.getAjaxDataType(),
+      inst.httpClient(url, {
         beforeSend : function() {
           inst.context.append(destBox);
           destBox.html('<img style=\"margin-left:' + (destBox.width() / 2) + 'px;margin-top:147px\" src="img/ajax-loader-gray.gif"/>');
@@ -981,11 +984,7 @@
 
     } else {
 
-      $.ajax({
-        url : SPARQLquery,
-        contentType: 'application/json',
-        accepts: inst.options.connection['http:'].accepts,
-        dataType: inst.getAjaxDataType(),
+      inst.httpClient(SPARQLquery, {
         success : function(json) {
           json = json.results && json.results.bindings;
 
@@ -1435,11 +1434,7 @@
 
     var SPARQLquery = inst.composeQuery(val, 'bnode', URI);
 
-    $.ajax({
-      url : SPARQLquery,
-      contentType: 'application/json',
-      accepts: inst.options.connection['http:'].accepts,
-      dataType: inst.getAjaxDataType(),
+    inst.httpClient(SPARQLquery, {
       beforeSend : function() {
         destBox.find('span[class=bnode]').html('<img src="img/ajax-loader-black.gif"/>');
 
@@ -2204,12 +2199,7 @@
 
     } else {
 
-      //TODO: remove jQuery jsonp dependency
-      $.ajax({
-        url : SPARQLquery,
-        contentType: 'application/json',
-        accepts: inst.options.connection['http:'].accepts,
-        dataType: inst.getAjaxDataType(),
+      inst.httpClient(SPARQLquery, {
         beforeSend : function() {
           destBox.children('.box').html('<img style=\"margin-top:' + (destBox.children('.box').height() / 2 - 8) + 'px\" src="img/ajax-loader.gif"/>');
         },
@@ -2240,11 +2230,8 @@
             SPARQLquery = inst.composeQuery(anUri, 'inverse');
 
             var inverses = [];
-            $.ajax({
-              url : SPARQLquery,
-              contentType: 'application/json',
-              accepts: inst.options.connection['http:'].accepts,
-              dataType: inst.getAjaxDataType(),
+
+            inst.httpClient(SPARQLquery, {
               beforeSend : function() {
                 destBox.children('.box').html('<img style=\"margin-top:' + (destBox.children('.box').height() / 2 - 5) + 'px\" src="img/ajax-loader.gif"/>');
               },
@@ -2344,11 +2331,8 @@
           uriId : resource
         });
       }
-      $.ajax({
-        url : url,
-        contentType: 'application/json',
-        accepts: inst.options.connection['http:'].accepts,
-        dataType: inst.getAjaxDataType(),
+
+      inst.httpClient(url, {
         beforeSend : function() {
           destBox.children('.box').html('<img style=\"margin-top:' + (destBox.children('.box').height() / 2 - 8) + 'px\" src="img/ajax-loader.gif"/>');
         },
@@ -2489,12 +2473,9 @@
           SPARQLquery = value.proxy + '?endpoint=' + value.endpoint + '&' + (value.endpointType ? lodLiveProfile.endpoints[value.endpointType] : lodLiveProfile.endpoints.all) + '&query=' + escape(LodLiveUtils.getSparqlConf('inverseSameAs', value, lodLiveProfile).replace(/\{URI\}/g, anUri));
         }
 
-        $.ajax({
-          url : SPARQLquery,
+        inst.httpClient(SPARQLquery, {
+          // TODO: is this necessary?
           timeout : 3000,
-          contentType: 'application/json',
-          accepts: inst.options.connection['http:'].accepts,
-          dataType: inst.getAjaxDataType(),
           success : function(json) {
             json = json['results']['bindings'];
             var conta = 0;
