@@ -159,6 +159,15 @@
       throw 'LodLive: no container found';
     }
     enableDrag(this);
+
+    var rendererFactory = require('../../src/renderer.js');
+
+    this.renderer = rendererFactory.create(
+      this.container,
+      this.context,
+      this.options.arrows,
+      this.refs
+    );
   }
 
   LodLive.prototype.init = function(firstUri) {
@@ -421,7 +430,7 @@
         } else {
           inst.openDoc(rel, newObj);
         }
-        inst.drawaLine(obj, newObj, propertyName);
+        inst.renderer.drawaLine(obj, newObj, propertyName);
       } else {
         if (inst.debugOn) {
           console.debug((new Date().getTime() - start) + '  addNewDoc 09 ');
@@ -433,7 +442,7 @@
         if (inst.debugOn) {
           console.debug((new Date().getTime() - start) + '  addNewDoc 10 ');
         }
-        inst.drawaLine(obj, newObj, propertyName);
+        inst.renderer.drawaLine(obj, newObj, propertyName);
       } else {
         if (inst.debugOn) {
           console.debug((new Date().getTime() - start) + '  addNewDoc 11 ');
@@ -540,7 +549,7 @@
         var objectIds = inst.refs.getObjectRefs(subjectId);
 
         objectIds.forEach(function(objectId) {
-          inst.drawaLine(
+          inst.renderer.drawaLine(
             inst.context.find('#' + subjectId),
             inst.context.find('#' + objectId)
           );
@@ -743,57 +752,6 @@
     });
   };
 
-  LodLive.prototype.processDraw = function(x1, y1, x2, y2, canvas, toId) {
-    var inst = this, start, lodLiveProfile = inst.options;
-
-    if (inst.debugOn) {
-      start = new Date().getTime();
-    }
-    // recupero il nome della proprieta'
-    var label = '';
-
-    var lineStyle = 'standardLine';
-    //FIXME:  don't use IDs
-    if (inst.context.find('#' + toId).length > 0) {
-
-      label = canvas.attr('data-propertyName-' + toId);
-
-      // TODO: literal regexp?
-      var labeArray = label.split('\|');
-
-      label = '\n';
-
-      for (var o = 0; o < labeArray.length; o++) {
-
-        if (lodLiveProfile.arrows[$.trim(labeArray[o])]) {
-          lineStyle = inst.options.arrows[$.trim(labeArray[o])] + 'Line';
-        }
-
-        var shortKey = utils.shortenKey(labeArray[o]);
-        var lastHash = shortKey.lastIndexOf('#');
-        var lastSlash = shortKey.lastIndexOf('/');
-
-        if (label.indexOf('\n' + shortKey + '\n') == -1) {
-          label += shortKey + '\n';
-        }
-      }
-    }
-    //if (lineStyle === 'standardLine') { it appears they all end up back here anyway
-    if (lineStyle !== 'isSameAsLine') {
-
-      inst.standardLine(label, x1, y1, x2, y2, canvas, toId);
-
-    } else {
-      //TODO: doesn't make sense to have these live in different files.  Should make line drawers an extensible interface
-      utils.customLines(inst.context, lineStyle, label, x1, y1, x2, y2, canvas, toId);
-    }
-
-    if (inst.debugOn) {
-      console.debug((new Date().getTime() - start) + '  processDraw ');
-    }
-
-  };
-
   LodLive.prototype.drawAllLines = function(obj) {
     var inst = this;
     var id = obj.attr('id');
@@ -808,7 +766,7 @@
     inst.context.find('#line-' + id).clearCanvas();
 
     objectIds.forEach(function(objectId) {
-      inst.drawaLine(
+      inst.renderer.drawaLine(
         obj,
         inst.context.find('#' + objectId)
       );
@@ -818,46 +776,12 @@
       var nestedObjectIds = inst.refs.getObjectRefs(subjectId);
 
       nestedObjectIds.forEach(function(objectId) {
-        inst.drawaLine(
+        inst.renderer.drawaLine(
           inst.context.find('#' + subjectId),
           inst.context.find('#' + objectId)
         );
       });
     });
-  };
-
-  LodLive.prototype.drawaLine = function(from, to, propertyName) {
-    var inst = this, start;
-    if (inst.debugOn) {
-      start = new Date().getTime();
-    }
-
-    var pos1 = from.position();
-    var pos2 = to.position();
-    var aCanvas = $('#line-' + from.attr('id'));
-    // console.debug(new Date().getTime()+'moving - '+(new Date())+" -
-    // #line-" +
-    // from.attr("id") + "-" + to.attr("id"))
-    if (aCanvas.length == 1) {
-      if (propertyName) {
-        aCanvas.attr('data-propertyName-' + to.attr('id'), propertyName);
-      }
-      inst.processDraw(pos1.left + from.width() / 2, pos1.top + from.height() / 2, pos2.left + to.width() / 2, pos2.top + to.height() / 2, aCanvas, to.attr('id'));
-    } else {
-      aCanvas = $('<canvas data-propertyName-' + to.attr('id') + '="' + propertyName + '" height="' + inst.context.height() + '" width="' + inst.context.width() + '" id="line-' + from.attr('id') + '"></canvas>');
-      inst.context.append(aCanvas);
-      aCanvas.css({
-        'position' : 'absolute',
-        'zIndex' : '0',
-        'top' : 0,
-        'left' : 0
-      });
-      inst.processDraw(pos1.left + from.width() / 2, pos1.top + from.height() / 2, pos2.left + to.width() / 2, pos2.top + to.height() / 2, aCanvas, to.attr('id'));
-    }
-
-    if (inst.debugOn) {
-      console.debug((new Date().getTime() - start) + '  drawaLine ');
-    }
   };
 
   LodLive.prototype.formatDoc = function(destBox, values, uris, bnodes, URI) {
@@ -2114,78 +2038,7 @@
   };
 
   //TODO: these line drawing methods don't care about the instance, they should live somewhere else
-  LodLive.prototype.standardLine = function(label, x1, y1, x2, y2, canvas, toId) {
 
-    // eseguo i calcoli e scrivo la riga di connessione tra i cerchi
-    var lineangle = (Math.atan2(y2 - y1, x2 - x1) * 180 / Math.PI) + 180;
-    var x2bis = x1 - Math.sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1)) + 60;
-    //canvas.detectPixelRatio();
-    canvas.rotateCanvas({
-      rotate : lineangle,
-      x : x1,
-      y : y1
-    }).drawLine({
-      strokeStyle : '#fff',
-      strokeWidth : 1,
-      strokeCap : 'bevel',
-      x1 : x1 - 60,
-      y1 : y1,
-      x2 : x2bis,
-      y2 : y1
-    });
-
-    if (lineangle > 90 && lineangle < 270) {
-      canvas.rotateCanvas({
-        rotate : 180,
-        x : (x2bis + x1) / 2,
-        y : (y1 + y1) / 2
-      });
-    }
-    label = $.trim(label).replace(/\n/g, ', ');
-    canvas.drawText({// inserisco l'etichetta
-      fillStyle : '#606060',
-      strokeStyle : '#606060',
-      x : (x2bis + x1 + ((x1 + 60) > x2 ? -60 : +60)) / 2,
-      y : (y1 + y1 - ((x1 + 60) > x2 ? 18 : -18)) / 2,
-      text : label ,
-      align : 'center',
-      strokeWidth : 0.01,
-      fontSize : 11,
-      fontFamily : '"Open Sans",Verdana'
-    }).restoreCanvas().restoreCanvas();
-    //TODO:  why is this called twice?
-
-    // ed inserisco la freccia per determinarne il verso della
-    // relazione
-    lineangle = Math.atan2(y2 - y1, x2 - x1);
-    var angle = 0.79;
-    var h = Math.abs(8 / Math.cos(angle));
-    var fromx = x2 - 60 * Math.cos(lineangle);
-    var fromy = y2 - 60 * Math.sin(lineangle);
-    var angle1 = lineangle + Math.PI + angle;
-    var topx = (x2 + Math.cos(angle1) * h) - 60 * Math.cos(lineangle);
-    var topy = (y2 + Math.sin(angle1) * h) - 60 * Math.sin(lineangle);
-    var angle2 = lineangle + Math.PI - angle;
-    var botx = (x2 + Math.cos(angle2) * h) - 60 * Math.cos(lineangle);
-    var boty = (y2 + Math.sin(angle2) * h) - 60 * Math.sin(lineangle);
-
-    canvas.drawLine({
-      strokeStyle : '#fff',
-      strokeWidth : 1,
-      x1 : fromx,
-      y1 : fromy,
-      x2 : botx,
-      y2 : boty
-    });
-    canvas.drawLine({
-      strokeStyle : '#fff',
-      strokeWidth : 1,
-      x1 : fromx,
-      y1 : fromy,
-      x2 : topx,
-      y2 : topy
-    });
-  };
 
   // expose our Constructor if not already present
   if (!window.LodLive) {
