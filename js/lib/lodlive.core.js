@@ -20,6 +20,33 @@
 
   var DEFAULT_BOX_TEMPLATE = '<div class="boxWrapper lodlive-node defaultBoxTemplate"><div class="ll-node-anchor"></div><div class="lodlive-node-label box sprite"></div></div>';
 
+  /* experimental renderer component */
+
+  var renderer = {
+    /**
+     * Render a loading glyph
+     *
+     * @param {Element} dest - a jQuery element
+     * @return {Function} a function to remove the loading glyph
+     */
+    loading: function loading(dest) {
+      var target = dest.children('.box');
+      var top = target.height() / 2 - 8;
+      target.html(
+        // TODO: issue #18
+        // '<i class="fa fa-spinner fa-spin" style="margin-top:' + top + 'px;margin-left: 5px"/></i>'
+        '<img style="margin-top:' + top + 'px" src="img/ajax-loader.gif"/>'
+      );
+
+      // console.log(dest)
+      // console.log('loading')
+
+      return function() {
+        target.html('');
+      };
+    }
+  };
+
   /* experimental HTTP Client component */
 
   var httpClientFactory = {
@@ -180,6 +207,9 @@
     if (this.UI.nodeHover) {
       this.msg = this.UI.nodeHover;
     }
+
+    // TODO: lookup options, call a factory ...
+    this.renderer = renderer;
 
     this.httpClient = httpClientFactory.create(
       this.options.connection['http:'].accepts,
@@ -1616,13 +1646,13 @@
       inst.httpClient(url, {
         beforeSend : function() {
           inst.context.append(destBox);
-          destBox.html('<img style=\"margin-left:' + (destBox.width() / 2) + 'px;margin-top:147px\" src="img/ajax-loader-gray.gif"/>');
-          destBox.css({
-            position : 'fixed',
-            right: 20,
-            top : 0
-          });
-          destBox.attr('data-top', destBox.position().top);
+          // destBox.html('<img style=\"margin-left:' + (destBox.width() / 2) + 'px;margin-top:147px\" src="img/ajax-loader-gray.gif"/>');
+          // destBox.css({ position : 'fixed', right: 20, top : 0  });
+          // destBox.attr('data-top', destBox.position().top);
+          if (inst.debugOn) {
+            console.debug('beforeSend parseRawResourceDoc')
+          }
+          return inst.renderer.loading(destBox);
         },
 
         success : function(json) {
@@ -1641,7 +1671,8 @@
                 }
           });
 
-          destBox.html('');
+          // s/b unnecessary
+          // destBox.html('');
           if (inst.debugOn) {
             console.debug(URI + '   ');
             console.debug(values);
@@ -1650,7 +1681,9 @@
           inst.formatDoc(destBox, values, uris, bnodes, URI);
         },
         error : function(e, b, v) {
-          destBox.html('');
+          // s/b unnecessary
+          // destBox.html('');
+
           // not sure what this says, should it be a configurable message?
           // RESOURCE NOT FOUND
           values = [{
@@ -1720,8 +1753,8 @@
           inst.formatDoc(docInfo, values, uris, bnodes, URI);
         },
         error : function(e, b, v) {
-          // TODO: where do we get destBox?
-          destBox.html('');
+          // TODO: this looks like a copy/paste error from other methods ... disabling
+          // destBox.html('');
           values = [{
             'http://system/msg' : 'Could not find document: ' + destBox.attr('rel')
           }];
@@ -2152,11 +2185,15 @@
 
     inst.httpClient(SPARQLquery, {
       beforeSend : function() {
-        destBox.find('span[class=bnode]').html('<img src="img/ajax-loader-black.gif"/>');
-
+        // destBox.find('span[class=bnode]').html('<img src="img/ajax-loader-black.gif"/>');
+        if (inst.debugOn) {
+          console.debug('beforeSend resolveBnodes')
+        }
+        return inst.renderer.loading( destBox.find('span[class=bnode]') );
       },
       success : function(json) {
-        destBox.find('span[class=bnode]').html('');
+        // s/b unnecessary
+        // destBox.find('span[class=bnode]').html('');
         json = json['results']['bindings'];
         $.each(json, function(key, value) {
           var shortKey = LodLive.shortenKey(value.property.value);
@@ -2194,8 +2231,8 @@
         });
       },
       error : function(e, b, v) {
-        destBox.find('span').html('');
-
+        // s/b unnecessary
+        // destBox.find('span[class=bnode]').html('');
       }
     });
 
@@ -2929,7 +2966,11 @@
 
       inst.httpClient(SPARQLquery, {
         beforeSend : function() {
-          destBox.children('.box').html('<img style=\"margin-top:' + (destBox.children('.box').height() / 2 - 8) + 'px\" src="img/ajax-loader.gif"/>');
+          // destBox.children('.box').html('<img style=\"margin-top:' + (destBox.children('.box').height() / 2 - 8) + 'px\" src="img/ajax-loader.gif"/>');
+          if (inst.debugOn) {
+            console.debug('beforeSend openDoc')
+          }
+          return inst.renderer.loading(destBox)
         },
         success : function(json) {
           // console.log('sparql success', json);
@@ -2959,7 +3000,10 @@
           if (inst.debugOn) {
             console.debug((new Date().getTime() - start) + '  openDoc eval uris & values');
           }
-          destBox.children('.box').html('');
+
+          // s/b unnecessary
+          // destBox.children('.box').html('');
+
           if (inst.doInverse) {
             SPARQLquery = inst.composeQuery(anUri, 'inverse');
 
@@ -2967,7 +3011,11 @@
 
             inst.httpClient(SPARQLquery, {
               beforeSend : function() {
-                destBox.children('.box').html('<img style=\"margin-top:' + (destBox.children('.box').height() / 2 - 5) + 'px\" src="img/ajax-loader.gif"/>');
+                // destBox.children('.box').html('<img id="1234" style=\"margin-top:' + (destBox.children('.box').height() / 2 - 5) + 'px\" src="img/ajax-loader.gif"/>');
+                if (inst.debugOn) {
+                  console.debug('beforeSend openDoc inverses')
+                }
+                return inst.renderer.loading(destBox);
               },
               success : function(json) {
                 json = json['results']['bindings'];
@@ -2993,7 +3041,9 @@
                 }
 
                 var callback = function() {
-                  destBox.children('.box').html('');
+                  // s/b unnecessary
+                  // destBox.children('.box').html('');
+
                   inst.format(destBox.children('.box'), values, uris, inverses);
                   inst.addClick(destBox, fromInverse ? function() {
                     //TODO: dynamic selector across the entire doc here seems strange, what are the the possibilities?  Is it only a DOM element?
@@ -3018,7 +3068,9 @@
 
               },
               error : function(e, b, v) {
-                destBox.children('.box').html('');
+                // s/b unnecessary
+                // destBox.children('.box').html('');
+
                 inst.format(destBox.children('.box'), values, uris);
                 if (inst.showInfoConsole) {
                   inst.queryConsole('log', {
@@ -3084,7 +3136,11 @@
 
       inst.httpClient(url, {
         beforeSend : function() {
-          destBox.children('.box').html('<img style=\"margin-top:' + (destBox.children('.box').height() / 2 - 8) + 'px\" src="img/ajax-loader.gif"/>');
+          // destBox.children('.box').html('<img style=\"margin-top:' + (destBox.children('.box').height() / 2 - 8) + 'px\" src="img/ajax-loader.gif"/>');
+          if (inst.debugOn) {
+            console.debug('beforeSend parseRawResource')
+          }
+          return inst.renderer.loading(destBox);
         },
         success : function(json) {
           json = json['results']['bindings'];
@@ -3108,7 +3164,9 @@
           var inverses = [];
           //FIXME:  here is a callback function, debug to see if it can simply wait for returns because I haven't noticed anything async in the chain
           var callback = function() {
-            destBox.children('.box').html('');
+            // s/b unnecessary
+            // destBox.children('.box').html('');
+
             inst.format(destBox.children('.box'), values, uris, inverses);
             inst.addClick(destBox, fromInverse ? function() {
               try {
@@ -3132,7 +3190,10 @@
         },
         error : function(e, j, k) {
           // console.debug(e);console.debug(j);
-          destBox.children('.box').html('');
+
+          // s/b unnecessary
+          // destBox.children('.box').html('');
+
           var inverses = [];
           if (fromInverse) {
             eval('uris.push({\'' + fromInverse.replace(/div\[data-property="([^"]*)"\].*/, '$1') + '\':\'' + fromInverse.replace(/.*\[rel="([^"]*)"\].*/, '$1') + '\'})');
@@ -3199,7 +3260,11 @@
 
     inst.httpClient(SPARQLquery, {
       beforeSend : function() {
-        destBox.html('<img src="img/ajax-loader.gif"/>');
+        // destBox.html('<img src="img/ajax-loader.gif"/>');
+        if (inst.debugOn) {
+          console.debug('beforeSend allClasses')
+        }
+        return inst.renderer.loading(destBox);
       },
       success : function(json) {
         destBox.html(LodLiveUtils.lang('choose'));
@@ -3360,10 +3425,16 @@
 
     inst.httpClient(SPARQLquery, {
       beforeSend : function() {
-        destBox.html('<img src="img/ajax-loader.gif"/>');
+        // destBox.html('<img src="img/ajax-loader.gif"/>');
+        if (inst.debugOn) {
+          console.debug('beforeSend findSubject')
+        }
+        return this.renderer.loading(destBox);
       },
       success : function(json) {
-        destBox.html('');
+        // s/b unnecessary
+        //destBox.html('');
+
         json = json.results && json.results.bindings;
         $.each(json, function(key, value) {
           values.push(json[key].subject.value);
