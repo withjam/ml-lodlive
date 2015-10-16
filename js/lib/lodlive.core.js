@@ -757,7 +757,7 @@
 
           if (toLog.error) {
 
-            panel.find('h4.t' + localId + ' > span').append('<strong style="float:right">' + LodLiveUtils.lang('enpointNotAvailable') + '</strong>');
+            panel.find('h4.t' + localId + ' > span').append('<strong style="float:right">' + LodLiveUtils.lang('endpointNotAvailable') + '</strong>');
 
           }
 
@@ -3147,10 +3147,10 @@
 
     destBox.children('.box').addClass('errorBox');
     destBox.children('.box').html('');
-    var jResult = $('<div class="boxTitle"><span>' + LodLiveUtils.lang('enpointNotAvailable') + '</span></div>');
+    var jResult = $('<div class="boxTitle"><span>' + LodLiveUtils.lang('endpointNotAvailable') + '</span></div>');
     destBox.children('.box').append(jResult);
     destBox.children('.box').hover(function() {
-      inst.msg(LodLiveUtils.lang('enpointNotAvailableOrSLow'), 'show', 'fullInfo', destBox.attr('data-endpoint'));
+      inst.msg(LodLiveUtils.lang('endpointNotAvailableOrSLow'), 'show', 'fullInfo', destBox.attr('data-endpoint'));
     }, function() {
       inst.msg(null, 'hide');
     });
