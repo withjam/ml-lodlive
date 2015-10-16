@@ -4,7 +4,7 @@
   overflow: scroll;
   background-color: #c7c7c7;
   font-family: 'Open Sans', Verdana, sans-serif;
-  font-size: 10px; 
+  font-size: 10px;
   position: relative;
 }
 
@@ -29,7 +29,7 @@
   width: 0;
 }
 
-.lodlive-node .lodlive-node-label{ 
+.lodlive-node .lodlive-node-label {
   width: 126px;
   height: 126px;
   position: relative;
@@ -133,7 +133,4 @@
   border-radius: 0 8px 0 0;
 }
 
-
 .lodlive-node.pinned .lodlive-node-label { border: dashed 1px white; background-color: #9CF; }
-
-

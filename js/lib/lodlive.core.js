@@ -104,7 +104,7 @@
     }
     instance.container.on('mouseup', cancelDrag);
     jQuery(document).on('keydown', function(event) {
-      console.log('keypress', event);
+      // console.log('keypress', event);
       if (event.keyCode === 27) {
         // esc key
         cancelDrag();
@@ -545,7 +545,6 @@
 
     // counterintuitive for this to be part of a 'compose' function, but leaving it for now
     if (endpoint && inst.showInfoConsole) {
-
       inst.queryConsole('log', {
         title : endpoint,
         text : res,
@@ -2142,10 +2141,13 @@
           }
           jContents.append(destBox);
           if (jContents.height() + 40 > $(window).height()) {
-            jContents.slimScroll({
-              height : $(window).height() - 40,
-              color : '#fff'
-            });
+
+            // TODO: slimScroll is no long included, and seems to be unnecessary
+            // jContents.slimScroll({
+            //   height : $(window).height() - 40,
+            //   color : '#fff'
+            // });
+
             jContents.parent().find('div.separLast').remove();
           } else {
             jContents.parent().append('<div class="separLast"></div>');
