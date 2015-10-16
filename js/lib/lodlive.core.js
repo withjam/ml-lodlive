@@ -3155,50 +3155,6 @@
 
   };
 
-  LodLive.prototype.allClasses = function(SPARQLquery, destBox, destSelect, template) {
-    var inst = this;
-
-    var start;
-    if (inst.debugOn) {
-      start = new Date().getTime();
-    }
-
-    //TODO: if composeQuery is a static utility function then this can be as well
-    SPARQLquery = inst.composeQuery(SPARQLquery, 'allClasses');
-    var classes = [];
-    $.ajax({
-      url : SPARQLquery,
-      contentType: 'application/json',
-      accepts: inst.options.connection['http:'].accepts,
-      dataType: inst.getAjaxDataType(),
-      beforeSend : function() {
-        destBox.html('<img src="img/ajax-loader.gif"/>');
-      },
-      success : function(json) {
-        destBox.html(LodLiveUtils.lang('choose'));
-        json = json.results && json.results.bindings;
-        $.each(json, function(key, value) {
-          var aclass = json[key].object.value;
-          if (aclass.indexOf('http://www.openlinksw.com/') == -1) {
-            aclass = aclass.replace(/http:\/\//, '');
-            classes.push(aclass);
-          }
-
-        });
-        for (var i = 0; i < classes.length; i++) {
-          destSelect.append(template.replace(/\{CONTENT\}/g, classes[i]));
-        }
-      },
-      error : function(e, b, v) {
-        destSelect.append(template.replace(/\{CONTENT\}/g, 'si Ã¨ verificato un errore'));
-      }
-    });
-
-    if (inst.debugOn) {
-      console.debug((new Date().getTime() - start) + '  allClasses');
-    }
-  };
-
   LodLive.prototype.findInverseSameAs = function(anUri, counter, inverse, callback, tot) {
     var inst = this, lodLiveProfile = inst.options;
 
@@ -3305,60 +3261,6 @@
     });
     if (inst.debugOn) {
       console.debug((new Date().getTime() - start) + '  findInverseSameAs');
-    }
-  };
-
-  /** Find the subject
-    */
-  LodLive.prototype.findSubject = function(SPARQLquery, selectedClass, selectedValue, destBox, destInput) {
-    var inst = this, lodLiveProfile = inst.options;
-
-    var start;
-    if (inst.debugOn) {
-      start = new Date().getTime();
-    }
-
-    $.each(lodLiveProfile.connection, function(key, value) {
-
-      var keySplit = key.split(',');
-      for (var a = 0; a < keySplit.length; a++) {
-        if (SPARQLquery.indexOf(keySplit[a]) != -1) {
-          SPARQLquery = value.endpoint + '?' + (value.endpointType ? lodLiveProfile.endpoints[value.endpointType] : lodLiveProfile.endpoints.all) + '&query=' + escape(LodLiveUtils.getSparqlConf('findSubject', value, lodLiveProfile).replace(/\{CLASS\}/g, selectedClass).replace(/\{VALUE\}/g, selectedValue));
-          if (value.proxy) {
-            SPARQLquery = value.proxy + '?endpoint=' + value.endpoint + '&' + (value.endpointType ? lodLiveProfile.endpoints[value.endpointType] : lodLiveProfile.endpoints.all) + '&query=' + escape(LodLiveUtils.getSparqlConf('findSubject', value, lodLiveProfile).replace(/\{CLASS\}/g, selectedClass).replace(/\{VALUE\}/g, selectedValue));
-          }
-        }
-      }
-
-    });
-
-    var values = [];
-
-    $.ajax({
-      url : SPARQLquery,
-      contentType: 'application/json',
-      accepts: inst.options.connection['http:'].accepts,
-      dataType: inst.getAjaxDataType(),
-      beforeSend : function() {
-        destBox.html('<img src="img/ajax-loader.gif"/>');
-      },
-      success : function(json) {
-        destBox.html('');
-        json = json.results && json.results.bindings;
-        $.each(json, function(key, value) {
-          values.push(json[key].subject.value);
-        });
-        for (var i = 0; i < values.length; i++) {
-          destInput.val(values[i]);
-        }
-      },
-      error : function(e, b, v) {
-        destBox.html('errore: ' + e);
-      }
-    });
-
-    if (inst.debugOn) {
-      console.debug((new Date().getTime() - start) + '  findSubject');
     }
   };
 
