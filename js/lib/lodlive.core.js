@@ -134,6 +134,11 @@
     }
   };
 
+  // temporary, for testing
+  if (!window.sparqlClientFactory) {
+    window.sparqlClientFactory = sparqlClientFactory;
+  }
+
   /** LodLiveProfile constructor - Not sure this is even necessary, a basic object should suffice - I don't think it adds any features or logic
     * @Class LodLiveProfile
     */
