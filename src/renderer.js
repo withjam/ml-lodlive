@@ -323,6 +323,20 @@ LodLiveRenderer.prototype.msg = function(msg, action, type, endpoint, inverse) {
   msgPanel.show();
 };
 
+LodLiveRenderer.prototype.errorBox = function(destBox) {
+  var renderer = this;
+
+  destBox.children('.box').addClass('errorBox');
+  destBox.children('.box').html('');
+  var jResult = $('<div class="boxTitle"><span>' + utils.lang('endpointNotAvailable') + '</span></div>');
+  destBox.children('.box').append(jResult);
+  destBox.children('.box').hover(function() {
+    renderer.msg(utils.lang('endpointNotAvailableOrSLow'), 'show', 'fullInfo', destBox.attr('data-endpoint'));
+  }, function() {
+    renderer.msg(null, 'hide');
+  });
+};
+
 var rendererFactory = {
   create: function(container, context, arrows, refs) {
     return new LodLiveRenderer(container, context, arrows, refs);
