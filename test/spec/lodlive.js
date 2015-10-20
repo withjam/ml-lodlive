@@ -28,7 +28,7 @@ describe('lodlive', function () {
   });
 
   it('should init', function () {
-    var centerBox = this.sandbox.spy(LodLive.prototype, 'centerBox');
+    var centerBox = this.sandbox.spy(LodLiveRenderer.prototype, 'centerBox');
     var openDoc = this.sandbox.spy(LodLive.prototype, 'openDoc');
 
     var firstUri = 'http://dbpedia.org/resource/Will_Smith';
@@ -53,7 +53,7 @@ describe('lodlive', function () {
   });
 
   it('should render sparql results', function () {
-    var centerBox = this.sandbox.spy(LodLive.prototype, 'centerBox');
+    var centerBox = this.sandbox.spy(LodLiveRenderer.prototype, 'centerBox');
     var openDoc = this.sandbox.spy(LodLive.prototype, 'openDoc');
     var format = this.sandbox.spy(LodLive.prototype, 'format');
     var addNewDoc = this.sandbox.spy(LodLive.prototype, 'addNewDoc');

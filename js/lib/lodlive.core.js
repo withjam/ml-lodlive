@@ -52,6 +52,42 @@
   };
 
   /**
+   * Centers the initial box (for firstUri)
+   */
+  LodLiveRenderer.prototype.centerBox = function(aBox) {
+    var renderer = this;
+    var ch = renderer.context.height();
+    var cw = renderer.context.width();
+
+    var bw = aBox.width() || 65;
+    var bh = aBox.height() || 65;
+
+    var start;
+
+    var top = (ch - 65) / 2 + (renderer.context.scrollTop() || 0);
+    var left = (cw - 65) / 2 + (renderer.context.scrollLeft() || 0);
+    var props = {
+      position : 'absolute',
+      left : left,
+      top : top,
+      opacity: 0
+    };
+
+    //console.log('centering top: %s, left: %s', top, left);
+
+    //FIXME: we don't want to assume we scroll the entire window here, since we could be just a portion of the screen or have multiples
+    renderer.context.parent().scrollTop(ch / 2 - renderer.context.parent().height() / 2 + 60);
+    renderer.context.parent().scrollLeft(cw / 2 - renderer.context.parent().width() / 2 + 60);
+
+    // console.log(inst.context.parent().scrollTop());
+
+    //window.scrollBy(cw / 2 - jwin.width() / 2 + 25, ch / 2 - jwin.height() / 2 + 65);
+
+    aBox.css(props);
+    aBox.animate({ opacity: 1}, 1000);
+  };
+
+  /**
    * Draws a line
    */
   LodLiveRenderer.prototype.drawaLine = function(from, to, propertyName) {
@@ -367,6 +403,11 @@
     }
   };
 
+  // temporary, for testing
+  if (!window.LodLiveRenderer) {
+    window.LodLiveRenderer = LodLiveRenderer;
+  }
+
   /* experimental HTTP Client component */
 
   var httpClientFactory = {
@@ -638,7 +679,9 @@
     this.doDrawMap = false;
 
     var firstBox = $(this.boxTemplate);
-    this.centerBox(firstBox);
+
+    this.renderer.centerBox(firstBox);
+
     firstBox.attr('id', this.hashFunc(firstUri));
     firstBox.attr('rel', firstUri);
     firstBox.css('zIndex',1);
@@ -653,38 +696,6 @@
     this.openDoc(firstUri, firstBox);
 
     this.renderer.msg('', 'init');
-  };
-
-  LodLive.prototype.centerBox = function(aBox) {
-    var inst = this, ch = inst.context.height(), cw = inst.context.width(), bw = aBox.width() || 65, bh = aBox.height() || 65, start;
-    if (inst.debugOn) {
-      start = new Date().getTime();
-    }
-
-    var top = (ch - 65) / 2 + (inst.context.scrollTop() || 0);
-    var left = (cw - 65) / 2 + (inst.context.scrollLeft() || 0);
-    var props = {
-      position : 'absolute',
-      left : left,
-      top : top,
-      opacity: 0
-    };
-
-    //console.log('centering top: %s, left: %s', top, left);
-
-    //FIXME: we don't want to assume we scroll the entire window here, since we could be just a portion of the screen or have multiples
-    inst.context.parent().scrollTop(ch / 2 - inst.context.parent().height() / 2 + 60);
-    inst.context.parent().scrollLeft(cw / 2 - inst.context.parent().width() / 2 + 60);
-    console.log(inst.context.parent().scrollTop());
-    //window.scrollBy(cw / 2 - jwin.width() / 2 + 25, ch / 2 - jwin.height() / 2 + 65);
-    aBox.css(props);
-
-      aBox.animate({ opacity: 1}, 1000);
-
-
-    if (inst.debugOn) {
-      console.debug((new Date().getTime() - start) + '  centerBox ');
-    }
   };
 
   LodLive.prototype.autoExpand = function(obj) {
