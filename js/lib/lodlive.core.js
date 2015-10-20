@@ -346,6 +346,21 @@
 
   };
 
+  LodLiveRenderer.prototype.errorBox = function(destBox) {
+    var renderer = this;
+
+    destBox.children('.box').addClass('errorBox');
+    destBox.children('.box').html('');
+    var jResult = $('<div class="boxTitle"><span>' + LodLiveUtils.lang('endpointNotAvailable') + '</span></div>');
+    destBox.children('.box').append(jResult);
+    destBox.children('.box').hover(function() {
+      renderer.msg(LodLiveUtils.lang('endpointNotAvailableOrSLow'), 'show', 'fullInfo', destBox.attr('data-endpoint'));
+    }, function() {
+      renderer.msg(null, 'hide');
+    });
+
+  };
+
   var rendererFactory = {
     create: function(container, context, arrows) {
       return new LodLiveRenderer(container, context, arrows);
@@ -3115,28 +3130,13 @@
           }
         },
         error : function(e, b, v) {
-          inst.errorBox(destBox);
+          inst.renderer.errorBox(destBox);
         }
       });
 
     if (inst.debugOn) {
       console.debug((new Date().getTime() - start) + '  openDoc');
     }
-  };
-
-  LodLive.prototype.errorBox = function(destBox) {
-    var inst = this;
-
-    destBox.children('.box').addClass('errorBox');
-    destBox.children('.box').html('');
-    var jResult = $('<div class="boxTitle"><span>' + LodLiveUtils.lang('endpointNotAvailable') + '</span></div>');
-    destBox.children('.box').append(jResult);
-    destBox.children('.box').hover(function() {
-      inst.renderer.msg(LodLiveUtils.lang('endpointNotAvailableOrSLow'), 'show', 'fullInfo', destBox.attr('data-endpoint'));
-    }, function() {
-      inst.renderer.msg(null, 'hide');
-    });
-
   };
 
   LodLive.prototype.findInverseSameAs = function(anUri, counter, inverse, callback, tot) {
