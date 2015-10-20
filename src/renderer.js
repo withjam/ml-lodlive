@@ -268,6 +268,61 @@ LodLiveRenderer.prototype.customLines = function(context, method) {
   }
 };
 
+LodLiveRenderer.prototype.msg = function(msg, action, type, endpoint, inverse) {
+  var renderer = this;
+  var msgPanel = renderer.container.find('.lodlive-message-container')
+  var msgs;
+
+  if (!msg) msg = '';
+
+  switch(action) {
+    case 'init':
+      if (!msgPanel.length) {
+        msgPanel = $('<div class="lodlive-message-container"></div>');
+        renderer.container.append(msgPanel);
+      }
+      break;
+
+    default:
+      msgPanel.hide();
+  }
+
+  msgPanel.empty();
+  msg = msg.replace(/http:\/\/.+~~/g, '');
+  msg = msg.replace(/nodeID:\/\/.+~~/g, '');
+  msg = msg.replace(/_:\/\/.+~~/g, '');
+  msg = utils.breakLines(msg);
+  msg = msg.replace(/\|/g, '<br />');
+
+  msgs = msg.split(' \n ');
+
+  if (type === 'fullInfo') {
+    msgPanel.append('<div class="endpoint">' + endpoint + '</div>');
+    // why 2?
+    if (msgs.length === 2) {
+      msgPanel.append('<div class="from upperline">' + (msgs[0].length > 200 ? msgs[0].substring(0, 200) + '...' : msgs[0]) + '</div>');
+      msgPanel.append('<div class="from upperline">'+ msgs[1] + '</div>');
+    } else {
+      msgPanel.append('<div class="from upperline">' + msgs[0] + '</div>');
+    }
+  } else {
+    if (msgs.length === 2) {
+      msgPanel.append('<div class="from">' + msgs[0] + '</div>');
+      if (inverse) {
+        msgPanel.append('<div class="separ inverse sprite"></div>');
+      } else {
+        msgPanel.append('<div class="separ sprite"></div>');
+      }
+
+      msgPanel.append('<div class="from">' + msgs[1] + '</div>');
+    } else {
+      msgPanel.append('<div class="from">' + msgs[0] + '</div>');
+    }
+  }
+
+  msgPanel.show();
+};
+
 var rendererFactory = {
   create: function(container, context, arrows, refs) {
     return new LodLiveRenderer(container, context, arrows, refs);
