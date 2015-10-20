@@ -290,6 +290,62 @@
     }
   };
 
+  LodLiveRenderer.prototype.msg = function(msg, action, type, endpoint, inverse) {
+    var renderer = this;
+    var msgPanel = renderer.container.find('.lodlive-message-container')
+    var msgs;
+
+    if (!msg) msg = '';
+
+    switch(action) {
+      case 'init':
+        if (!msgPanel.length) {
+          msgPanel = $('<div class="lodlive-message-container"></div>');
+          renderer.container.append(msgPanel);
+        }
+        break;
+
+      default:
+        msgPanel.hide();
+    }
+
+    msgPanel.empty();
+    msg = msg.replace(/http:\/\/.+~~/g, '');
+    msg = msg.replace(/nodeID:\/\/.+~~/g, '');
+    msg = msg.replace(/_:\/\/.+~~/g, '');
+    msg = LodLiveUtils.breakLines(msg);
+    msg = msg.replace(/\|/g, '<br />');
+
+    msgs = msg.split(' \n ');
+
+    if (type === 'fullInfo') {
+      msgPanel.append('<div class="endpoint">' + endpoint + '</div>');
+      // why 2?
+      if (msgs.length === 2) {
+        msgPanel.append('<div class="from upperline">' + (msgs[0].length > 200 ? msgs[0].substring(0, 200) + '...' : msgs[0]) + '</div>');
+        msgPanel.append('<div class="from upperline">'+ msgs[1] + '</div>');
+      } else {
+        msgPanel.append('<div class="from upperline">' + msgs[0] + '</div>');
+      }
+    } else {
+      if (msgs.length === 2) {
+        msgPanel.append('<div class="from">' + msgs[0] + '</div>');
+        if (inverse) {
+          msgPanel.append('<div class="separ inverse sprite"></div>');
+        } else {
+          msgPanel.append('<div class="separ sprite"></div>');
+        }
+
+        msgPanel.append('<div class="from">' + msgs[1] + '</div>');
+      } else {
+        msgPanel.append('<div class="from">' + msgs[0] + '</div>');
+      }
+    }
+
+    msgPanel.show();
+
+  };
+
   var rendererFactory = {
     create: function(container, context, arrows) {
       return new LodLiveRenderer(container, context, arrows);
@@ -579,7 +635,7 @@
     this.openDoc(firstUri, firstBox);
 
     this.controlPanel('init');
-    this.msg('', 'init');
+    this.renderer.msg('', 'init');
 
   };
 
@@ -872,59 +928,6 @@
 
   LodLive.prototype.close = function() {
     document.location = document.location.pathname; // remove the query string
-  };
-
-  LodLive.prototype.msg = function(msg, action, type, endpoint, inverse) {
-    // area dei messaggi
-    var inst = this, msgPanel = inst.container.find('.lodlive-message-container'), msgs;
-    if (!msg) msg = '';
-    switch(action) {
-
-      case 'init':
-        if (!msgPanel.length) {
-          msgPanel = $('<div class="lodlive-message-container"></div>');
-          inst.container.append(msgPanel);
-        }
-        break;
-
-      default:
-        msgPanel.hide();
-    }
-    msgPanel.empty();
-    msg = msg.replace(/http:\/\/.+~~/g, '');
-    msg = msg.replace(/nodeID:\/\/.+~~/g, '');
-    msg = msg.replace(/_:\/\/.+~~/g, '');
-    msg = LodLiveUtils.breakLines(msg);
-    msg = msg.replace(/\|/g, '<br />');
-
-    msgs = msg.split(' \n ');
-
-    if (type === 'fullInfo') {
-      msgPanel.append('<div class="endpoint">' + endpoint + '</div>');
-      // why 2?
-      if (msgs.length === 2) {
-        msgPanel.append('<div class="from upperline">' + (msgs[0].length > 200 ? msgs[0].substring(0, 200) + '...' : msgs[0]) + '</div>');
-        msgPanel.append('<div class="from upperline">'+ msgs[1] + '</div>');
-      } else {
-        msgPanel.append('<div class="from upperline">' + msgs[0] + '</div>');
-      }
-    } else {
-      if (msgs.length === 2) {
-        msgPanel.append('<div class="from">' + msgs[0] + '</div>');
-        if (inverse) {
-          msgPanel.append('<div class="separ inverse sprite"></div>');
-        } else {
-          msgPanel.append('<div class="separ sprite"></div>');
-        }
-
-        msgPanel.append('<div class="from">' + msgs[1] + '</div>');
-      } else {
-        msgPanel.append('<div class="from">' + msgs[0] + '</div>');
-      }
-    }
-
-    msgPanel.show();
-
   };
 
   //FIXME: replace globalInfoPanelMap
@@ -1733,9 +1736,9 @@
       });
 
       box.hover(function() {
-        inst.msg(box.data('title'), 'show', null, null, box.is('.inverse'));
+        inst.renderer.msg(box.data('title'), 'show', null, null, box.is('.inverse'));
       }, function() {
-        inst.msg(null, 'hide');
+        inst.renderer.msg(null, 'hide');
       });
     });
 
@@ -1764,9 +1767,9 @@
       });
 
       box.hover(function() {
-        inst.msg(box.attr('data-title'), 'show', null, null, box.is('.inverse'));
+        inst.renderer.msg(box.attr('data-title'), 'show', null, null, box.is('.inverse'));
       }, function() {
-        inst.msg(null, 'hide');
+        inst.renderer.msg(null, 'hide');
       });
     });
 
@@ -2028,9 +2031,9 @@
       jSection.find('label').each(function() {
         var lbl = $(this);
         lbl.hover(function() {
-          inst.msg(lbl.attr('data-title'), 'show');
+          inst.renderer.msg(lbl.attr('data-title'), 'show');
         }, function() {
-          inst.msg(null, 'hide');
+          inst.renderer.msg(null, 'hide');
         });
       });
 
@@ -2056,9 +2059,9 @@
       var jWebLinkResult = $(webLinkResult);
       jWebLinkResult.find('a').each(function() {
         $(this).hover(function() {
-          inst.msg($(this).attr('data-title'), 'show');
+          inst.renderer.msg($(this).attr('data-title'), 'show');
         }, function() {
-          inst.msg(null, 'hide');
+          inst.renderer.msg(null, 'hide');
         });
       });
       jContents.append(jWebLinkResult);
@@ -2079,9 +2082,9 @@
                 var jSection = $('<div class="section"><label data-title="' + akey + '">' + shortKey + '</label><div>' + unescape(value[akey]) + '</div></div>');
                 jSection.find('label').each(function() {
                   $(this).hover(function() {
-                    inst.msg($(this).attr('data-title'), 'show');
+                    inst.renderer.msg($(this).attr('data-title'), 'show');
                   }, function() {
-                    inst.msg(null, 'hide');
+                    inst.renderer.msg(null, 'hide');
                   });
                 });
                 jContents.append(jSection);
@@ -2112,9 +2115,9 @@
             var jSection = $('<div class="section"><label data-title="' + akey + '">' + shortKey + '</label><div>' + unescape(value[akey]) + '</div></div>');
             jSection.find('label').each(function() {
               $(this).hover(function() {
-                inst.msg($(this).attr('data-title'), 'show');
+                inst.renderer.msg($(this).attr('data-title'), 'show');
               }, function() {
-                inst.msg(null, 'hide');
+                inst.renderer.msg(null, 'hide');
               });
             });
             jContents.append(jSection);
@@ -2134,9 +2137,9 @@
           var jBnode = $('<div class="section"><label data-title="' + akey + '">' + shortKey + '</label><span class="bnode"></span></div><div class="separ sprite"></div>');
           jBnode.find('label').each(function() {
             $(this).hover(function() {
-              inst.msg($(this).attr('data-title'), 'show');
+              inst.renderer.msg($(this).attr('data-title'), 'show');
             }, function() {
-              inst.msg(null, 'hide');
+              inst.renderer.msg(null, 'hide');
             });
           });
           inst.resolveBnodes(unescape(value[akey]), URI, jBnode, jContents);
@@ -2149,9 +2152,9 @@
       var jSection = $('<div class="section"><label data-title="' + LodLiveUtils.lang('resourceMissingDoc') + '"></label><div>' + LodLiveUtils.lang('resourceMissingDoc') + '</div></div><div class="separ sprite"></div>');
       jSection.find('label').each(function() {
         $(this).hover(function() {
-          inst.msg($(this).attr('data-title'), 'show');
+          inst.renderer.msg($(this).attr('data-title'), 'show');
         }, function() {
-          inst.msg(null, 'hide');
+          inst.renderer.msg(null, 'hide');
         });
       });
       jContents.append(jSection);
@@ -2230,9 +2233,9 @@
             var jBnode = $('<span><label data-title="' + value.property.value + '"> / ' + shortKey + '</label><span class="bnode"></span></span>');
             jBnode.find('label').each(function() {
               $(this).hover(function() {
-                inst.msg($(this).attr('data-title'), 'show');
+                inst.renderer.msg($(this).attr('data-title'), 'show');
               }, function() {
-                inst.msg(null, 'hide');
+                inst.renderer.msg(null, 'hide');
               });
             });
             destBox.find('span[class=bnode]').attr('class', '').append(jBnode);
@@ -2512,9 +2515,9 @@
     destBox.hover(function() {
         var msgTitle = jResult.text();
         console.log('destbox hover title', msgTitle);
-      inst.msg(msgTitle, 'show', 'fullInfo', containerBox.attr('data-endpoint'));
+      inst.renderer.msg(msgTitle, 'show', 'fullInfo', containerBox.attr('data-endpoint'));
     }, function() {
-      inst.msg(null, 'hide');
+      inst.renderer.msg(null, 'hide');
     });
 
     // calcolo le uri e le url dei documenti correlati
@@ -3129,9 +3132,9 @@
     var jResult = $('<div class="boxTitle"><span>' + LodLiveUtils.lang('endpointNotAvailable') + '</span></div>');
     destBox.children('.box').append(jResult);
     destBox.children('.box').hover(function() {
-      inst.msg(LodLiveUtils.lang('endpointNotAvailableOrSLow'), 'show', 'fullInfo', destBox.attr('data-endpoint'));
+      inst.renderer.msg(LodLiveUtils.lang('endpointNotAvailableOrSLow'), 'show', 'fullInfo', destBox.attr('data-endpoint'));
     }, function() {
-      inst.msg(null, 'hide');
+      inst.renderer.msg(null, 'hide');
     });
 
   };
