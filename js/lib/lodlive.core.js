@@ -166,6 +166,7 @@
       this.container,
       this.context,
       this.options.arrows,
+      this.options.UI.tools,
       this.refs
     );
   }
@@ -479,57 +480,6 @@
     }
   };
 
-  var _builtins = {
-    'expand': {
-      title: 'Expand all',
-      icon: 'fa fa-arrows-alt',
-      handler: function(obj, inst) {
-        var idx = 0;
-        var elements = obj.find('.relatedBox:visible');
-        var totalElements = elements.length;
-        var onTo = function() {
-          var elem= elements.eq(idx++);
-          if (elem.length) {
-            elem.click();
-          }
-          if (idx < totalElements) {
-            window.setTimeout(onTo, 120);
-          }
-        };
-        window.setTimeout(onTo, 120);
-      }
-    },
-    'info': {
-      title: 'More info',
-      icon: 'fa fa-info-circle',
-      handler: function(obj, inst) {
-        // TODO: ?
-      }
-    },
-    'rootNode': {
-      title: 'Make root node',
-      icon: 'fa fa-dot-circle-o',
-      handler: function(obj, instance) {
-        instance.context.empty();
-        instance.init(obj.attr('rel'));
-      }
-    },
-    'remove': {
-      title: 'Remove this node',
-      icon: 'fa fa-trash',
-      handler: function(obj, inst) {
-        inst.removeDoc(obj);
-      }
-    },
-    'openPage': {
-      title: 'Open in another page',
-      icon: 'fa fa-external-link',
-      handler: function(obj, inst) {
-        window.open(obj.attr('rel'));
-      }
-    }
-  };
-
   LodLive.prototype.addClick = function(obj, callback) {
     var inst = this;
     var start;
@@ -597,7 +547,7 @@
       } else {
         switch(rel) {
           case 'docInfo':  inst.docInfo(obj); break;
-          case 'tools': inst.generateTools(el, obj).fadeToggle('fast'); break;
+          case 'tools': inst.renderer.generateTools(el, obj, inst).fadeToggle('fast'); break;
         }
       }
     });
@@ -610,25 +560,6 @@
     if (inst.debugOn) {
       console.debug((new Date().getTime() - start) + '  addClick ');
     }
-  };
-
-  LodLive.prototype.generateTools = function(container, obj) {
-    var inst = this, tools = container.find('.lodlive-toolbox');
-    if (!tools.length) {
-      tools = $('<div class="lodlive-toolbox"></div>').hide();
-      jQuery.each(inst.UI.tools, function() {
-        var toolConfig = this, t;
-        if (toolConfig.builtin) {
-          toolConfig = _builtins[toolConfig.builtin];
-        }
-        if (!toolConfig) return;
-        t = jQuery('<div class="innerActionBox" title="' + utils.lang(toolConfig.title) + '"><span class="' + toolConfig.icon + '"></span></div>');
-        t.appendTo(tools).on('click', function() { toolConfig.handler.call($(this), obj, inst); });
-      });
-      var toolWrapper = $('<div class=\"lodlive-toolbox-wrapper\"></div>').append(tools);
-      container.append(toolWrapper);
-    }
-    return tools;
   };
 
   /**
