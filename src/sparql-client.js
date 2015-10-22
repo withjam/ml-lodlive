@@ -14,8 +14,57 @@ var sparqlClientFactory = {
       return pattern.replace(/\{URI\}/ig, iri.replace(/^.*~~/, ''));
     }
 
-    return function sparqlClient(axis, iri, callbacks) {
-      return httpClient({ query: getQuery(axis, iri) }, callbacks);
+    function parseResults(bindings) {
+      var info = { uris: [], bnodes: [], values: [] };
+
+      $.each(bindings, function(key, value) {
+        var newVal = {};
+        newVal[value.property.value] = value.object.value;
+        if (value.object.type === 'uri') {
+          info.uris.push(newVal);
+        } else if (value.object.type === 'bnode') {
+          info.bnodes.push(newVal);
+        } else {
+          info.values.push(newVal);
+        }
+      });
+
+      return info;
+    }
+
+    return {
+      document: function(iri, callbacks) {
+        var axis = 'document';
+        var params = { query: getQuery(axis, iri) };
+
+        return httpClient(params, {
+          beforeSend: callbacks.beforeSend,
+          error: callbacks.error,
+          success : function(json) {
+            var info;
+
+            if ( !(json && json.results && json.results.bindings) ) {
+              console.error(json);
+              return callbacks.error(new Error('malformed results'));
+            }
+
+            info = parseResults(json.results.bindings);
+            callbacks.success(info);
+          }
+        });
+      },
+      bnode: function(iri, callbacks) {
+        var axis = 'bnode';
+        return httpClient({ query: getQuery(axis, iri) }, callbacks);
+      },
+      documentUri: function(iri, callbacks) {
+        var axis = 'documentUri';
+        return httpClient({ query: getQuery(axis, iri) }, callbacks);
+      },
+      inverse: function(iri, callbacks) {
+        var axis = 'inverse';
+        return httpClient({ query: getQuery(axis, iri) }, callbacks);
+      }
     };
   }
 };
