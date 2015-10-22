@@ -576,8 +576,60 @@
         return pattern.replace(/\{URI\}/ig, iri.replace(/^.*~~/, ''));
       }
 
-      return function sparqlClient(axis, iri, callbacks) {
-        return httpClient({ query: getQuery(axis, iri) }, callbacks);
+      function parseResults(bindings) {
+        var info = { uris: [], bnodes: [], values: [] };
+
+        $.each(bindings, function(key, value) {
+          var newVal = {};
+          newVal[value.property.value] = value.object.value;
+          if (value.object.type === 'uri') {
+            info.uris.push(newVal);
+          } else if (value.object.type === 'bnode') {
+            info.bnodes.push(newVal);
+          } else {
+            info.values.push(newVal);
+          }
+        });
+
+        return info;
+      }
+
+      return {
+        document: function(iri, callbacks) {
+          var axis = 'document';
+          var params = { query: getQuery(axis, iri) };
+          // setTimeout(function() {
+          //   callbacks.error(new Error('blah'))
+          // }, 1)
+
+          return httpClient(params, {
+            beforeSend: callbacks.beforeSend,
+            error: callbacks.error,
+            success : function(json) {
+              var info;
+
+              if ( !(json && json.results && json.results.bindings) ) {
+                console.error(json);
+                return callbacks.error(new Error('malformed results'));
+              }
+
+              info = parseResults(json.results.bindings);
+              callbacks.success(info);
+            }
+          });
+        },
+        bnode: function(iri, callbacks) {
+          var axis = 'bnode';
+          return httpClient({ query: getQuery(axis, iri) }, callbacks);
+        },
+        documentUri: function(iri, callbacks) {
+          var axis = 'documentUri';
+          return httpClient({ query: getQuery(axis, iri) }, callbacks);
+        },
+         inverse: function(iri, callbacks) {
+          var axis = 'inverse';
+          return httpClient({ query: getQuery(axis, iri) }, callbacks);
+        }
       };
     }
   };
@@ -1192,15 +1244,15 @@
     * @param {Object=} obj a jquery wrapped DOM element that is a node, or null.  If null is passed then it will close any open doc info panel
    **/
   LodLive.prototype.docInfo = function(obj) {
-    var inst = this, URI, docInfo = inst.container.find('.lodlive-docinfo');
+    var inst = this;
+    var docInfo = inst.container.find('.lodlive-docinfo');
+    var URI;
 
     if (obj == null || ((URI = obj.attr('rel')) && docInfo.is('[rel="'+ URI + '"]'))) {
-      console.log('hiding');
+      console.log('hiding docInfo');
       docInfo.fadeOut('fast').removeAttr('rel');
       return;
     }
-
-    URI = obj.attr('rel');
 
     if (!docInfo.length) {
       docInfo = $('<div class="lodlive-docinfo" rel="' + URI + '"></div>');
@@ -1208,48 +1260,21 @@
     }
 
     // duplicated code ...
-    var URI = obj.attr('rel');
+    // var URI = obj.attr('rel');
     docInfo.attr('rel', URI);
 
-    // predispongo il div contenente il documento
-
-    var uris = [];
-    var bnodes = [];
-    var values = [];
-
-    // var SPARQLquery = inst.composeQuery(URI, 'document');
-
-    // NOTE: previously fell back to inst.parseRawResourceDoc(docInfo, URI);
-    // (if SPARQLquery was http://system/dummy)
-
-      inst.sparqlClient('document', URI, {
-        success : function(json) {
-          json = json.results && json.results.bindings;
-
-          $.each(json, function(key, value) {
-            var newVal = {};
-            newVal[value.property.value] = value.object.value;
-            if (value.object.type === 'uri') {
-              uris.push(newVal);
-            } else if (value.object.type == 'bnode') {
-              bnodes.push(newVal);
-            } else {
-              values.push(newVal);
-            }
-          });
-
-          docInfo.empty().fadeIn();
-          inst.formatDoc(docInfo, values, uris, bnodes, URI);
-        },
-        error : function(e, b, v) {
-          // TODO: this looks like a copy/paste error from other methods ... disabling
-          // destBox.html('');
-          values = [{
-            'http://system/msg' : 'Could not find document: ' + destBox.attr('rel')
-          }];
-          inst.formatDoc(docInfo, values, uris, bnodes, URI);
-        }
-      });
+    inst.sparqlClient.document(URI, {
+      success : function(info) {
+        docInfo.empty().fadeIn();
+        inst.formatDoc(docInfo, info.values, info.uris, info.bnodes, URI);
+      },
+      error : function(e, b, v) {
+        var values = [{
+          'http://system/msg' : 'Could not find document: ' + URI
+        }];
+        inst.formatDoc(docInfo, values, [], [], URI);
+      }
+    });
   };
 
   LodLive.prototype.drawAllLines = function(obj) {
@@ -1583,7 +1608,7 @@
       start = new Date().getTime();
     }
 
-    inst.sparqlClient('bnode', val, {
+    inst.sparqlClient.bnode(val, {
       beforeSend : function() {
         // destBox.find('span[class=bnode]').html('<img src="img/ajax-loader-black.gif"/>');
         if (inst.debugOn) {
@@ -2338,7 +2363,7 @@
     //   success: inst.openDoc(anUri, destBox, fromInverse);
     //   failure: inst.parseRawResource(destBox, anUri, fromInverse);
 
-      inst.sparqlClient('documentUri', anUri, {
+      inst.sparqlClient.documentUri(anUri, {
         beforeSend : function() {
           // destBox.children('.box').html('<img style=\"margin-top:' + (destBox.children('.box').height() / 2 - 8) + 'px\" src="img/ajax-loader.gif"/>');
           if (inst.debugOn) {
@@ -2377,7 +2402,7 @@
             var inverses = [];
             // SPARQLquery = inst.composeQuery(anUri, 'inverse');
 
-            inst.sparqlClient('inverse', anUri, {
+            inst.sparqlClient.inverse(anUri, {
               beforeSend : function() {
                 // destBox.children('.box').html('<img id="1234" style=\"margin-top:' + (destBox.children('.box').height() / 2 - 5) + 'px\" src="img/ajax-loader.gif"/>');
                 if (inst.debugOn) {
