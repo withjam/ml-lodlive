@@ -59,7 +59,23 @@ var sparqlClientFactory = {
       },
       documentUri: function(iri, callbacks) {
         var axis = 'documentUri';
-        return httpClient({ query: getQuery(axis, iri) }, callbacks);
+        var params = { query: getQuery(axis, iri) };
+
+        return httpClient(params, {
+          beforeSend: callbacks.beforeSend,
+          error: callbacks.error,
+          success : function(json) {
+            var info;
+
+            if ( !(json && json.results && json.results.bindings) ) {
+              console.error(json);
+              return callbacks.error(new Error('malformed results'));
+            }
+
+            info = parseResults(json.results.bindings);
+            callbacks.success(info);
+          }
+        });
       },
       inverse: function(iri, callbacks) {
         var axis = 'inverse';

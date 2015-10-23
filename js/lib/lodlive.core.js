@@ -1978,24 +1978,42 @@
         beforeSend : function() {
           destBox.children('.box').html('<img style=\"margin-top:' + (destBox.children('.box').height() / 2 - 8) + 'px\" src="img/ajax-loader.gif"/>');
         },
-        success : function(json) {
-          // console.log('sparql success', json);
-          json = json.results && json.results.bindings;
-          var conta = 0;
-          $.each(json, function(key, value) {
-            var newVal = {}, newUri = {};
-            conta++;
-            if (value.object.type === 'uri' || value.object.type === 'bnode') {
-              if (value.object.value != anUri && (value.object.type !== 'bnode' || !inst.ignoreBnodes)) {
-                newUri[value.property.value] = (value.object.type === 'bnode') ? escape(anUri + '~~' + value.object.value) : escape(value.object.value);
-                uris.push(newUri);
-              }
-            } else {
-              newVal[value.property.value] = escape(value.object.value);
-              values.push(newVal);
-            }
+        success : function(info) {
+          // reformat values for compatility
 
+          // escape values
+          info.values = info.values.map(function(value) {
+            var keys = Object.keys(value)
+            keys.forEach(function(key) {
+              value[key] = escape(value[key])
+            })
+            return value
           });
+
+          // TODO: filter info.uris where object value === anURI (??)
+
+          // escape URIs
+          info.uris = info.uris.map(function(value) {
+            var keys = Object.keys(value)
+            keys.forEach(function(key) {
+              value[key] = escape(value[key])
+            })
+            return value
+          });
+
+          // parse bnodes, escape and add to URIs
+
+          // TODO: refactor `format()` and remove this
+          info.bnodes.forEach(function(bnode) {
+            var keys = Object.keys(bnode)
+            var value = {};
+            keys.forEach(function(key) {
+              value[key] = escape(anUri + '~~' + bnode[key])
+            })
+            info.uris.push(value);
+          })
+
+          delete info.bnodes;
 
           if (inst.debugOn) {
             console.debug((new Date().getTime() - start) + '  openDoc eval uris & values');
@@ -2064,7 +2082,7 @@
               }
             });
           } else {
-            inst.format(destBox.children('.box'), values, uris);
+            inst.format(destBox.children('.box'), info.values, info.uris);
             inst.addClick(destBox, fromInverse ? function() {
               try {
                 $(fromInverse).click();
