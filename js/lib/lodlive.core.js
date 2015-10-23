@@ -624,9 +624,25 @@
         },
         documentUri: function(iri, callbacks) {
           var axis = 'documentUri';
-          return httpClient({ query: getQuery(axis, iri) }, callbacks);
+          var params = { query: getQuery(axis, iri) };
+
+          return httpClient(params, {
+            beforeSend: callbacks.beforeSend,
+            error: callbacks.error,
+            success : function(json) {
+              var info;
+
+              if ( !(json && json.results && json.results.bindings) ) {
+                console.error(json);
+                return callbacks.error(new Error('malformed results'));
+              }
+
+              info = parseResults(json.results.bindings);
+              callbacks.success(info);
+            }
+          });
         },
-         inverse: function(iri, callbacks) {
+        inverse: function(iri, callbacks) {
           var axis = 'inverse';
           return httpClient({ query: getQuery(axis, iri) }, callbacks);
         }
@@ -2371,24 +2387,42 @@
           }
           return inst.renderer.loading(destBox)
         },
-        success : function(json) {
-          // console.log('sparql success', json);
-          json = json.results && json.results.bindings;
-          var conta = 0;
-          $.each(json, function(key, value) {
-            var newVal = {}, newUri = {};
-            conta++;
-            if (value.object.type === 'uri' || value.object.type === 'bnode') {
-              if (value.object.value != anUri && (value.object.type !== 'bnode' || !inst.ignoreBnodes)) {
-                newUri[value.property.value] = (value.object.type === 'bnode') ? escape(anUri + '~~' + value.object.value) : escape(value.object.value);
-                uris.push(newUri);
-              }
-            } else {
-              newVal[value.property.value] = escape(value.object.value);
-              values.push(newVal);
-            }
+        success : function(info) {
+          // reformat values for compatility
 
+          // escape values
+          info.values = info.values.map(function(value) {
+            var keys = Object.keys(value)
+            keys.forEach(function(key) {
+              value[key] = escape(value[key])
+            })
+            return value
           });
+
+          // TODO: filter info.uris where object value === anURI (??)
+
+          // escape URIs
+          info.uris = info.uris.map(function(value) {
+            var keys = Object.keys(value)
+            keys.forEach(function(key) {
+              value[key] = escape(value[key])
+            })
+            return value
+          });
+
+          // parse bnodes, escape and add to URIs
+
+          // TODO: refactor `format()` and remove this
+          info.bnodes.forEach(function(bnode) {
+            var keys = Object.keys(bnode)
+            var value = {};
+            keys.forEach(function(key) {
+              value[key] = escape(anUri + '~~' + bnode[key])
+            })
+            info.uris.push(value);
+          })
+
+          delete info.bnodes;
 
           if (inst.debugOn) {
             console.debug((new Date().getTime() - start) + '  openDoc eval uris & values');
@@ -2427,7 +2461,7 @@
                   // s/b unnecessary
                   // destBox.children('.box').html('');
 
-                  inst.format(destBox.children('.box'), values, uris, inverses);
+                  inst.format(destBox.children('.box'), info.values, info.uris, inverses);
                   inst.addClick(destBox, fromInverse ? function() {
                     //TODO: dynamic selector across the entire doc here seems strange, what are the the possibilities?  Is it only a DOM element?
                     try {
@@ -2454,7 +2488,7 @@
                 // s/b unnecessary
                 // destBox.children('.box').html('');
 
-                inst.format(destBox.children('.box'), values, uris);
+                inst.format(destBox.children('.box'), info.values, info.uris);
 
                 inst.addClick(destBox, fromInverse ? function() {
                   try {
@@ -2468,7 +2502,7 @@
               }
             });
           } else {
-            inst.format(destBox.children('.box'), values, uris);
+            inst.format(destBox.children('.box'), info.values, info.uris);
             inst.addClick(destBox, fromInverse ? function() {
               try {
                 $(fromInverse).click();
