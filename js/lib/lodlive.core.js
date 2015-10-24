@@ -137,8 +137,7 @@
 
     var httpClientFactory = require('../../src/http-client.js');
 
-    // TODO: local only
-    var httpClient = this.httpClient = httpClientFactory.create(
+    var httpClient = httpClientFactory.create(
       this.options.connection['http:'].endpoint,
       this.options.endpoints.all,
       this.options.connection['http:'].accepts,
@@ -2084,9 +2083,7 @@
                 };
 
                 if (inst.doAutoSameas) {
-                  var counter = 0;
-                  var tot = Object.keys(lodLiveProfile).length;
-                  inst.findInverseSameAs(anUri, counter, inverses, callback, tot);
+                  inst.findInverseSameAs(anUri, inverses, callback);
                 } else {
                   callback();
                 }
@@ -2145,83 +2142,36 @@
 
   };
 
-  LodLive.prototype.findInverseSameAs = function(anUri, counter, inverse, callback, tot) {
-    var inst = this, lodLiveProfile = inst.options;
+  LodLive.prototype.findInverseSameAs = function(anUri, inverse, callback) {
+    var inst = this;
+
+    // TODO: why two options? (useForInverseSameAs and doAutoSameas)
+    if (!inst.options.connection['http:'].useForInverseSameAs) return;
 
     var start;
     if (inst.debugOn) {
       start = new Date().getTime();
     }
-    var innerCounter = 0;
-    $.each(lodLiveProfile.connection, function(key, value) {
-      // what is the intent of matching the counter to the argument?  Are we trying to simulate numerical index of object properties when order is not guaranteed? Why not by name?
-      if (innerCounter === counter) {
-        var skip = false;
-        var keySplit = key.split(',');
-        if (!value.useForInverseSameAs) {
-          skip = true;
-        } else {
-          for (var a = 0; a < keySplit.length; a++) {
-            // salto i sameas interni allo stesso endpoint
-            if (anUri.indexOf(keySplit[a]) != -1) {
-              skip = true;
-            }
-          }
-        }
-        if (skip) {
-          counter++;
-          if (counter < tot) {
-            inst.findInverseSameAs(anUri, counter, inverse, callback, tot);
-          } else {
-            callback();
-          }
-          return false;
-        }
 
-        var SPARQLquery = value.endpoint + '?' + (value.endpointType ? lodLiveProfile.endpoints[value.endpointType] : lodLiveProfile.endpoints.all) + '&query=' + escape(LodLiveUtils.getSparqlConf('inverseSameAs', value, lodLiveProfile).replace(/\{URI\}/g, anUri));
-        if (value.proxy) {
-          SPARQLquery = value.proxy + '?endpoint=' + value.endpoint + '&' + (value.endpointType ? lodLiveProfile.endpoints[value.endpointType] : lodLiveProfile.endpoints.all) + '&query=' + escape(LodLiveUtils.getSparqlConf('inverseSameAs', value, lodLiveProfile).replace(/\{URI\}/g, anUri));
-        }
+    inst.sparqlClient.inverseSameAs(anUri, {
+      success : function(json) {
+        json = json.results.bindings;
 
-        inst.httpClient(SPARQLquery, {
-          // TODO: is this necessary?
-          timeout : 3000,
-          success : function(json) {
-            json = json['results']['bindings'];
-            var conta = 0;
-            $.each(json, function(key, value) {
-              conta++;
-              if (value.property && value.property.value) {
-                eval('inverse.splice(1,0,{\'' + value.property.value + '\':\'' + escape(value.object.value) + '\'})');
-              } else {
-                eval('inverse.splice(1,0,{\'' + 'http://www.w3.org/2002/07/owl#sameAs' + '\':\'' + escape(value.object.value) + '\'})');
-              }
-            });
-
-            counter++;
-            //TODO:  why callbacks and not just return?
-            if (counter < tot) {
-              inst.findInverseSameAs(anUri, counter, inverse, callback, tot);
-            } else {
-              callback();
-            }
-          },
-
-          error : function(e, b, v) {
-            counter++;
-            if (counter < tot) {
-              inst.findInverseSameAs(anUri, counter, inverse, callback, tot);
-            } else {
-              callback();
-            }
-          }
+        $.each(json, function(key, value) {
+          var newObj = {};
+          var key = value.property && value.property.value || 'http://www.w3.org/2002/07/owl#sameAs';
+          newObj[key] = escape(value.object.value);
+          // TODO: why the 2nd array element?
+          inverse.splice(1, 0, newObj);
         });
-        if (inst.debugOn) {
-          console.debug((new Date().getTime() - start) + '  findInverseSameAs ' + value.endpoint);
-        }
+
+        callback();
+      },
+      error : function(e, b, v) {
+        callback();
       }
-      innerCounter++;
     });
+
     if (inst.debugOn) {
       console.debug((new Date().getTime() - start) + '  findInverseSameAs');
     }

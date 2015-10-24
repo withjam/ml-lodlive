@@ -149,6 +149,16 @@ describe('sparqlClient', function () {
     expect(args.bnodes.length).to.equal(1)
   })
 
+  it('should parse queries and make request (inverseSameAs)', function () {
+    var profile = { inverseSameAs: 'QUERY' }
+    var httpStub = this.sandbox.stub()
+    var sparqlClient = sparqlClientFactory.create(profile, {}, httpStub)
+
+    sparqlClient.inverseSameAs('', {})
+    expect(httpStub.calledOnce).to.be.true
+    expect(httpStub.args[0][0].query).to.equal('QUERY')
+  })
+
   it('should fallback to default queries and make request', function () {
     var defaultProfile = { bnode: 'QUERY' }
     var httpStub = this.sandbox.stub()

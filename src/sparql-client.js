@@ -96,6 +96,10 @@ var sparqlClientFactory = {
             callbacks.success(info);
           }
         });
+      },
+      inverseSameAs: function(iri, callbacks) {
+        var axis = 'inverseSameAs';
+        return httpClient({ query: getQuery(axis, iri) }, callbacks);
       }
     };
   }
