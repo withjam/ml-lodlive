@@ -790,8 +790,7 @@
       this.msg = this.UI.nodeHover;
     }
 
-    // TODO: local only
-    var httpClient = this.httpClient = httpClientFactory.create(
+    var httpClient = httpClientFactory.create(
       this.options.connection['http:'].endpoint,
       this.options.endpoints.all,
       this.options.connection['http:'].accepts,
