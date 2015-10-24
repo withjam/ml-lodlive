@@ -2021,20 +2021,46 @@
           destBox.children('.box').html('');
           if (inst.doInverse) {
 
-            var inverses = [];
             // SPARQLquery = inst.composeQuery(anUri, 'inverse');
 
             inst.sparqlClient.inverse(anUri, {
               beforeSend : function() {
                 destBox.children('.box').html('<img style=\"margin-top:' + (destBox.children('.box').height() / 2 - 5) + 'px\" src="img/ajax-loader.gif"/>');
               },
-              success : function(json) {
-                json = json['results']['bindings'];
-                var conta = 0;
-                $.each(json, function(key, value) {
-                  conta++;
-                  //TODO: replace evals
-                  eval('inverses.push({\'' + value['property']['value'] + '\':\'' + (value.object.type == 'bnode' ? anUri + '~~' : '') + escape(value.object.value) + '\'})');
+              success : function(inverseInfo) {
+                var inverses = [];
+
+                // escape values
+                inverseInfo.values = inverseInfo.values.map(function(value) {
+                  var keys = Object.keys(value)
+                  keys.forEach(function(key) {
+                    value[key] = escape(value[key])
+                  })
+                  return value
+                });
+
+                // escape URIs
+                inverseInfo.uris = inverseInfo.uris.map(function(value) {
+                  var keys = Object.keys(value)
+                  keys.forEach(function(key) {
+                    value[key] = escape(value[key])
+                  })
+                  return value
+                });
+
+                inverses = inverseInfo.uris.concat(inverseInfo.values);
+
+                // parse bnodes, escape and add to URIs
+
+                // parse bnodes and add to URIs
+                // TODO: refactor `format()` and remove this
+                inverseInfo.bnodes.forEach(function(bnode) {
+                  var keys = Object.keys(bnode);
+                  var value = {};
+                  keys.forEach(function(key) {
+                    value[key] = anUri + '~~' + bnode[key];
+                  });
+                  inverses.push(value);
                 });
 
                 if (inst.debugOn) {
