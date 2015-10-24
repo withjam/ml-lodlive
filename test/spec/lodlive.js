@@ -81,7 +81,7 @@ describe('lodlive', function () {
 
     expect($('#graph .box').length).to.equal(1);
     expect($('#graph .lodlive-node .groupedRelatedBox').length).to.equal(6);
-    expect($('#graph .lodlive-node .relatedBox').length).to.equal(8);
+    expect($('#graph .lodlive-node .relatedBox').length).to.equal(84);
 
     $('#graph .lodlive-node .relatedBox').first().trigger('click');
 

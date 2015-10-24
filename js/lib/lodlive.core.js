@@ -103,7 +103,6 @@
     this.mapsMap = {};
     this.infoPanelMap = {};
     this.connection = {};
-    this.innerPageMap = {};
     this.ignoreBnodes = this.UI.ignoreBnodes;
 
     // TODO: look these up on the context object as data-lodlive-xxxx attributes
@@ -134,55 +133,19 @@
     this.renderer.msg('', 'init');
   };
 
-  LodLive.prototype.autoExpand = function(obj) {
-    var inst = this, start, box;
-    if (inst.debugOn) {
-      start = new Date().getTime();
-    }
+  LodLive.prototype.autoExpand = function() {
+    var inst = this;
 
-    $.each(inst.innerPageMap, function(key, element) {
-
-      var closed = element.children('.relatedBox:not([class*=exploded])');
-
-      if (closed.length) {
-
-        if (!element.parent().length) {
-          inst.context.append(element);
-        }
-
-        closed.each(function() {
-          // TODO: where do we find moreInfoOnThis? (lol)
-          box = $(moreInfoOnThis);
-          var aId = box.attr('relmd5');
-
-          //FIXME: not sure I want IDs here but leaving for now
-          var newObj = inst.context.children('#' + aId);
-
-          if (newObj.length > 0) {
-            box.click();
-          }
-        });
-
-        inst.context.children('.innerPage').detach();
-
-      }
-    });
-
-    //FIXME: this does the same thing as the function above, consolidate
-    inst.context.find('.relatedBox:not([class*=exploded])').each(function() {
+    inst.context.find('.relatedBox:not([class*=exploded])')
+    .each(function() {
       var box = $(this);
       var aId = box.attr('relmd5');
-      var newObj = context.children('#' + aId);
-      if (newObj.length > 0) {
+
+      // if a subject box exists
+      if (inst.context.children('#' + aId).length) {
         box.click();
       }
     });
-
-
-    if (inst.debugOn) {
-      console.debug((new Date().getTime() - start) + '  autoExpand ');
-    }
-
   };
 
   LodLive.prototype.addNewDoc = function(originalCircle, ele) {
@@ -323,17 +286,6 @@
 
     obj.fadeOut('normal', null, function() {
       obj.remove();
-      $.each(inst.innerPageMap, function(key, element) {
-        if (element.children('.' + id).length) {
-          var keyEle = inst.context.find('#' + key);
-          keyEle.append(element);
-          var lastClick = keyEle.find('.lastClick').attr('rel');
-          if (!keyEle.children('.innerPage').children('.' + lastClick).length) {
-            //TODO: again, why detaching?
-            keyEle.children('.innerPage').detach();
-          }
-        }
-      });
 
       // re-show predicate boxes that pointed to this object
       inst.context.find('div[relmd5=' + id + ']').each(function() {
@@ -377,15 +329,12 @@
           box.removeClass('lastClick');
           obj.find('.' + box.attr('rel')).fadeOut('fast');
           box.fadeTo('fast', 1);
-          obj.children('.innerPage').detach();
+          obj.children('.innerPage').hide();
         } else {
           box.data('show', true);
-          obj.append(inst.innerPageMap[obj.attr('id')]);
+          obj.children('.innerPage').show();
           inst.docInfo();
           obj.find('.lastClick').removeClass('lastClick').click();
-          if (!obj.children('.innerPage').length) {
-            obj.append(inst.innerPageMap[obj.attr('id')]);
-          }
           box.addClass('lastClick');
           obj.find('.' + box.attr('rel') + ':not([class*=exploded])').fadeIn('fast');
           box.fadeTo('fast', 0.3);
@@ -397,8 +346,6 @@
       });
     });
 
-    inst.innerPageMap[obj.attr('id')] = obj.children('.innerPage');
-    obj.children('.innerPage').detach();
     // aggiungo le azioni dei tools
     obj.on('click', '.actionBox', function(evt) {
       var el = $(this), handler = el.data('action-handler'), rel = el.attr('rel');
