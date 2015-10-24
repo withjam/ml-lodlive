@@ -873,55 +873,56 @@
     this.renderer.msg('', 'init');
   };
 
+  // TODO: remove unnecessary param
   LodLive.prototype.autoExpand = function(obj) {
-    var inst = this, start, box;
+    var inst = this;
+    var expandables = [];
+
+    var start;
     if (inst.debugOn) {
       start = new Date().getTime();
     }
 
-    $.each(inst.innerPageMap, function(key, element) {
-
-      var closed = element.children('.relatedBox:not([class*=exploded])');
-
-      if (closed.length) {
-
-        if (!element.parent().length) {
-          inst.context.append(element);
-        }
-
-        closed.each(function() {
-          // TODO: where do we find moreInfoOnThis? (lol)
-          box = $(moreInfoOnThis);
-          var aId = box.attr('relmd5');
-
-          //FIXME: not sure I want IDs here but leaving for now
-          var newObj = inst.context.children('#' + aId);
-
-          if (newObj.length > 0) {
-            box.click();
-          }
-        });
-
-        inst.context.children('.innerPage').detach();
-
-      }
-    });
-
-    //FIXME: this does the same thing as the function above, consolidate
-    inst.context.find('.relatedBox:not([class*=exploded])').each(function() {
+    function accumulateExpandables() {
       var box = $(this);
       var aId = box.attr('relmd5');
-      var newObj = context.children('#' + aId);
-      if (newObj.length > 0) {
-        box.click();
+
+      // if a subject box exists
+      if (inst.context.children('#' + aId).length) {
+        expandables.push(box);
       }
+    }
+
+    // accumulate expandable property boxes, including hidden ones
+    // TODO: deconstruct innerPageMap
+    $.each(inst.innerPageMap, function(key, element) {
+      var closed = element.children('.relatedBox:not([class*=exploded])');
+
+      // attach .innerPage, if necessary
+      if (closed.length && !element.parent().length) {
+        inst.context.append(element);
+      }
+
+      closed.each(accumulateExpandables);
     });
 
+    // accumulate expandable property boxes
+    inst.context.find('.relatedBox:not([class*=exploded])').each(accumulateExpandables);
+
+    // TODO: object identity doesn't work with jquery; group by id?
+    // expandables = expandables.filter(function(value, index, self) {
+    //   return self.indexOf(value) === index;
+    // });
+
+    expandables.forEach(function(box) {
+      box.click();
+    });
+
+    inst.context.children('.innerPage').detach();
 
     if (inst.debugOn) {
       console.debug((new Date().getTime() - start) + '  autoExpand ');
     }
-
   };
 
   LodLive.prototype.addNewDoc = function(obj, ele, callback) {
