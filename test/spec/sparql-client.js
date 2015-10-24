@@ -21,27 +21,27 @@ describe('sparqlClient', function () {
     var httpStub = this.sandbox.stub()
     var sparqlClient = sparqlClientFactory.create(profile, {}, httpStub)
 
-    sparqlClient('document', '')
+    sparqlClient.document('', {})
     expect(httpStub.calledOnce).to.be.true
     expect(httpStub.args[0][0].query).to.equal('QUERY')
   })
 
   it('should fallback to default queries and make request', function () {
-    var defaultProfile = { document: 'QUERY' }
+    var defaultProfile = { bnode: 'QUERY' }
     var httpStub = this.sandbox.stub()
     var sparqlClient = sparqlClientFactory.create({}, defaultProfile, httpStub)
 
-    sparqlClient('document', '')
+    sparqlClient.bnode('', {})
     expect(httpStub.calledOnce).to.be.true
     expect(httpStub.args[0][0].query).to.equal('QUERY')
   })
 
   it('should substitute IRIs', function () {
-    var profile = { document: 'QUERY {URI}' }
+    var profile = { inverse: 'QUERY {URI}' }
     var httpStub = this.sandbox.stub()
     var sparqlClient = sparqlClientFactory.create(profile, {}, httpStub)
 
-    sparqlClient('document', 'test')
+    sparqlClient.inverse('test', {})
     expect(httpStub.calledOnce).to.be.true
     expect(httpStub.args[0][0].query).to.equal('QUERY test')
   })
