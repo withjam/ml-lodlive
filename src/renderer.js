@@ -96,6 +96,28 @@ LodLiveRenderer.prototype.loading = function loading(target) {
 };
 
 /**
+ * Configure hover interactions for `target`
+ *
+ * Defaults to `renderer.msg(target.attr('data-title'), 'show')`
+ *
+ * @param {Object} target - jQuery object containing one-or-more elements
+ * parma {Function} [showFn] - function to invoke on hover
+ */
+LodLiveRenderer.prototype.hover = function hover(target, showFn) {
+  var renderer = this;
+
+  target.each(function() {
+    var el = $(this);
+    el.hover(function() {
+      if (showFn) return showFn();
+      renderer.msg(el.attr('data-title'), 'show');
+    }, function() {
+      renderer.msg(null, 'hide');
+    });
+  });
+};
+
+/**
  * Centers the initial box (for firstUri)
  */
 LodLiveRenderer.prototype.centerBox = function(aBox) {
