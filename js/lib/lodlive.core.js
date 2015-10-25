@@ -107,6 +107,28 @@
   };
 
   /**
+   * Configure hover interactions for `target`
+   *
+   * Defaults to `renderer.msg(target.attr('data-title'), 'show')`
+   *
+   * @param {Object} target - jQuery object containing one-or-more elements
+   * parma {Function} [showFn] - function to invoke on hover
+   */
+  LodLiveRenderer.prototype.hover = function hover(target, showFn) {
+    var renderer = this;
+
+    target.each(function() {
+      var el = $(this);
+      el.hover(function() {
+        if (showFn) return showFn();
+        renderer.msg(el.attr('data-title'), 'show');
+      }, function() {
+        renderer.msg(null, 'hide');
+      });
+    });
+  };
+
+  /**
    * Centers the initial box (for firstUri)
    */
   LodLiveRenderer.prototype.centerBox = function(aBox) {
@@ -476,12 +498,9 @@
     destBox.children('.box').html('');
     var jResult = $('<div class="boxTitle"><span>' + LodLiveUtils.lang('endpointNotAvailable') + '</span></div>');
     destBox.children('.box').append(jResult);
-    destBox.children('.box').hover(function() {
+    renderer.hover(destBox.children('.box'), function() {
       renderer.msg(LodLiveUtils.lang('endpointNotAvailableOrSLow'), 'show', 'fullInfo', destBox.attr('data-endpoint'));
-    }, function() {
-      renderer.msg(null, 'hide');
     });
-
   };
 
   var rendererFactory = {
@@ -1216,10 +1235,8 @@
         evt.stopPropagation();
       });
 
-      box.hover(function() {
+      inst.renderer.hover(box, function() {
         inst.renderer.msg(box.data('title'), 'show', null, null, box.is('.inverse'));
-      }, function() {
-        inst.renderer.msg(null, 'hide');
       });
     });
 
@@ -1247,10 +1264,8 @@
         }
       });
 
-      box.hover(function() {
+      inst.renderer.hover(box, function() {
         inst.renderer.msg(box.attr('data-title'), 'show', null, null, box.is('.inverse'));
-      }, function() {
-        inst.renderer.msg(null, 'hide');
       });
     });
 
@@ -1463,14 +1478,7 @@
     if (types.length > 0) {
       var jSection = $('<div class="section"><label data-title="http://www.w3.org/1999/02/22-rdf-syntax-ns#type">type</label><div></div></div>');
 
-      jSection.find('label').each(function() {
-        var lbl = $(this);
-        lbl.hover(function() {
-          inst.renderer.msg(lbl.attr('data-title'), 'show');
-        }, function() {
-          inst.renderer.msg(null, 'hide');
-        });
-      });
+      inst.renderer.hover( jSection.find('label') );
 
       for (var int = 0; int < types.length; int++) {
         var shortKey = LodLive.shortenKey(types[int]);
@@ -1492,13 +1500,7 @@
     if (webLinkResult) {
       //TODO: delegate hover
       var jWebLinkResult = $(webLinkResult);
-      jWebLinkResult.find('a').each(function() {
-        $(this).hover(function() {
-          inst.renderer.msg($(this).attr('data-title'), 'show');
-        }, function() {
-          inst.renderer.msg(null, 'hide');
-        });
-      });
+      inst.renderer.hover( jWebLinkResult.find('a') );
       jContents.append(jWebLinkResult);
     }
 
@@ -1515,13 +1517,7 @@
               var shortKey = label;
               try {
                 var jSection = $('<div class="section"><label data-title="' + akey + '">' + shortKey + '</label><div>' + unescape(value[akey]) + '</div></div>');
-                jSection.find('label').each(function() {
-                  $(this).hover(function() {
-                    inst.renderer.msg($(this).attr('data-title'), 'show');
-                  }, function() {
-                    inst.renderer.msg(null, 'hide');
-                  });
-                });
+                inst.renderer.hover( jSection.find('label') );
                 jContents.append(jSection);
               } catch (e) {
                 // /console.debug(value[akey] + " --- " + shortKey);
@@ -1548,13 +1544,7 @@
           try {
 
             var jSection = $('<div class="section"><label data-title="' + akey + '">' + shortKey + '</label><div>' + unescape(value[akey]) + '</div></div>');
-            jSection.find('label').each(function() {
-              $(this).hover(function() {
-                inst.renderer.msg($(this).attr('data-title'), 'show');
-              }, function() {
-                inst.renderer.msg(null, 'hide');
-              });
-            });
+            inst.renderer.hover( jSection.find('label') );
             jContents.append(jSection);
           } catch (e) { // what are we catching here?
             // /console.debug(value[akey] + " --- " + shortKey);
@@ -1570,13 +1560,7 @@
           var shortKey = LodLive.shortenKey(akey);
 
           var jBnode = $('<div class="section"><label data-title="' + akey + '">' + shortKey + '</label><span class="bnode"></span></div><div class="separ sprite"></div>');
-          jBnode.find('label').each(function() {
-            $(this).hover(function() {
-              inst.renderer.msg($(this).attr('data-title'), 'show');
-            }, function() {
-              inst.renderer.msg(null, 'hide');
-            });
-          });
+          inst.renderer.hover( jBnode.find('label') );
           inst.resolveBnodes(unescape(value[akey]), URI, jBnode, jContents);
 
         }
@@ -1585,13 +1569,7 @@
 
     if (contents.length == 0 && bnodes.length == 0) {
       var jSection = $('<div class="section"><label data-title="' + LodLiveUtils.lang('resourceMissingDoc') + '"></label><div>' + LodLiveUtils.lang('resourceMissingDoc') + '</div></div><div class="separ sprite"></div>');
-      jSection.find('label').each(function() {
-        $(this).hover(function() {
-          inst.renderer.msg($(this).attr('data-title'), 'show');
-        }, function() {
-          inst.renderer.msg(null, 'hide');
-        });
-      });
+      inst.renderer.hover( jSection.find('label') );
       jContents.append(jSection);
     }
 
@@ -1666,13 +1644,7 @@
 
           } else if (value.object.type == 'bnode') {
             var jBnode = $('<span><label data-title="' + value.property.value + '"> / ' + shortKey + '</label><span class="bnode"></span></span>');
-            jBnode.find('label').each(function() {
-              $(this).hover(function() {
-                inst.renderer.msg($(this).attr('data-title'), 'show');
-              }, function() {
-                inst.renderer.msg(null, 'hide');
-              });
-            });
+            inst.renderer.hover( jBnode.find('label' ) );
             destBox.find('span[class=bnode]').attr('class', '').append(jBnode);
             inst.resolveBnodes(value.object.value, URI, destBox, jContents);
           } else {
@@ -1944,15 +1916,13 @@
       }
     }
     destBox.append(jResult);
+
     var resourceTitle = jResult.text();
     jResult.data('tooltip', resourceTitle);
 
-    destBox.hover(function() {
-        var msgTitle = jResult.text();
-        console.log('destbox hover title', msgTitle);
-      inst.renderer.msg(msgTitle, 'show', 'fullInfo', containerBox.attr('data-endpoint'));
-    }, function() {
-      inst.renderer.msg(null, 'hide');
+    inst.renderer.hover(destBox, function() {
+      console.log('destbox hover title', resourceTitle);
+      inst.renderer.msg(resourceTitle, 'show', 'fullInfo', containerBox.attr('data-endpoint'));
     });
 
     // calcolo le uri e le url dei documenti correlati
