@@ -775,86 +775,6 @@
     // var connectedLongs = [];
     // var connectedLats = [];
 
-    var sameDocControl = [];
-    $.each(uris, function(key, value) {
-      for (var akey in value) {
-
-        // escludo la definizione della classe, le proprieta'
-        // relative alle immagini ed ai link web
-        if (lodLiveProfile.uriSubstitutor) {
-          $.each(lodLiveProfile.uriSubstitutor, function(skey, svalue) {
-            value[akey] = value[akey].replace(svalue.findStr, svalue.replaceStr);
-          });
-        }
-        if ($.inArray(akey, images) > -1) {
-          //FIXME: replace eval
-          eval('connectedImages.push({\'' + value[akey] + '\':\'' + escape(resourceTitle) + '\'})');
-
-        } else if ($.inArray(akey, weblinks) == -1) {
-
-          // controllo se trovo la stessa relazione in una
-          // proprieta' diversa
-          if ($.inArray(value[akey], sameDocControl) > -1) {
-
-            var aCounter = 0;
-            $.each(connectedDocs, function(key2, value2) {
-              for (var akey2 in value2) {
-                if (value2[akey2] == value[akey]) {
-                  eval('connectedDocs[' + aCounter + '] = {\'' + akey2 + ' | ' + akey + '\':\'' + value[akey] + '\'}');
-                }
-              }
-              aCounter++;
-            });
-
-          } else {
-            //FIXME: replace eval
-            eval('connectedDocs.push({\'' + akey + '\':\'' + value[akey] + '\'})');
-            sameDocControl.push(value[akey]);
-          }
-
-        }
-      }
-
-    });
-
-    if (inverses) {
-      sameDocControl = [];
-      $.each(inverses, function(key, value) {
-        for (var akey in value) {
-          if (docType == 'bnode' && value[akey].indexOf('~~') != -1) {
-            continue;
-          }
-          if (lodLiveProfile.uriSubstitutor) {
-            $.each(lodLiveProfile.uriSubstitutor, function(skey, svalue) {
-              value[akey] = value[akey].replace(escape(svalue.findStr), escape(svalue.replaceStr));
-            });
-          }
-          // controllo se trovo la stessa relazione in una
-          // proprieta' diversa
-          if ($.inArray(value[akey], sameDocControl) > -1) {
-            var aCounter = 0;
-            $.each(invertedDocs, function(key2, value2) {
-              for (var akey2 in value2) {
-                if (value2[akey2] == value[akey]) {
-                  var theKey = akey2;
-                  if (akey2 != akey) {
-                    theKey = akey2 + ' | ' + akey;
-                  }
-                  eval('invertedDocs[' + aCounter + '] = {\'' + theKey + '\':\'' + value[akey] + '\'}');
-                  return false;
-                }
-              }
-              aCounter++;
-            });
-          } else {
-            eval('invertedDocs.push({\'' + akey + '\':\'' + value[akey] + '\'})');
-            sameDocControl.push(value[akey]);
-          }
-
-        }
-      });
-    }
-
     function groupByObject(inputArray, type) {
       var tmpIRIs = {};
       var outputArray = [];
@@ -895,69 +815,10 @@
       return outputArray;
     }
 
-    var myConnectedDocs = [];
-    var myInvertedDocs = [];
-
-    myConnectedDocs = groupByObject(uris, 'uris');
+    connectedDocs = groupByObject(uris, 'uris');
     if (inverses) {
-      myInvertedDocs = groupByObject(inverses, 'inverses');
+      invertedDocs = groupByObject(inverses, 'inverses');
     }
-
-    var myConnectedEqual = deepCompare(connectedDocs, myConnectedDocs);
-    console.log('connected: ' + myConnectedEqual)
-    if (!myConnectedEqual) {
-      connectedDocs.forEach(function(obj, i) {
-        if (!deepCompare(obj, myConnectedDocs[i])) {
-          console.log(obj, myConnectedDocs[i])
-        }
-      })
-    }
-
-    var myInvertedEqual = deepCompare(invertedDocs, myInvertedDocs)
-    console.log('inverted: ' + myInvertedEqual)
-    if (!myInvertedEqual) {
-      invertedDocs.forEach(function(obj, i) {
-        if (!deepCompare(obj, myInvertedDocs[i])) {
-          console.log(obj, myInvertedDocs[i])
-        }
-      })
-    }
-
-    // if (totRelated > 16) {
-      $.each(connectedDocs, function(key, value) {
-        for (var akey in value) {
-          if (propertyGroup[akey]) {
-            var t = propertyGroup[akey];
-            t.push(value[akey]);
-            propertyGroup[akey] = t;
-          } else {
-            propertyGroup[akey] = [value[akey]];
-          }
-        }
-      });
-      $.each(invertedDocs, function(key, value) {
-        for (var akey in value) {
-          if (propertyGroupInverted[akey]) {
-            var t = propertyGroupInverted[akey];
-            t.push(value[akey]);
-            propertyGroupInverted[akey] = t;
-          } else {
-            propertyGroupInverted[akey] = [value[akey]];
-          }
-        }
-      });
-    //   totRelated = 0;
-    //   for (var prop in propertyGroup) {
-    //     if (propertyGroup.hasOwnProperty(prop)) {
-    //       totRelated++;
-    //     }
-    //   }
-    //   for (var prop in propertyGroupInverted) {
-    //     if (propertyGroupInverted.hasOwnProperty(prop)) {
-    //       totRelated++;
-    //     }
-    //   }
-    // }
 
     function groupByPropertyKey(inputArray) {
       var group = {};
@@ -979,29 +840,9 @@
     }
 
     // group URIs by property key
-    var myPropertyGroup = groupByPropertyKey(connectedDocs);
+    propertyGroup = groupByPropertyKey(connectedDocs);
     // group inverse URIs by property key
-    var myPropertyGroupInverted = groupByPropertyKey(invertedDocs);
-
-    var myGroupEqual = deepCompare(propertyGroup, myPropertyGroup);
-    console.log('group: ' + myGroupEqual)
-    if (!myGroupEqual) {
-      Object.keys(propertyGroup).forEach(function(key) {
-        if (!deepCompare(propertyGroup[key], myPropertyGroup[key])) {
-          console.log(propertyGroup[key], myPropertyGroup[key])
-        }
-      })
-    }
-
-    var myInvertedGroupEqual = deepCompare(propertyGroupInverted, myPropertyGroupInverted)
-    console.log('inverted group: ' + myInvertedGroupEqual)
-    if (!myInvertedGroupEqual) {
-      Object.keys(propertyGroupInverted).forEach(function(key) {
-        if (!deepCompare(propertyGroupInverted[key], myPropertyGroupInverted[key])) {
-          console.log(propertyGroupInverted[key], myPropertyGroupInverted[key])
-        }
-      })
-    }
+    propertyGroupInverted = groupByPropertyKey(invertedDocs);
 
     // Map rendering has been disabled; keeping for posterity ...
     // if (inst.doDrawMap) {
@@ -1064,20 +905,9 @@
     var chordsList = inst.circleChords(75, 24, destBox.position().left + 65, destBox.position().top + 65);
     var chordsListGrouped = inst.circleChords(95, 36, destBox.position().left + 65, destBox.position().top + 65);
 
-    // console.log(chordsList)
-    // console.log(chordsListGrouped)
-
-    var counterSanityCheck = {
-      group: [],
-      related: []
-    }
-    var newCounterSanityCheck = {
-      group: [],
-      related: []
-    }
-
+    // iterates over connectedDocs and invertedDocs, creating DOM nodes and calculating CSS positioning
     function createPropertyBoxes(inputArray, inputGroup, isInverse) {
-      var a = 1;
+      var counter = 1;
       var inserted = {};
       var innerCounter = 1;
       var objectList = [];
@@ -1085,43 +915,39 @@
 
       inputArray.forEach(function(value, i) {
         // TODO: refactor; modular arithmetic for CSS positioning
-        // a appears to equal the count of groupedProperties mod 14 plus 1 or 2
-        if (a === 15) {
-          a = 1;
+        // counter appears to equal the count of groupedProperties mod 14 plus 1 or 2
+        if (counter === 15) {
+          counter = 1;
         }
 
         // TODO: ensure only one key?
-        var akey = Object.keys(value)[0];
+        var key = Object.keys(value)[0];
         var obj = null;
 
-        if (inputGroup[akey] && inputGroup[akey].length > 1) {
-          if (!inserted[akey]) {
+        if (inputGroup[key] && inputGroup[key].length > 1) {
+          if (!inserted[key]) {
             innerCounter = 1;
-            inserted[akey] = true;
+            inserted[key] = true;
 
-            var objBox = createPropertyGroup(akey, inputGroup[akey], a, isInverse);
+            var objBox = createPropertyGroup(key, inputGroup[key], counter, isInverse);
             objectList.push(objBox);
-            newCounterSanityCheck.related.push(a)
-
-            a++;
+            counter++;
           }
 
           // TODO: magic number; why 25?
           if (innerCounter < 25) {
-            obj = createGroupedRelatedBox(akey, value[akey], innerCounter, isInverse);
-            newCounterSanityCheck.group.push(innerCounter)
+            obj = createGroupedRelatedBox(key, value[key], innerCounter, isInverse);
           }
 
           innerCounter++;
         } else {
-          obj = createRelatedBox(akey, value[akey], a, isInverse);
-          newCounterSanityCheck.related.push(a)
-          a++;
+          obj = createRelatedBox(key, value[key], counter, isInverse);
+          counter++;
         }
 
         // TODO: when will object be null? innerCounter >= 25?
         if (obj) {
-          addRelatedBoxProperties(obj, akey, containerBox, isInverse);
+          addRelatedBoxProperties(obj, key, containerBox, isInverse);
 
           if (obj.hasClass('aGrouped')) {
             innerObjectList.push(obj);
@@ -1138,426 +964,117 @@
     }
 
     // create a node to represent a group of related properties (star-circle)
-    function createPropertyGroup(akey, groupValue, aCounter, isInverse) {
+    function createPropertyGroup(key, groupValue, counter, isInverse) {
       var objBox = $('<div></div>')
 
-      objBox.addClass('groupedRelatedBox')
-      objBox.attr('rel', inst.hashFunc(akey))
-      objBox.attr('data-property', akey)
-      objBox.attr('data-title', akey + ' \n ' + (groupValue.length) + ' ' + utils.lang('connectedResources'))
-      objBox.css(inst.getRelationshipCSS(akey));
+      .addClass('groupedRelatedBox')
+      .attr('rel', inst.hashFunc(key))
+      .attr('data-property', key)
+      .attr('data-title', key + ' \n ' + (groupValue.length) + ' ' + utils.lang('connectedResources'))
+      .css(inst.getRelationshipCSS(key))
+      .css({
+        'top':  (chordsList[counter][1] - 8) + 'px',
+        'left': (chordsList[counter][0] - 8) + 'px'
+      });
 
       if (isInverse) {
-        objBox.addClass('inverse')
-        objBox.attr('rel', inst.hashFunc(akey) + '-i')
+        objBox.addClass('inverse');
+        objBox.attr('rel', inst.hashFunc(key) + '-i');
       }
 
-      var akeyArray = akey.split(' ');
+      var keyArray = key.split(' ');
 
-      if (unescape(groupValue[0]).indexOf('~~') != -1) {
+      if (unescape(groupValue[0]).indexOf('~~') > -1) {
         objBox.addClass('isBnode');
       } else {
-        for (var i = 0; i < akeyArray.length; i++) {
-          if (lodLiveProfile.arrows[akeyArray[i]]) {
-            objBox.addClass(lodLiveProfile.arrows[akeyArray[i]]);
+        for (var i = 0; i < keyArray.length; i++) {
+          if (lodLiveProfile.arrows[keyArray[i]]) {
+            objBox.addClass(lodLiveProfile.arrows[keyArray[i]]);
           }
         }
       }
-
-      objBox.css({
-        'top':  (chordsList[aCounter][1] - 8) + 'px',
-        'left': (chordsList[aCounter][0] - 8) + 'px'
-      });
 
       return objBox;
     }
 
     // create a node to represent a property in a group of related properties
-    function createGroupedRelatedBox(akey, keyedValue, innerCounter, isInverse) {
+    function createGroupedRelatedBox(key, keyedValue, innerCounter, isInverse) {
       var rel;
 
       // TODO: this seems inlikely... the bnode marker isn't ever at the beginning of keyedValue
       // is the condition a typo?
       if (isInverse) {
-        rel = unescape(keyedValue.indexOf('~~') == 0 ? thisUri + keyedValue : keyedValue);
+        rel = unescape(keyedValue.indexOf('~~') === 0 ? thisUri + keyedValue : keyedValue);
       } else {
         rel = unescape(keyedValue)
       }
 
       var obj = $('<div></div>')
-
-      obj.addClass('aGrouped relatedBox');
-      obj.attr('rel', rel)
-      obj.attr('data-title', akey + ' \n ' + unescape(keyedValue))
-      obj.attr('data-circlePos', innerCounter);
-      obj.attr('data-circleParts', 36);
-      // obj.css({
-      //   display: 'none',
-      //   position: 'absolute',
-      //   top: (chordsListGrouped[innerCounter][1] - 8) + 'px',
-      //   left: (chordsListGrouped[innerCounter][0] - 8) + 'px'
-      // });
-      obj.attr('style', 'display: none; position: absolute; top: ' + (chordsListGrouped[innerCounter][1] - 8) + 'px; left: ' + (chordsListGrouped[innerCounter][0] - 8) + 'px;');
+      .addClass('aGrouped relatedBox ' + inst.hashFunc(unescape(keyedValue)).toString())
+      .attr('rel', rel)
+      .attr('data-title', key + ' \n ' + unescape(keyedValue))
+      .attr('data-circlePos', innerCounter)
+      .attr('data-circleParts', 36)
+      .css({
+        display: 'none',
+        position: 'absolute',
+        top: (chordsListGrouped[innerCounter][1] - 8) + 'px',
+        left: (chordsListGrouped[innerCounter][0] - 8) + 'px'
+      });
 
       if (isInverse) {
-        obj.addClass('inverse ' + inst.hashFunc(akey) + '-i')
+        obj.addClass('inverse ' + inst.hashFunc(key) + '-i');
       } else {
-        obj.addClass(inst.hashFunc(akey).toString())
+        obj.addClass(inst.hashFunc(key).toString());
       }
-
-      obj.addClass(inst.hashFunc(unescape(keyedValue)).toString())
 
       return obj;
     }
 
     // create a node to represent a related property
-    function createRelatedBox(akey, keyedValue, aCounter, isInverse) {
+    function createRelatedBox(key, keyedValue, counter, isInverse) {
       var obj = $('<div></div>')
-
-      obj.addClass('relatedBox')
-      obj.attr('rel', unescape(keyedValue))
-      obj.attr('data-title', akey + ' \n ' + unescape(keyedValue))
-      obj.attr('data-circlePos', aCounter);
-      obj.attr('data-circleParts', 24);
-      // obj.css({
-      //   top: (chordsList[a][1] - 8) + 'px',
-      //   left: (chordsList[a][0] - 8) + 'px'
-      // })
-      obj.attr('style', 'top: ' + (chordsList[aCounter][1] - 8) + 'px; left: ' + (chordsList[aCounter][0] - 8) + 'px;');
+      .addClass('relatedBox ' + inst.hashFunc(unescape(keyedValue)).toString())
+      .attr('rel', unescape(keyedValue))
+      .attr('data-title', key + ' \n ' + unescape(keyedValue))
+      .attr('data-circlePos', counter)
+      .attr('data-circleParts', 24)
+      .css({
+        top: (chordsList[counter][1] - 8) + 'px',
+        left: (chordsList[counter][0] - 8) + 'px'
+      });
 
       if (isInverse) {
-        obj.addClass('inverse')
+        obj.addClass('inverse');
       }
-
-      obj.addClass(inst.hashFunc(unescape(keyedValue)).toString())
 
       return obj;
     }
 
-    function addRelatedBoxProperties(obj, akey, containerBox, isInverse) {
-      obj.attr('data-circleid', containerBox.attr('id'));
-      obj.attr('data-property', akey);
-      obj.css(inst.getRelationshipCSS(akey));
+    function addRelatedBoxProperties(obj, key, containerBox, isInverse) {
+      obj.attr('data-circleid', containerBox.attr('id'))
+      .attr('data-property', key)
+      .css(inst.getRelationshipCSS(key));
+
       // se si tratta di un  Bnode applico una classe diversa
-      var akeyArray = akey.split(' ');
-      if (obj.attr('rel').indexOf('~~') != -1) {
+      var keyArray = key.split(' ');
+      if (obj.attr('rel').indexOf('~~') > -1) {
         obj.addClass('isBnode');
       } else {
-        for (var i = 0; i < akeyArray.length; i++) {
-          if (lodLiveProfile.arrows[akeyArray[i]]) {
-            obj.addClass(lodLiveProfile.arrows[akeyArray[i]]);
+        for (var i = 0; i < keyArray.length; i++) {
+          if (lodLiveProfile.arrows[keyArray[i]]) {
+            obj.addClass(lodLiveProfile.arrows[keyArray[i]]);
           }
         }
       }
     }
 
-    var connectedDocsLists = createPropertyBoxes(connectedDocs, propertyGroup, false);
-    var invertedDocsLists = createPropertyBoxes(invertedDocs, propertyGroupInverted, true);
+    var connectedNodes = createPropertyBoxes(connectedDocs, propertyGroup, false);
+    var invertedNodes = createPropertyBoxes(invertedDocs, propertyGroupInverted, true);
 
     // aggiungo al box i link ai documenti correlati
-    var objectList = [];
-    var innerObjectList = [];
-
-    var a = 1;
-    var inserted = {};
-    var counter = 0;
-    var innerCounter = 1;
-
-    var isInverse = false;
-
-    $.each(connectedDocs, function(key, value) {
-
-      // TODO: remove; appears to be unused
-      if (counter == 16) {
-        counter = 0;
-      }
-
-      // TODO: refactor; modular arithmetic for CSS positioning
-      if (a == 1) {
-      } else if (a == 15) {
-        a = 1;
-      }
-
-      for (var akey in value) {
-        var obj = null;
-        if (propertyGroup[akey] && propertyGroup[akey].length > 1) {
-          if (!inserted[akey]) {
-            innerCounter = 1;
-            inserted[akey] = true;
-            var objBox = $('<div class="groupedRelatedBox" rel="' + inst.hashFunc(akey) + '" data-property="' + akey + '"  data-title="' + akey + ' \n ' + (propertyGroup[akey].length) + ' ' + utils.lang('connectedResources') + '" ></div>');
-            objBox.css(inst.getRelationshipCSS(akey));
-            // containerBox.append(objBox);
-            var akeyArray = akey.split(' ');
-            if (unescape(propertyGroup[akey][0]).indexOf('~~') != -1) {
-              objBox.addClass('isBnode');
-            } else {
-              for (var i = 0; i < akeyArray.length; i++) {
-                if (lodLiveProfile.arrows[akeyArray[i]]) {
-                  objBox.addClass(lodLiveProfile.arrows[akeyArray[i]]);
-                }
-              }
-            }
-            objBox.css({
-              'top':  (chordsList[a][1] - 8) + 'px',
-              'left': (chordsList[a][0] - 8) + 'px'
-            });
-
-            var myObjBox = createPropertyGroup(akey, propertyGroup[akey], a, isInverse);
-            if (!deepCompare(objBox[0].outerHTML, myObjBox[0].outerHTML)) {
-              console.log(objBox[0].outerHTML)
-              console.log(myObjBox[0].outerHTML)
-            }
-
-            objectList.push(objBox);
-
-            a++;
-            counter++;
-          }
-
-          if (innerCounter < 25) {
-            obj = $('<div class="aGrouped relatedBox ' + inst.hashFunc(akey) + ' ' + inst.hashFunc(unescape(value[akey])) + '" rel="' + unescape(value[akey]) + '"  data-title="' + akey + ' \n ' + unescape(value[akey]) + '" ></div>');
-            // containerBox.append(obj);
-            obj.attr('data-circlePos', innerCounter);
-            obj.attr('data-circleParts', 36);
-            obj.attr('style', 'display: none; position: absolute; top: ' + (chordsListGrouped[innerCounter][1] - 8) + 'px; left: ' + (chordsListGrouped[innerCounter][0] - 8) + 'px;');
-            obj.attr('data-circleid', containerBox.attr('id'));
-
-            var myObj = createGroupedRelatedBox(akey, value[akey], innerCounter, isInverse);
-            // if (!deepCompare(obj[0].outerHTML, myObj[0].outerHTML)) {
-            //   console.log(obj[0].outerHTML)
-            //   console.log(myObj[0].outerHTML)
-            // }
-
-            counterSanityCheck.group.push(innerCounter)
-
-          }
-
-          innerCounter++;
-        } else {
-          obj = $('<div class="relatedBox ' + inst.hashFunc(unescape(value[akey])) + '" rel="' + unescape(value[akey]) + '" data-title="' + akey + ' \n ' + unescape(value[akey]) + '"></div>');
-          // containerBox.append(obj);
-          obj.attr('data-circlePos', a);
-          obj.attr('data-circleParts', 24);
-          obj.attr('style', 'top: ' + (chordsList[a][1] - 8) + 'px; left: ' + (chordsList[a][0] - 8) + 'px;');
-
-          var myObj = createRelatedBox(akey, value[akey], a, isInverse);
-          // if (!deepCompare(obj[0].outerHTML, myObj[0].outerHTML)) {
-          //   console.log(obj[0].outerHTML)
-          //   console.log(myObj[0].outerHTML)
-          // }
-
-          counterSanityCheck.related.push(a)
-
-          a++;
-          counter++;
-        }
-        if (obj) {
-          obj.attr('data-circleid', containerBox.attr('id'));
-          obj.attr('data-property', akey);
-          obj.css(inst.getRelationshipCSS(akey));
-          // se si tratta di un  Bnode applico una classe diversa
-          var akeyArray = akey.split(' ');
-          if (obj.attr('rel').indexOf('~~') != -1) {
-            obj.addClass('isBnode');
-          } else {
-            for (var i = 0; i < akeyArray.length; i++) {
-              if (lodLiveProfile.arrows[akeyArray[i]]) {
-                obj.addClass(lodLiveProfile.arrows[akeyArray[i]]);
-              }
-            }
-          }
-
-          addRelatedBoxProperties(myObj, akey, containerBox, isInverse);
-
-          if (!deepCompare(obj[0].outerHTML, myObj[0].outerHTML)) {
-            console.log(obj[0].outerHTML)
-            console.log(myObj[0].outerHTML)
-          }
-
-          if (obj.hasClass('aGrouped')) {
-            innerObjectList.push(obj);
-          } else {
-            objectList.push(obj);
-          }
-        }
-      }
-
-    });
-
-    console.log('connectedDocs/object: ' + objectList.length)
-    console.log('connectedDocs/newObject: ' + connectedDocsLists.objectList.length)
-
-    objectList.forEach(function(obj, i) {
-      if (!deepCompare(obj[0].outerHTML, connectedDocsLists.objectList[i][0].outerHTML)) {
-        console.log(obj[0].outerHTML)
-        console.log(connectedDocsLists.objectList[i][0].outerHTML)
-      }
-    })
-
-    console.log('connectedDocs/innerObject: ' + innerObjectList.length)
-    console.log('connectedDocs/newInnerObject: ' + connectedDocsLists.innerObjectList.length)
-
-    innerObjectList.forEach(function(obj, i) {
-      if (!deepCompare(obj[0].outerHTML, connectedDocsLists.innerObjectList[i][0].outerHTML)) {
-        console.log(obj[0].outerHTML)
-        console.log(connectedDocsLists.innerObjectList[i][0].outerHTML)
-      }
-    })
-
-    isInverse = true;
-    a = 1;
-
-    inserted = {};
-    $.each(invertedDocs, function(key, value) {
-
-      // TODO: remove; appears to be unused
-      if (counter == 16) {
-        counter = 0;
-      }
-
-      // TODO: refactor; modular arithmetic for CSS positioning
-      if (a == 1) {
-      } else if (a == 15) {
-        a = 1;
-      }
-
-      for (var akey in value) {
-        var obj = null;
-        if (propertyGroupInverted[akey] && propertyGroupInverted[akey].length > 1) {
-          if (!inserted[akey]) {
-            innerCounter = 1;
-            inserted[akey] = true;
-
-            var objBox = $('<div class="groupedRelatedBox inverse" rel="' + inst.hashFunc(akey) + '-i"   data-property="' + akey + '" data-title="' + akey + ' \n ' + (propertyGroupInverted[akey].length) + ' ' + utils.lang('connectedResources') + '" ></div>');
-            objBox.css(inst.getRelationshipCSS(akey));
-            // containerBox.append(objBox);
-            var akeyArray = akey.split(' ');
-            if (unescape(propertyGroupInverted[akey][0]).indexOf('~~') != -1) {
-              objBox.addClass('isBnode');
-            } else {
-              for (var i = 0; i < akeyArray.length; i++) {
-                if (lodLiveProfile.arrows[akeyArray[i]]) {
-                  objBox.addClass(lodLiveProfile.arrows[akeyArray[i]]);
-                }
-              }
-            }
-            objBox.css({
-              'top': + (chordsList[a][1] - 8) + 'px',
-              'left': + (chordsList[a][0] - 8) + 'px'
-            });
-
-            var myObjBox = createPropertyGroup(akey, propertyGroupInverted[akey], a, isInverse);
-            if (!deepCompare(objBox[0].outerHTML, myObjBox[0].outerHTML)) {
-              console.log(objBox[0].outerHTML)
-              console.log(myObjBox[0].outerHTML)
-            }
-
-            objectList.push(objBox);
-            a++;
-            counter++;
-          }
-
-          if (innerCounter < 25) {
-            var destUri = unescape(value[akey].indexOf('~~') == 0 ? thisUri + value[akey] : value[akey]);
-            obj = $('<div class="aGrouped relatedBox inverse ' + inst.hashFunc(akey) + '-i ' + inst.hashFunc(unescape(value[akey])) + '" rel="' + destUri + '"  data-title="' + akey + ' \n ' + unescape(value[akey]) + '" ></div>');
-            // containerBox.append(obj);
-            obj.attr('data-circlePos', innerCounter);
-            obj.attr('data-circleParts', 36);
-            // obj.attr('data-circleId', containerBox.attr('id'));
-            obj.attr('style', 'display: none; position: absolute; top: ' + (chordsListGrouped[innerCounter][1] - 8) + 'px; left: ' + (chordsListGrouped[innerCounter][0] - 8) + 'px;');
-
-            var myObj = createGroupedRelatedBox(akey, value[akey], innerCounter, isInverse);
-            if (!deepCompare(obj[0].outerHTML, myObj[0].outerHTML)) {
-              console.log(obj[0].outerHTML)
-              console.log(myObj[0].outerHTML)
-            }
-
-            counterSanityCheck.group.push(innerCounter)
-          }
-
-          innerCounter++;
-        } else {
-          obj = $('<div class="relatedBox inverse ' + inst.hashFunc(unescape(value[akey])) + '" rel="' + unescape(value[akey]) + '"   data-title="' + akey + ' \n ' + unescape(value[akey]) + '" ></div>');
-          // containerBox.append(obj);
-          obj.attr('data-circlePos', a);
-          obj.attr('data-circleParts', 24);
-          obj.attr('style', 'top: ' + (chordsList[a][1] - 8) + 'px; left: ' + (chordsList[a][0] - 8) + 'px;');
-
-          var myObj = createRelatedBox(akey, value[akey], a, isInverse);
-          if (!deepCompare(obj[0].outerHTML, myObj[0].outerHTML)) {
-            console.log(obj[0].outerHTML)
-            console.log(myObj[0].outerHTML)
-          }
-
-          counterSanityCheck.related.push(a)
-
-          a++;
-          counter++;
-        }
-        if (obj) {
-          obj.attr('data-circleId', containerBox.attr('id'));
-          obj.attr('data-property', akey);
-          obj.css(inst.getRelationshipCSS(akey));
-          // se si tratta di un sameas applico una classe diversa
-          var akeyArray = akey.split(' ');
-
-          if (obj.attr('rel').indexOf('~~') != -1) {
-            obj.addClass('isBnode');
-          } else {
-            for (var i = 0; i < akeyArray.length; i++) {
-              if (lodLiveProfile.arrows[akeyArray[i]]) {
-                obj.addClass(lodLiveProfile.arrows[akeyArray[i]]);
-              }
-            }
-          }
-
-          addRelatedBoxProperties(myObj, akey, containerBox, isInverse);
-
-          if (!deepCompare(obj[0].outerHTML, myObj[0].outerHTML)) {
-            console.log(obj[0].outerHTML)
-            console.log(myObj[0].outerHTML)
-          }
-
-          if (obj.hasClass('aGrouped')) {
-            innerObjectList.push(obj);
-          } else {
-            objectList.push(obj);
-          }
-        }
-      }
-
-    });
-
-    // objectList = connectedDocsLists.objectList.concat(invertedDocsLists.objectList);
-    // innerObjectList = connectedDocsLists.innerObjectList.concat(invertedDocsLists.innerObjectList);
-
-    var combinedObjects = connectedDocsLists.objectList.concat(invertedDocsLists.objectList);
-    var combinedInnerObjects = connectedDocsLists.innerObjectList.concat(invertedDocsLists.innerObjectList)
-
-    console.log('objects: ' + objectList.length)
-    console.log('newObjects: ' + combinedObjects.length)
-
-    objectList.forEach(function(obj, i) {
-      if (!deepCompare(obj[0].outerHTML, combinedObjects[i][0].outerHTML)) {
-        console.log(i)
-        console.log(obj[0].outerHTML)
-        console.log(combinedObjects[i][0].outerHTML)
-      }
-    })
-
-    console.log('innerObjects: ' + innerObjectList.length)
-    console.log('newInnerObjects: ' + combinedInnerObjects.length)
-
-    innerObjectList.forEach(function(obj, i) {
-      if (!deepCompare(obj[0].outerHTML, combinedInnerObjects[i][0].outerHTML)) {
-        console.log(i)
-        console.log(obj[0].outerHTML)
-        console.log(combinedInnerObjects[i][0].outerHTML)
-      }
-    })
-
-    objectList = connectedDocsLists.objectList.concat(invertedDocsLists.objectList);
-    innerObjectList = connectedDocsLists.innerObjectList.concat(invertedDocsLists.innerObjectList);
+    var objectList = connectedNodes.objectList.concat(invertedNodes.objectList);
+    var innerObjectList = connectedNodes.innerObjectList.concat(invertedNodes.innerObjectList);
 
     var page = 0;
     var totPages = objectList.length > 14 ? (objectList.length / 14 + (objectList.length % 14 > 0 ? 1 : 0)) : 1;
@@ -1827,118 +1344,3 @@
   };
 
 })(jQuery);
-
-function deepCompare () {
-  var i, l, leftChain, rightChain;
-
-  function compare2Objects (x, y) {
-    var p;
-
-    // remember that NaN === NaN returns false
-    // and isNaN(undefined) returns true
-    if (isNaN(x) && isNaN(y) && typeof x === 'number' && typeof y === 'number') {
-         return true;
-    }
-
-    // Compare primitives and functions.
-    // Check if both arguments link to the same object.
-    // Especially useful on step when comparing prototypes
-    if (x === y) {
-        return true;
-    }
-
-    // Works in case when functions are created in constructor.
-    // Comparing dates is a common scenario. Another built-ins?
-    // We can even handle functions passed across iframes
-    if ((typeof x === 'function' && typeof y === 'function') ||
-       (x instanceof Date && y instanceof Date) ||
-       (x instanceof RegExp && y instanceof RegExp) ||
-       (x instanceof String && y instanceof String) ||
-       (x instanceof Number && y instanceof Number)) {
-        return x.toString() === y.toString();
-    }
-
-    // At last checking prototypes as good a we can
-    if (!(x instanceof Object && y instanceof Object)) {
-        return false;
-    }
-
-    if (x.isPrototypeOf(y) || y.isPrototypeOf(x)) {
-        return false;
-    }
-
-    if (x.constructor !== y.constructor) {
-        return false;
-    }
-
-    if (x.prototype !== y.prototype) {
-        return false;
-    }
-
-    // Check for infinitive linking loops
-    if (leftChain.indexOf(x) > -1 || rightChain.indexOf(y) > -1) {
-         return false;
-    }
-
-    // Quick checking of one object beeing a subset of another.
-    // todo: cache the structure of arguments[0] for performance
-    for (p in y) {
-        if (y.hasOwnProperty(p) !== x.hasOwnProperty(p)) {
-            return false;
-        }
-        else if (typeof y[p] !== typeof x[p]) {
-            return false;
-        }
-    }
-
-    for (p in x) {
-        if (y.hasOwnProperty(p) !== x.hasOwnProperty(p)) {
-            return false;
-        }
-        else if (typeof y[p] !== typeof x[p]) {
-            return false;
-        }
-
-        switch (typeof (x[p])) {
-            case 'object':
-            case 'function':
-
-                leftChain.push(x);
-                rightChain.push(y);
-
-                if (!compare2Objects (x[p], y[p])) {
-                    return false;
-                }
-
-                leftChain.pop();
-                rightChain.pop();
-                break;
-
-            default:
-                if (x[p] !== y[p]) {
-                    return false;
-                }
-                break;
-        }
-    }
-
-    return true;
-  }
-
-  if (arguments.length < 1) {
-    return true; //Die silently? Don't know how to handle such case, please help...
-    // throw "Need two or more arguments to compare";
-  }
-
-  for (i = 1, l = arguments.length; i < l; i++) {
-
-      leftChain = []; //Todo: this can be cached
-      rightChain = [];
-
-      if (!compare2Objects(arguments[0], arguments[i])) {
-          return false;
-      }
-  }
-
-  return true;
-}
