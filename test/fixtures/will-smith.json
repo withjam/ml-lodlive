@@ -1,0 +1,1389 @@
+{
+  "head": {
+    "link": [],
+    "vars": [
+      "property",
+      "object"
+    ]
+  },
+  "results": {
+    "distinct": false,
+    "ordered": true,
+    "bindings": [
+      {
+        "property": {
+          "type": "uri",
+          "value": "http:\/\/dbpedia.org\/ontology\/birthPlace"
+        },
+        "object": {
+          "type": "uri",
+          "value": "http:\/\/dbpedia.org\/resource\/Pennsylvania"
+        }
+      },
+      {
+        "property": {
+          "type": "uri",
+          "value": "http:\/\/dbpedia.org\/ontology\/birthPlace"
+        },
+        "object": {
+          "type": "uri",
+          "value": "http:\/\/dbpedia.org\/resource\/Wynnefield,_Philadelphia"
+        }
+      },
+      {
+        "property": {
+          "type": "uri",
+          "value": "http:\/\/dbpedia.org\/ontology\/birthPlace"
+        },
+        "object": {
+          "type": "uri",
+          "value": "http:\/\/dbpedia.org\/resource\/West_Philadelphia"
+        }
+      },
+      {
+        "property": {
+          "type": "uri",
+          "value": "http:\/\/dbpedia.org\/ontology\/child"
+        },
+        "object": {
+          "type": "uri",
+          "value": "http:\/\/dbpedia.org\/resource\/Willow_Smith"
+        }
+      },
+      {
+        "property": {
+          "type": "uri",
+          "value": "http:\/\/dbpedia.org\/ontology\/child"
+        },
+        "object": {
+          "type": "uri",
+          "value": "http:\/\/dbpedia.org\/resource\/Jaden_Smith"
+        }
+      },
+      {
+        "property": {
+          "type": "uri",
+          "value": "http:\/\/dbpedia.org\/ontology\/residence"
+        },
+        "object": {
+          "type": "uri",
+          "value": "http:\/\/dbpedia.org\/resource\/California"
+        }
+      },
+      {
+        "property": {
+          "type": "uri",
+          "value": "http:\/\/dbpedia.org\/ontology\/residence"
+        },
+        "object": {
+          "type": "uri",
+          "value": "http:\/\/dbpedia.org\/resource\/Los_Angeles"
+        }
+      },
+      {
+        "property": {
+          "type": "uri",
+          "value": "http:\/\/dbpedia.org\/ontology\/thumbnail"
+        },
+        "object": {
+          "type": "uri",
+          "value": "http:\/\/commons.wikimedia.org\/wiki\/Special:FilePath\/Will_Smith_2011,_2.jpg?width=300"
+        }
+      },
+      {
+        "property": {
+          "type": "uri",
+          "value": "http:\/\/dbpedia.org\/ontology\/wikiPageExternalLink"
+        },
+        "object": {
+          "type": "uri",
+          "value": "http:\/\/www.willsmith.com\/"
+        }
+      },
+      {
+        "property": {
+          "type": "uri",
+          "value": "http:\/\/dbpedia.org\/property\/children"
+        },
+        "object": {
+          "type": "uri",
+          "value": "http:\/\/dbpedia.org\/resource\/Willow_Smith"
+        }
+      },
+      {
+        "property": {
+          "type": "uri",
+          "value": "http:\/\/dbpedia.org\/property\/children"
+        },
+        "object": {
+          "type": "uri",
+          "value": "http:\/\/dbpedia.org\/resource\/Jaden_Smith"
+        }
+      },
+      {
+        "property": {
+          "type": "uri",
+          "value": "http:\/\/dbpedia.org\/property\/hasPhotoCollection"
+        },
+        "object": {
+          "type": "uri",
+          "value": "http:\/\/wifo5-03.informatik.uni-mannheim.de\/flickrwrappr\/photos\/Will_Smith"
+        }
+      },
+      {
+        "property": {
+          "type": "uri",
+          "value": "http:\/\/dbpedia.org\/property\/wordnet_type"
+        },
+        "object": {
+          "type": "uri",
+          "value": "http:\/\/www.w3.org\/2006\/03\/wn\/wn20\/instances\/synset-musician-noun-1"
+        }
+      },
+      {
+        "property": {
+          "type": "uri",
+          "value": "http:\/\/purl.org\/dc\/terms\/subject"
+        },
+        "object": {
+          "type": "uri",
+          "value": "http:\/\/dbpedia.org\/resource\/Category:1968_births"
+        }
+      },
+      {
+        "property": {
+          "type": "uri",
+          "value": "http:\/\/purl.org\/dc\/terms\/subject"
+        },
+        "object": {
+          "type": "uri",
+          "value": "http:\/\/dbpedia.org\/resource\/Category:20th-century_American_male_actors"
+        }
+      },
+      {
+        "property": {
+          "type": "uri",
+          "value": "http:\/\/purl.org\/dc\/terms\/subject"
+        },
+        "object": {
+          "type": "uri",
+          "value": "http:\/\/dbpedia.org\/resource\/Category:20th-century_American_singers"
+        }
+      },
+      {
+        "property": {
+          "type": "uri",
+          "value": "http:\/\/purl.org\/dc\/terms\/subject"
+        },
+        "object": {
+          "type": "uri",
+          "value": "http:\/\/dbpedia.org\/resource\/Category:21st-century_American_male_actors"
+        }
+      },
+      {
+        "property": {
+          "type": "uri",
+          "value": "http:\/\/purl.org\/dc\/terms\/subject"
+        },
+        "object": {
+          "type": "uri",
+          "value": "http:\/\/dbpedia.org\/resource\/Category:21st-century_American_singers"
+        }
+      },
+      {
+        "property": {
+          "type": "uri",
+          "value": "http:\/\/purl.org\/dc\/terms\/subject"
+        },
+        "object": {
+          "type": "uri",
+          "value": "http:\/\/dbpedia.org\/resource\/Category:African-American_businesspeople"
+        }
+      },
+      {
+        "property": {
+          "type": "uri",
+          "value": "http:\/\/purl.org\/dc\/terms\/subject"
+        },
+        "object": {
+          "type": "uri",
+          "value": "http:\/\/dbpedia.org\/resource\/Category:African-American_film_directors"
+        }
+      },
+      {
+        "property": {
+          "type": "uri",
+          "value": "http:\/\/purl.org\/dc\/terms\/subject"
+        },
+        "object": {
+          "type": "uri",
+          "value": "http:\/\/dbpedia.org\/resource\/Category:African-American_film_producers"
+        }
+      },
+      {
+        "property": {
+          "type": "uri",
+          "value": "http:\/\/purl.org\/dc\/terms\/subject"
+        },
+        "object": {
+          "type": "uri",
+          "value": "http:\/\/dbpedia.org\/resource\/Category:African-American_male_actors"
+        }
+      },
+      {
+        "property": {
+          "type": "uri",
+          "value": "http:\/\/purl.org\/dc\/terms\/subject"
+        },
+        "object": {
+          "type": "uri",
+          "value": "http:\/\/dbpedia.org\/resource\/Category:African-American_male_rappers"
+        }
+      },
+      {
+        "property": {
+          "type": "uri",
+          "value": "http:\/\/purl.org\/dc\/terms\/subject"
+        },
+        "object": {
+          "type": "uri",
+          "value": "http:\/\/dbpedia.org\/resource\/Category:African-American_record_producers"
+        }
+      },
+      {
+        "property": {
+          "type": "uri",
+          "value": "http:\/\/purl.org\/dc\/terms\/subject"
+        },
+        "object": {
+          "type": "uri",
+          "value": "http:\/\/dbpedia.org\/resource\/Category:African-American_sports_executives_and_administrators"
+        }
+      },
+      {
+        "property": {
+          "type": "uri",
+          "value": "http:\/\/purl.org\/dc\/terms\/subject"
+        },
+        "object": {
+          "type": "uri",
+          "value": "http:\/\/dbpedia.org\/resource\/Category:American_beatboxers"
+        }
+      },
+      {
+        "property": {
+          "type": "uri",
+          "value": "http:\/\/purl.org\/dc\/terms\/subject"
+        },
+        "object": {
+          "type": "uri",
+          "value": "http:\/\/dbpedia.org\/resource\/Category:American_male_film_actors"
+        }
+      },
+      {
+        "property": {
+          "type": "uri",
+          "value": "http:\/\/purl.org\/dc\/terms\/subject"
+        },
+        "object": {
+          "type": "uri",
+          "value": "http:\/\/dbpedia.org\/resource\/Category:American_male_television_actors"
+        }
+      },
+      {
+        "property": {
+          "type": "uri",
+          "value": "http:\/\/purl.org\/dc\/terms\/subject"
+        },
+        "object": {
+          "type": "uri",
+          "value": "http:\/\/dbpedia.org\/resource\/Category:American_male_voice_actors"
+        }
+      },
+      {
+        "property": {
+          "type": "uri",
+          "value": "http:\/\/purl.org\/dc\/terms\/subject"
+        },
+        "object": {
+          "type": "uri",
+          "value": "http:\/\/dbpedia.org\/resource\/Category:American_television_producers"
+        }
+      },
+      {
+        "property": {
+          "type": "uri",
+          "value": "http:\/\/purl.org\/dc\/terms\/subject"
+        },
+        "object": {
+          "type": "uri",
+          "value": "http:\/\/dbpedia.org\/resource\/Category:Columbia_Records_artists"
+        }
+      },
+      {
+        "property": {
+          "type": "uri",
+          "value": "http:\/\/purl.org\/dc\/terms\/subject"
+        },
+        "object": {
+          "type": "uri",
+          "value": "http:\/\/dbpedia.org\/resource\/Category:Film_directors_from_Pennsylvania"
+        }
+      },
+      {
+        "property": {
+          "type": "uri",
+          "value": "http:\/\/purl.org\/dc\/terms\/subject"
+        },
+        "object": {
+          "type": "uri",
+          "value": "http:\/\/dbpedia.org\/resource\/Category:Grammy_Award-winning_artists"
+        }
+      },
+      {
+        "property": {
+          "type": "uri",
+          "value": "http:\/\/purl.org\/dc\/terms\/subject"
+        },
+        "object": {
+          "type": "uri",
+          "value": "http:\/\/dbpedia.org\/resource\/Category:Interscope_Records_artists"
+        }
+      },
+      {
+        "property": {
+          "type": "uri",
+          "value": "http:\/\/purl.org\/dc\/terms\/subject"
+        },
+        "object": {
+          "type": "uri",
+          "value": "http:\/\/dbpedia.org\/resource\/Category:Living_people"
+        }
+      },
+      {
+        "property": {
+          "type": "uri",
+          "value": "http:\/\/purl.org\/dc\/terms\/subject"
+        },
+        "object": {
+          "type": "uri",
+          "value": "http:\/\/dbpedia.org\/resource\/Category:Male_actors_from_Philadelphia,_Pennsylvania"
+        }
+      },
+      {
+        "property": {
+          "type": "uri",
+          "value": "http:\/\/purl.org\/dc\/terms\/subject"
+        },
+        "object": {
+          "type": "uri",
+          "value": "http:\/\/dbpedia.org\/resource\/Category:Rappers_from_Philadelphia,_Pennsylvania"
+        }
+      },
+      {
+        "property": {
+          "type": "uri",
+          "value": "http:\/\/purl.org\/dc\/terms\/subject"
+        },
+        "object": {
+          "type": "uri",
+          "value": "http:\/\/dbpedia.org\/resource\/Category:Philadelphia_76ers_owners"
+        }
+      },
+      {
+        "property": {
+          "type": "uri",
+          "value": "http:\/\/www.w3.org\/1999\/02\/22-rdf-syntax-ns#type"
+        },
+        "object": {
+          "type": "uri",
+          "value": "http:\/\/www.w3.org\/2002\/07\/owl#Thing"
+        }
+      },
+      {
+        "property": {
+          "type": "uri",
+          "value": "http:\/\/www.w3.org\/1999\/02\/22-rdf-syntax-ns#type"
+        },
+        "object": {
+          "type": "uri",
+          "value": "http:\/\/xmlns.com\/foaf\/0.1\/Person"
+        }
+      },
+      {
+        "property": {
+          "type": "uri",
+          "value": "http:\/\/www.w3.org\/1999\/02\/22-rdf-syntax-ns#type"
+        },
+        "object": {
+          "type": "uri",
+          "value": "http:\/\/dbpedia.org\/ontology\/Person"
+        }
+      },
+      {
+        "property": {
+          "type": "uri",
+          "value": "http:\/\/www.w3.org\/1999\/02\/22-rdf-syntax-ns#type"
+        },
+        "object": {
+          "type": "uri",
+          "value": "http:\/\/www.ontologydesignpatterns.org\/ont\/dul\/DUL.owl#Agent"
+        }
+      },
+      {
+        "property": {
+          "type": "uri",
+          "value": "http:\/\/www.w3.org\/1999\/02\/22-rdf-syntax-ns#type"
+        },
+        "object": {
+          "type": "uri",
+          "value": "http:\/\/www.ontologydesignpatterns.org\/ont\/dul\/DUL.owl#NaturalPerson"
+        }
+      },
+      {
+        "property": {
+          "type": "uri",
+          "value": "http:\/\/www.w3.org\/1999\/02\/22-rdf-syntax-ns#type"
+        },
+        "object": {
+          "type": "uri",
+          "value": "http:\/\/www.wikidata.org\/entity\/Q215627"
+        }
+      },
+      {
+        "property": {
+          "type": "uri",
+          "value": "http:\/\/www.w3.org\/1999\/02\/22-rdf-syntax-ns#type"
+        },
+        "object": {
+          "type": "uri",
+          "value": "http:\/\/www.wikidata.org\/entity\/Q5"
+        }
+      },
+      {
+        "property": {
+          "type": "uri",
+          "value": "http:\/\/www.w3.org\/1999\/02\/22-rdf-syntax-ns#type"
+        },
+        "object": {
+          "type": "uri",
+          "value": "http:\/\/dbpedia.org\/ontology\/Agent"
+        }
+      },
+      {
+        "property": {
+          "type": "uri",
+          "value": "http:\/\/www.w3.org\/1999\/02\/22-rdf-syntax-ns#type"
+        },
+        "object": {
+          "type": "uri",
+          "value": "http:\/\/schema.org\/Person"
+        }
+      },
+      {
+        "property": {
+          "type": "uri",
+          "value": "http:\/\/www.w3.org\/1999\/02\/22-rdf-syntax-ns#type"
+        },
+        "object": {
+          "type": "uri",
+          "value": "http:\/\/umbel.org\/umbel\/rc\/Actor"
+        }
+      },
+      {
+        "property": {
+          "type": "uri",
+          "value": "http:\/\/www.w3.org\/1999\/02\/22-rdf-syntax-ns#type"
+        },
+        "object": {
+          "type": "uri",
+          "value": "http:\/\/umbel.org\/umbel\/rc\/Artist"
+        }
+      },
+      {
+        "property": {
+          "type": "uri",
+          "value": "http:\/\/www.w3.org\/1999\/02\/22-rdf-syntax-ns#type"
+        },
+        "object": {
+          "type": "uri",
+          "value": "http:\/\/dbpedia.org\/class\/yago\/Actor109765278"
+        }
+      },
+      {
+        "property": {
+          "type": "uri",
+          "value": "http:\/\/www.w3.org\/1999\/02\/22-rdf-syntax-ns#type"
+        },
+        "object": {
+          "type": "uri",
+          "value": "http:\/\/dbpedia.org\/class\/yago\/ActorsFromPennsylvania"
+        }
+      },
+      {
+        "property": {
+          "type": "uri",
+          "value": "http:\/\/www.w3.org\/1999\/02\/22-rdf-syntax-ns#type"
+        },
+        "object": {
+          "type": "uri",
+          "value": "http:\/\/dbpedia.org\/class\/yago\/Administrator109770949"
+        }
+      },
+      {
+        "property": {
+          "type": "uri",
+          "value": "http:\/\/www.w3.org\/1999\/02\/22-rdf-syntax-ns#type"
+        },
+        "object": {
+          "type": "uri",
+          "value": "http:\/\/dbpedia.org\/class\/yago\/AfricanAmericanRappers"
+        }
+      },
+      {
+        "property": {
+          "type": "uri",
+          "value": "http:\/\/www.w3.org\/1999\/02\/22-rdf-syntax-ns#type"
+        },
+        "object": {
+          "type": "uri",
+          "value": "http:\/\/dbpedia.org\/class\/yago\/AfricanAmericanSportsExecutives"
+        }
+      },
+      {
+        "property": {
+          "type": "uri",
+          "value": "http:\/\/www.w3.org\/1999\/02\/22-rdf-syntax-ns#type"
+        },
+        "object": {
+          "type": "uri",
+          "value": "http:\/\/dbpedia.org\/class\/yago\/AmericanFilmActors"
+        }
+      },
+      {
+        "property": {
+          "type": "uri",
+          "value": "http:\/\/www.w3.org\/1999\/02\/22-rdf-syntax-ns#type"
+        },
+        "object": {
+          "type": "uri",
+          "value": "http:\/\/dbpedia.org\/class\/yago\/AmericanFilmDirectors"
+        }
+      },
+      {
+        "property": {
+          "type": "uri",
+          "value": "http:\/\/www.w3.org\/1999\/02\/22-rdf-syntax-ns#type"
+        },
+        "object": {
+          "type": "uri",
+          "value": "http:\/\/dbpedia.org\/class\/yago\/AmericanFilmProducers"
+        }
+      },
+      {
+        "property": {
+          "type": "uri",
+          "value": "http:\/\/www.w3.org\/1999\/02\/22-rdf-syntax-ns#type"
+        },
+        "object": {
+          "type": "uri",
+          "value": "http:\/\/dbpedia.org\/class\/yago\/AmericanHipHopMusicians"
+        }
+      },
+      {
+        "property": {
+          "type": "uri",
+          "value": "http:\/\/www.w3.org\/1999\/02\/22-rdf-syntax-ns#type"
+        },
+        "object": {
+          "type": "uri",
+          "value": "http:\/\/dbpedia.org\/class\/yago\/AmericanHipHopRecordProducers"
+        }
+      },
+      {
+        "property": {
+          "type": "uri",
+          "value": "http:\/\/www.w3.org\/1999\/02\/22-rdf-syntax-ns#type"
+        },
+        "object": {
+          "type": "uri",
+          "value": "http:\/\/dbpedia.org\/class\/yago\/AmericanTelevisionActors"
+        }
+      },
+      {
+        "property": {
+          "type": "uri",
+          "value": "http:\/\/www.w3.org\/1999\/02\/22-rdf-syntax-ns#type"
+        },
+        "object": {
+          "type": "uri",
+          "value": "http:\/\/dbpedia.org\/class\/yago\/Artist109812338"
+        }
+      },
+      {
+        "property": {
+          "type": "uri",
+          "value": "http:\/\/www.w3.org\/1999\/02\/22-rdf-syntax-ns#type"
+        },
+        "object": {
+          "type": "uri",
+          "value": "http:\/\/dbpedia.org\/class\/yago\/Businessman109882007"
+        }
+      },
+      {
+        "property": {
+          "type": "uri",
+          "value": "http:\/\/www.w3.org\/1999\/02\/22-rdf-syntax-ns#type"
+        },
+        "object": {
+          "type": "uri",
+          "value": "http:\/\/dbpedia.org\/class\/yago\/Businessperson109882716"
+        }
+      },
+      {
+        "property": {
+          "type": "uri",
+          "value": "http:\/\/www.w3.org\/1999\/02\/22-rdf-syntax-ns#type"
+        },
+        "object": {
+          "type": "uri",
+          "value": "http:\/\/dbpedia.org\/class\/yago\/Capitalist109609232"
+        }
+      },
+      {
+        "property": {
+          "type": "uri",
+          "value": "http:\/\/www.w3.org\/1999\/02\/22-rdf-syntax-ns#type"
+        },
+        "object": {
+          "type": "uri",
+          "value": "http:\/\/dbpedia.org\/class\/yago\/CausalAgent100007347"
+        }
+      },
+      {
+        "property": {
+          "type": "uri",
+          "value": "http:\/\/www.w3.org\/1999\/02\/22-rdf-syntax-ns#type"
+        },
+        "object": {
+          "type": "uri",
+          "value": "http:\/\/dbpedia.org\/class\/yago\/Creator109614315"
+        }
+      },
+      {
+        "property": {
+          "type": "uri",
+          "value": "http:\/\/www.w3.org\/1999\/02\/22-rdf-syntax-ns#type"
+        },
+        "object": {
+          "type": "uri",
+          "value": "http:\/\/dbpedia.org\/class\/yago\/Entertainer109616922"
+        }
+      },
+      {
+        "property": {
+          "type": "uri",
+          "value": "http:\/\/www.w3.org\/1999\/02\/22-rdf-syntax-ns#type"
+        },
+        "object": {
+          "type": "uri",
+          "value": "http:\/\/dbpedia.org\/class\/yago\/Executive110069645"
+        }
+      },
+      {
+        "property": {
+          "type": "uri",
+          "value": "http:\/\/www.w3.org\/1999\/02\/22-rdf-syntax-ns#type"
+        },
+        "object": {
+          "type": "uri",
+          "value": "http:\/\/dbpedia.org\/class\/yago\/FilmDirector110088200"
+        }
+      },
+      {
+        "property": {
+          "type": "uri",
+          "value": "http:\/\/www.w3.org\/1999\/02\/22-rdf-syntax-ns#type"
+        },
+        "object": {
+          "type": "uri",
+          "value": "http:\/\/dbpedia.org\/class\/yago\/FilmMaker110088390"
+        }
+      },
+      {
+        "property": {
+          "type": "uri",
+          "value": "http:\/\/www.w3.org\/1999\/02\/22-rdf-syntax-ns#type"
+        },
+        "object": {
+          "type": "uri",
+          "value": "http:\/\/dbpedia.org\/class\/yago\/Head110162991"
+        }
+      },
+      {
+        "property": {
+          "type": "uri",
+          "value": "http:\/\/www.w3.org\/1999\/02\/22-rdf-syntax-ns#type"
+        },
+        "object": {
+          "type": "uri",
+          "value": "http:\/\/dbpedia.org\/class\/yago\/Leader109623038"
+        }
+      },
+      {
+        "property": {
+          "type": "uri",
+          "value": "http:\/\/www.w3.org\/1999\/02\/22-rdf-syntax-ns#type"
+        },
+        "object": {
+          "type": "uri",
+          "value": "http:\/\/dbpedia.org\/class\/yago\/LivingThing100004258"
+        }
+      },
+      {
+        "property": {
+          "type": "uri",
+          "value": "http:\/\/www.w3.org\/1999\/02\/22-rdf-syntax-ns#type"
+        },
+        "object": {
+          "type": "uri",
+          "value": "http:\/\/dbpedia.org\/class\/yago\/Maker110284064"
+        }
+      },
+      {
+        "property": {
+          "type": "uri",
+          "value": "http:\/\/www.w3.org\/1999\/02\/22-rdf-syntax-ns#type"
+        },
+        "object": {
+          "type": "uri",
+          "value": "http:\/\/dbpedia.org\/class\/yago\/Manufacturer110292316"
+        }
+      },
+      {
+        "property": {
+          "type": "uri",
+          "value": "http:\/\/www.w3.org\/1999\/02\/22-rdf-syntax-ns#type"
+        },
+        "object": {
+          "type": "uri",
+          "value": "http:\/\/dbpedia.org\/class\/yago\/Musician110339966"
+        }
+      },
+      {
+        "property": {
+          "type": "uri",
+          "value": "http:\/\/www.w3.org\/1999\/02\/22-rdf-syntax-ns#type"
+        },
+        "object": {
+          "type": "uri",
+          "value": "http:\/\/dbpedia.org\/class\/yago\/Musician110340312"
+        }
+      },
+      {
+        "property": {
+          "type": "uri",
+          "value": "http:\/\/www.w3.org\/1999\/02\/22-rdf-syntax-ns#type"
+        },
+        "object": {
+          "type": "uri",
+          "value": "http:\/\/dbpedia.org\/class\/yago\/Object100002684"
+        }
+      },
+      {
+        "property": {
+          "type": "uri",
+          "value": "http:\/\/www.w3.org\/1999\/02\/22-rdf-syntax-ns#type"
+        },
+        "object": {
+          "type": "uri",
+          "value": "http:\/\/dbpedia.org\/class\/yago\/Organism100004475"
+        }
+      },
+      {
+        "property": {
+          "type": "uri",
+          "value": "http:\/\/www.w3.org\/1999\/02\/22-rdf-syntax-ns#type"
+        },
+        "object": {
+          "type": "uri",
+          "value": "http:\/\/dbpedia.org\/class\/yago\/Owner110388924"
+        }
+      },
+      {
+        "property": {
+          "type": "uri",
+          "value": "http:\/\/www.w3.org\/1999\/02\/22-rdf-syntax-ns#type"
+        },
+        "object": {
+          "type": "uri",
+          "value": "http:\/\/dbpedia.org\/class\/yago\/Performer110415638"
+        }
+      },
+      {
+        "property": {
+          "type": "uri",
+          "value": "http:\/\/www.w3.org\/1999\/02\/22-rdf-syntax-ns#type"
+        },
+        "object": {
+          "type": "uri",
+          "value": "http:\/\/dbpedia.org\/class\/yago\/Person100007846"
+        }
+      },
+      {
+        "property": {
+          "type": "uri",
+          "value": "http:\/\/www.w3.org\/1999\/02\/22-rdf-syntax-ns#type"
+        },
+        "object": {
+          "type": "uri",
+          "value": "http:\/\/dbpedia.org\/class\/yago\/Rapper110507482"
+        }
+      },
+      {
+        "property": {
+          "type": "uri",
+          "value": "http:\/\/www.w3.org\/1999\/02\/22-rdf-syntax-ns#type"
+        },
+        "object": {
+          "type": "uri",
+          "value": "http:\/\/dbpedia.org\/class\/yago\/Singer110599806"
+        }
+      },
+      {
+        "property": {
+          "type": "uri",
+          "value": "http:\/\/www.w3.org\/1999\/02\/22-rdf-syntax-ns#type"
+        },
+        "object": {
+          "type": "uri",
+          "value": "http:\/\/dbpedia.org\/class\/yago\/Whole100003553"
+        }
+      },
+      {
+        "property": {
+          "type": "uri",
+          "value": "http:\/\/www.w3.org\/1999\/02\/22-rdf-syntax-ns#type"
+        },
+        "object": {
+          "type": "uri",
+          "value": "http:\/\/dbpedia.org\/class\/yago\/YagoLegalActorGeo"
+        }
+      },
+      {
+        "property": {
+          "type": "uri",
+          "value": "http:\/\/www.w3.org\/1999\/02\/22-rdf-syntax-ns#type"
+        },
+        "object": {
+          "type": "uri",
+          "value": "http:\/\/dbpedia.org\/class\/yago\/ColumbiaRecordsArtists"
+        }
+      },
+      {
+        "property": {
+          "type": "uri",
+          "value": "http:\/\/www.w3.org\/1999\/02\/22-rdf-syntax-ns#type"
+        },
+        "object": {
+          "type": "uri",
+          "value": "http:\/\/dbpedia.org\/class\/yago\/PhysicalEntity100001930"
+        }
+      },
+      {
+        "property": {
+          "type": "uri",
+          "value": "http:\/\/www.w3.org\/1999\/02\/22-rdf-syntax-ns#type"
+        },
+        "object": {
+          "type": "uri",
+          "value": "http:\/\/dbpedia.org\/class\/yago\/Producer110480018"
+        }
+      },
+      {
+        "property": {
+          "type": "uri",
+          "value": "http:\/\/www.w3.org\/1999\/02\/22-rdf-syntax-ns#type"
+        },
+        "object": {
+          "type": "uri",
+          "value": "http:\/\/dbpedia.org\/class\/yago\/InterscopeRecordsArtists"
+        }
+      },
+      {
+        "property": {
+          "type": "uri",
+          "value": "http:\/\/www.w3.org\/1999\/02\/22-rdf-syntax-ns#type"
+        },
+        "object": {
+          "type": "uri",
+          "value": "http:\/\/dbpedia.org\/class\/yago\/LivingPeople"
+        }
+      },
+      {
+        "property": {
+          "type": "uri",
+          "value": "http:\/\/www.w3.org\/1999\/02\/22-rdf-syntax-ns#type"
+        },
+        "object": {
+          "type": "uri",
+          "value": "http:\/\/dbpedia.org\/class\/yago\/NationalBasketballAssociationExecutives"
+        }
+      },
+      {
+        "property": {
+          "type": "uri",
+          "value": "http:\/\/www.w3.org\/1999\/02\/22-rdf-syntax-ns#type"
+        },
+        "object": {
+          "type": "uri",
+          "value": "http:\/\/dbpedia.org\/class\/yago\/NationalBasketballAssociationOwners"
+        }
+      },
+      {
+        "property": {
+          "type": "uri",
+          "value": "http:\/\/www.w3.org\/1999\/02\/22-rdf-syntax-ns#type"
+        },
+        "object": {
+          "type": "uri",
+          "value": "http:\/\/dbpedia.org\/class\/yago\/PeopleFromPhiladelphia,Pennsylvania"
+        }
+      },
+      {
+        "property": {
+          "type": "uri",
+          "value": "http:\/\/www.w3.org\/1999\/02\/22-rdf-syntax-ns#type"
+        },
+        "object": {
+          "type": "uri",
+          "value": "http:\/\/dbpedia.org\/class\/yago\/Philadelphia76ersExecutives"
+        }
+      },
+      {
+        "property": {
+          "type": "uri",
+          "value": "http:\/\/www.w3.org\/1999\/02\/22-rdf-syntax-ns#type"
+        },
+        "object": {
+          "type": "uri",
+          "value": "http:\/\/dbpedia.org\/class\/yago\/YagoLegalActor"
+        }
+      },
+      {
+        "property": {
+          "type": "uri",
+          "value": "http:\/\/www.w3.org\/1999\/02\/22-rdf-syntax-ns#type"
+        },
+        "object": {
+          "type": "uri",
+          "value": "http:\/\/dbpedia.org\/class\/yago\/RappersFromPhiladelphia,Pennsylvania"
+        }
+      },
+      {
+        "property": {
+          "type": "uri",
+          "value": "http:\/\/www.w3.org\/2000\/01\/rdf-schema#label"
+        },
+        "object": {
+          "type": "literal",
+          "xml:lang": "en",
+          "value": "Will Smith"
+        }
+      },
+      {
+        "property": {
+          "type": "uri",
+          "value": "http:\/\/www.w3.org\/2000\/01\/rdf-schema#label"
+        },
+        "object": {
+          "type": "literal",
+          "xml:lang": "ar",
+          "value": "\u0648\u064a\u0644 \u0633\u0645\u064a\u062b"
+        }
+      },
+      {
+        "property": {
+          "type": "uri",
+          "value": "http:\/\/www.w3.org\/2000\/01\/rdf-schema#label"
+        },
+        "object": {
+          "type": "literal",
+          "xml:lang": "de",
+          "value": "Will Smith"
+        }
+      },
+      {
+        "property": {
+          "type": "uri",
+          "value": "http:\/\/www.w3.org\/2000\/01\/rdf-schema#label"
+        },
+        "object": {
+          "type": "literal",
+          "xml:lang": "es",
+          "value": "Will Smith"
+        }
+      },
+      {
+        "property": {
+          "type": "uri",
+          "value": "http:\/\/www.w3.org\/2000\/01\/rdf-schema#label"
+        },
+        "object": {
+          "type": "literal",
+          "xml:lang": "fr",
+          "value": "Will Smith"
+        }
+      },
+      {
+        "property": {
+          "type": "uri",
+          "value": "http:\/\/www.w3.org\/2000\/01\/rdf-schema#label"
+        },
+        "object": {
+          "type": "literal",
+          "xml:lang": "nl",
+          "value": "Will Smith"
+        }
+      },
+      {
+        "property": {
+          "type": "uri",
+          "value": "http:\/\/www.w3.org\/2000\/01\/rdf-schema#label"
+        },
+        "object": {
+          "type": "literal",
+          "xml:lang": "ja",
+          "value": "\u30a6\u30a3\u30eb\u30fb\u30b9\u30df\u30b9"
+        }
+      },
+      {
+        "property": {
+          "type": "uri",
+          "value": "http:\/\/www.w3.org\/2000\/01\/rdf-schema#label"
+        },
+        "object": {
+          "type": "literal",
+          "xml:lang": "it",
+          "value": "Will Smith"
+        }
+      },
+      {
+        "property": {
+          "type": "uri",
+          "value": "http:\/\/www.w3.org\/2000\/01\/rdf-schema#label"
+        },
+        "object": {
+          "type": "literal",
+          "xml:lang": "pl",
+          "value": "Will Smith"
+        }
+      },
+      {
+        "property": {
+          "type": "uri",
+          "value": "http:\/\/www.w3.org\/2000\/01\/rdf-schema#label"
+        },
+        "object": {
+          "type": "literal",
+          "xml:lang": "pt",
+          "value": "Will Smith"
+        }
+      },
+      {
+        "property": {
+          "type": "uri",
+          "value": "http:\/\/www.w3.org\/2000\/01\/rdf-schema#label"
+        },
+        "object": {
+          "type": "literal",
+          "xml:lang": "ru",
+          "value": "\u0421\u043c\u0438\u0442, \u0423\u0438\u043b\u043b"
+        }
+      },
+      {
+        "property": {
+          "type": "uri",
+          "value": "http:\/\/www.w3.org\/2000\/01\/rdf-schema#label"
+        },
+        "object": {
+          "type": "literal",
+          "xml:lang": "zh",
+          "value": "\u5a01\u723e\u00b7\u53f2\u5bc6\u65af"
+        }
+      },
+      {
+        "property": {
+          "type": "uri",
+          "value": "http:\/\/www.w3.org\/2002\/07\/owl#differentFrom"
+        },
+        "object": {
+          "type": "uri",
+          "value": "http:\/\/dbpedia.org\/resource\/Willi_Smith"
+        }
+      },
+      {
+        "property": {
+          "type": "uri",
+          "value": "http:\/\/www.w3.org\/2002\/07\/owl#sameAs"
+        },
+        "object": {
+          "type": "uri",
+          "value": "http:\/\/data.linkedmdb.org\/resource\/producer\/10003"
+        }
+      },
+      {
+        "property": {
+          "type": "uri",
+          "value": "http:\/\/www.w3.org\/2002\/07\/owl#sameAs"
+        },
+        "object": {
+          "type": "uri",
+          "value": "http:\/\/fr.dbpedia.org\/resource\/Will_Smith"
+        }
+      },
+      {
+        "property": {
+          "type": "uri",
+          "value": "http:\/\/www.w3.org\/2002\/07\/owl#sameAs"
+        },
+        "object": {
+          "type": "uri",
+          "value": "http:\/\/cs.dbpedia.org\/resource\/Will_Smith"
+        }
+      },
+      {
+        "property": {
+          "type": "uri",
+          "value": "http:\/\/www.w3.org\/2002\/07\/owl#sameAs"
+        },
+        "object": {
+          "type": "uri",
+          "value": "http:\/\/de.dbpedia.org\/resource\/Will_Smith"
+        }
+      },
+      {
+        "property": {
+          "type": "uri",
+          "value": "http:\/\/www.w3.org\/2002\/07\/owl#sameAs"
+        },
+        "object": {
+          "type": "uri",
+          "value": "http:\/\/el.dbpedia.org\/resource\/\u0393\u03bf\u03c5\u03af\u03bb_\u03a3\u03bc\u03b9\u03b8"
+        }
+      },
+      {
+        "property": {
+          "type": "uri",
+          "value": "http:\/\/www.w3.org\/2002\/07\/owl#sameAs"
+        },
+        "object": {
+          "type": "uri",
+          "value": "http:\/\/es.dbpedia.org\/resource\/Will_Smith"
+        }
+      },
+      {
+        "property": {
+          "type": "uri",
+          "value": "http:\/\/www.w3.org\/2002\/07\/owl#sameAs"
+        },
+        "object": {
+          "type": "uri",
+          "value": "http:\/\/eu.dbpedia.org\/resource\/Will_Smith"
+        }
+      },
+      {
+        "property": {
+          "type": "uri",
+          "value": "http:\/\/www.w3.org\/2002\/07\/owl#sameAs"
+        },
+        "object": {
+          "type": "uri",
+          "value": "http:\/\/id.dbpedia.org\/resource\/Will_Smith"
+        }
+      },
+      {
+        "property": {
+          "type": "uri",
+          "value": "http:\/\/www.w3.org\/2002\/07\/owl#sameAs"
+        },
+        "object": {
+          "type": "uri",
+          "value": "http:\/\/it.dbpedia.org\/resource\/Will_Smith"
+        }
+      },
+      {
+        "property": {
+          "type": "uri",
+          "value": "http:\/\/www.w3.org\/2002\/07\/owl#sameAs"
+        },
+        "object": {
+          "type": "uri",
+          "value": "http:\/\/ja.dbpedia.org\/resource\/\u30a6\u30a3\u30eb\u30fb\u30b9\u30df\u30b9"
+        }
+      },
+      {
+        "property": {
+          "type": "uri",
+          "value": "http:\/\/www.w3.org\/2002\/07\/owl#sameAs"
+        },
+        "object": {
+          "type": "uri",
+          "value": "http:\/\/ko.dbpedia.org\/resource\/\uc70c_\uc2a4\ubbf8\uc2a4"
+        }
+      },
+      {
+        "property": {
+          "type": "uri",
+          "value": "http:\/\/www.w3.org\/2002\/07\/owl#sameAs"
+        },
+        "object": {
+          "type": "uri",
+          "value": "http:\/\/nl.dbpedia.org\/resource\/Will_Smith"
+        }
+      },
+      {
+        "property": {
+          "type": "uri",
+          "value": "http:\/\/www.w3.org\/2002\/07\/owl#sameAs"
+        },
+        "object": {
+          "type": "uri",
+          "value": "http:\/\/pl.dbpedia.org\/resource\/Will_Smith"
+        }
+      },
+      {
+        "property": {
+          "type": "uri",
+          "value": "http:\/\/www.w3.org\/2002\/07\/owl#sameAs"
+        },
+        "object": {
+          "type": "uri",
+          "value": "http:\/\/pt.dbpedia.org\/resource\/Will_Smith"
+        }
+      },
+      {
+        "property": {
+          "type": "uri",
+          "value": "http:\/\/www.w3.org\/2002\/07\/owl#sameAs"
+        },
+        "object": {
+          "type": "uri",
+          "value": "http:\/\/wikidata.dbpedia.org\/resource\/Q40096"
+        }
+      },
+      {
+        "property": {
+          "type": "uri",
+          "value": "http:\/\/www.w3.org\/2002\/07\/owl#sameAs"
+        },
+        "object": {
+          "type": "uri",
+          "value": "http:\/\/wikidata.org\/entity\/Q40096"
+        }
+      },
+      {
+        "property": {
+          "type": "uri",
+          "value": "http:\/\/www.w3.org\/2002\/07\/owl#sameAs"
+        },
+        "object": {
+          "type": "uri",
+          "value": "http:\/\/rdf.freebase.com\/ns\/m.0147dk"
+        }
+      },
+      {
+        "property": {
+          "type": "uri",
+          "value": "http:\/\/www.w3.org\/2002\/07\/owl#sameAs"
+        },
+        "object": {
+          "type": "uri",
+          "value": "http:\/\/zitgist.com\/music\/artist\/5bae7081-64ef-4473-825a-38d310deb14c"
+        }
+      },
+      {
+        "property": {
+          "type": "uri",
+          "value": "http:\/\/www.w3.org\/2002\/07\/owl#sameAs"
+        },
+        "object": {
+          "type": "uri",
+          "value": "http:\/\/sw.cyc.com\/concept\/Mx4rv3LLy5wpEbGdrcN5Y29ycA"
+        }
+      },
+      {
+        "property": {
+          "type": "uri",
+          "value": "http:\/\/www.w3.org\/2002\/07\/owl#sameAs"
+        },
+        "object": {
+          "type": "uri",
+          "value": "http:\/\/viaf.org\/viaf\/118073838"
+        }
+      },
+      {
+        "property": {
+          "type": "uri",
+          "value": "http:\/\/www.w3.org\/2002\/07\/owl#sameAs"
+        },
+        "object": {
+          "type": "uri",
+          "value": "http:\/\/yago-knowledge.org\/resource\/Will_Smith"
+        }
+      },
+      {
+        "property": {
+          "type": "uri",
+          "value": "http:\/\/www.w3.org\/ns\/prov#wasDerivedFrom"
+        },
+        "object": {
+          "type": "uri",
+          "value": "http:\/\/en.wikipedia.org\/wiki\/Will_Smith?oldid=645091860"
+        }
+      },
+      {
+        "property": {
+          "type": "uri",
+          "value": "http:\/\/xmlns.com\/foaf\/0.1\/homepage"
+        },
+        "object": {
+          "type": "uri",
+          "value": "http:\/\/www.willsmith.com"
+        }
+      },
+      {
+        "property": {
+          "type": "uri",
+          "value": "http:\/\/xmlns.com\/foaf\/0.1\/isPrimaryTopicOf"
+        },
+        "object": {
+          "type": "uri",
+          "value": "http:\/\/en.wikipedia.org\/wiki\/Will_Smith"
+        }
+      },
+      {
+        "property": {
+          "type": "uri",
+          "value": "http:\/\/xmlns.com\/foaf\/0.1\/name"
+        },
+        "object": {
+          "type": "literal",
+          "xml:lang": "en",
+          "value": "Smith, Willard Carroll, Jr."
+        }
+      },
+      {
+        "property": {
+          "type": "uri",
+          "value": "http:\/\/xmlns.com\/foaf\/0.1\/name"
+        },
+        "object": {
+          "type": "literal",
+          "xml:lang": "en",
+          "value": "Will Smith"
+        }
+      }
+    ]
+  }
+}
