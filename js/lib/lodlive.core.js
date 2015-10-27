@@ -107,15 +107,19 @@
 
     // TODO: look these up on the context object as data-lodlive-xxxx attributes
     // store settings on the instance
-    /* TODO: set these by default on the instance via the options - consider putting them under 'flags' or some other property
-    $.jStorage.set('relationsLimit', 25);
-    $.jStorage.set('doStats', $.jStorage.get('doStats', true));
-    $.jStorage.set('doInverse', $.jStorage.get('doAutoExpand', true));
-    $.jStorage.set('doAutoExpand', $.jStorage.get('doAutoExpand', true));
-    $.jStorage.set('doAutoSameas', $.jStorage.get('doAutoSameas', true));
-    $.jStorage.set('doCollectImages', $.jStorage.get('doCollectImages', true));
-    $.jStorage.set('doDrawMap', $.jStorage.get('doDrawMap', true));
-    */
+    // TODO: set these by default on the instance via the options -
+    // consider putting them under 'flags' or some other property
+
+    // TODO: where appropriate, replace magic number 25
+    // this.relationsLimit = 25;
+
+    // TODO: this method is missing; implement it, or remove flag
+    // this.doStats = false
+
+    // TODO: retrieve these from the profile
+    this.doInverse = true;
+    this.doAutoExpand = true;
+    this.doAutoSameas = true;
 
     // explicitly disabled, for now
     this.doCollectImages = false;

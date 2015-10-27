@@ -65,6 +65,7 @@ describe('lodlive', function () {
     ExampleProfile.endpoints.jsonp = false;
     // ExampleProfile.debugOn = true;
     jQuery('#graph').lodlive({ profile: ExampleProfile, firstUri: firstUri });
+    jQuery('#graph').data('lodlive-instance').doInverse = false;
 
     expect(firstBox.calledOnce).to.be.true;
     expect(openDoc.calledOnce).to.be.true;
