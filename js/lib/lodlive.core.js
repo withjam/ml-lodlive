@@ -906,6 +906,78 @@
     this.renderer.msg('', 'init');
   };
 
+  /**
+   * Gets the Ids of all active objects with references from `subject`
+   *
+   * @param {String} subject - the Id of an active subject
+   * @return {Array<String>} object Ids
+   */
+  LodLive.prototype.getObjectRefs = function(subject) {
+    return this.storeIds['gen' + subject] || [];
+  };
+
+  /**
+   * Sets `objects` as the list of references from `subject`
+   *
+   * @param {String} subject - the Id of an active subject
+   * @param {Array<String>} objects - the Ids of `subject`'s objects
+   */
+  LodLive.prototype.setObjectRefs = function(subject, objects) {
+    this.storeIds['gen' + subject] = objects;
+  }
+
+  /**
+   * Adds an active object reference from `subject`
+   *
+   * @param {String} subject - the Id of an active subject
+   * @param {String} object - the Id of an object of `subject`
+   */
+  LodLive.prototype.addObjectRef = function(subject, object) {
+    var objects = this.getObjectRefs(subject);
+
+    if (objects.indexOf(object) === -1) {
+      objects.push(object);
+    }
+
+    this.setObjectRefs(subject, objects);
+  };
+
+  /**
+   * Gets the Ids of all active subjects with references to `object`
+   *
+   * @param {String} object - the Id of an active object
+   * @return {Array<String>} subject Ids
+   */
+  LodLive.prototype.getSubjectRefs = function(object) {
+    return this.storeIds['rev' + object] || [];
+  };
+
+  /**
+   * Sets `subjects` as the list of references from `object`
+   *
+   * @param {String} subjects - the Ids of `object`'s subjects
+   * @param {Array<String>} object - the Id of an active object
+   */
+  LodLive.prototype.setSubjectRefs = function(object, subjects) {
+    this.storeIds['rev' + object] = subjects;
+  }
+
+  /**
+   * Adds an active subject reference to `object`
+   *
+   * @param {String} object - the Id of an active object
+   * @param {String} subject - the Id of a subject of `object`
+   */
+  LodLive.prototype.addSubjectRef = function(object, subject) {
+    var subjects = this.getSubjectRefs(object);
+
+    if (subjects.indexOf(subject) === -1) {
+      subjects.push(subject);
+    }
+
+    this.setSubjectRefs(object, subjects);
+  };
+
   // TODO: remove unnecessary param
   LodLive.prototype.autoExpand = function(obj) {
     var inst = this;
@@ -958,92 +1030,63 @@
     }
   };
 
-  LodLive.prototype.addNewDoc = function(obj, ele, callback) {
-    var inst = this, start;
-    if (inst.debugOn) {
-      start = new Date().getTime();
+  LodLive.prototype.addNewDoc = function(originalCircle, ele) {
+    var inst = this;
+    var exist = true;
+    var fromInverse = null;
+
+    var rel = ele.attr('rel');
+    var aId = ele.attr('relmd5');
+    var circleId = ele.data('circleid');
+    var propertyName = ele.data('property');
+    var isInverse = ele.is('.inverse');
+
+    // TODO: rename for clarity ?
+    // var subjectId = circleId; var objectId = aId;
+
+    if (!isInverse) {
+      // TODO: add explaination for early return
+      if (inst.getObjectRefs(circleId).indexOf(aId) > -1) {
+        return;
+      }
+
+      inst.addObjectRef(circleId, aId);
+      inst.addSubjectRef(aId, circleId);
     }
 
-    var aId = ele.attr('relmd5');
     var newObj = inst.context.find('#' + aId);
-    var isInverse = ele.is('.inverse');
-    var exist = true;
-    ele = $(ele);
 
     // verifico se esistono box rappresentativi dello stesso documento
     // nella pagina
     if (!newObj.length) {
-
-      newObj = $(inst.boxTemplate);
       exist = false;
-
+      newObj = $(inst.boxTemplate)
+      .attr('id', aId)
+      .attr('rel', rel);
     }
 
-    var circleId = ele.data('circleid');
-    var originalCircus = $('#' + circleId);
-
-    if (inst.debugOn) {
-      console.debug((new Date().getTime() - start) + '  addNewDoc 01 ');
-    }
-
-    if (!isInverse) {
-
-      if (inst.debugOn) {
-
-        console.debug((new Date().getTime() - start) + '  addNewDoc 02 ');
-      }
-
-      var connected = inst.storeIds['gen' + circleId];
-      if (!connected) {
-        connected = [aId];
-      } else {
-        if ($.inArray(aId, connected) == -1) {
-          connected.push(aId);
-        } else {
-          return;
-        }
-      }
-
-      if (inst.debugOn) {
-        console.debug((new Date().getTime() - start) + '  addNewDoc 03 ');
-      }
-
-      inst.storeIds['gen' + circleId] = connected;
-
-      connected = inst.storeIds['rev'+ aId];
-      if (!connected) {
-        connected = [circleId];
-      } else {
-        if ($.inArray(circleId, connected) == -1) {
-          connected.push(circleId);
-        }
-      }
-      if (inst.debugOn) {
-        console.debug((new Date().getTime() - start) + '  addNewDoc 04 ');
-      }
-      inst.storeIds['rev' + aId] = connected;
-    }
-
-    var propertyName = ele.data('property');
-    var rel = ele.attr('rel');
-    newObj.attr('id', aId);
-    newObj.attr('rel', rel);
-
-    var fromInverse = isInverse ? 'div[data-property="' + propertyName + '"][rel="' + rel + '"]' : null;
-    if (inst.debugOn) {
-      console.debug((new Date().getTime() - start) + '  addNewDoc 05 ');
-    }
     // nascondo l'oggetto del click e carico la risorsa successiva
     ele.hide();
+
     if (!exist) {
-      if (inst.debugOn) {
-        console.debug((new Date().getTime() - start) + '  addNewDoc 06 ');
-      }
       var pos = parseInt(ele.attr('data-circlePos'), 10);
       var parts = parseInt(ele.attr('data-circleParts'), 10);
-      var chordsListExpand = inst.circleChords(parts > 10 ? (pos % 2 > 0 ? originalCircus.width() * 3 : originalCircus.width() * 2) : originalCircus.width() * 5 / 2, parts, originalCircus.position().left + obj.width() / 2, originalCircus.position().top + originalCircus.height() / 2, null, pos);
+
+      var radiusFactor = parts > 10 ?
+                         2 + (pos % 2) :
+                         5 / 2;
+
+      var chordsListExpand = inst.circleChords(
+        originalCircle.width() * radiusFactor,
+        parts,
+        originalCircle.position().left + originalCircle.width() / 2,
+        originalCircle.position().top + originalCircle.height() / 2,
+        null,
+        pos
+      );
+
       inst.context.append(newObj);
-      //FIXME: eliminate inline CSS where possible
+      // FIXME: eliminate inline CSS where possible
       newObj.css({
         left : (chordsListExpand[0][0] - newObj.height() / 2),
         top : (chordsListExpand[0][1] - newObj.width() / 2),
@@ -1051,45 +1094,16 @@
         zIndex : 99
       });
 
-      if (inst.debugOn) {
-        console.debug((new Date().getTime() - start) + '  addNewDoc 07 ');
+      if (isInverse) {
+        fromInverse = 'div[data-property="' + propertyName + '"][rel="' + rel + '"]';
       }
-      if (!isInverse) {
-        if (inst.debugOn) {
-          console.debug((new Date().getTime() - start) + '  addNewDoc 08 ');
-        }
-        if (inst.doInverse) {
-          inst.openDoc(rel, newObj, fromInverse);
-        } else {
-          inst.openDoc(rel, newObj);
-        }
-        inst.renderer.drawaLine(obj, newObj, propertyName);
-      } else {
-        if (inst.debugOn) {
-          console.debug((new Date().getTime() - start) + '  addNewDoc 09 ');
-        }
-        inst.openDoc(rel, newObj, fromInverse);
-      }
-    } else {
-      if (!isInverse) {
-        if (inst.debugOn) {
-          console.debug((new Date().getTime() - start) + '  addNewDoc 10 ');
-        }
-        inst.renderer.drawaLine(obj, newObj, propertyName);
-      } else {
-        if (inst.debugOn) {
-          console.debug((new Date().getTime() - start) + '  addNewDoc 11 ');
-        }
-      }
+
+      inst.openDoc(rel, newObj, fromInverse);
     }
-    //TODO: why is there a callback if this is not asnyc?
-    if (callback) {
-      callback();
+
+    if (!isInverse) {
+      inst.renderer.drawaLine(originalCircle, newObj, propertyName);
     }
-    if (inst.debugOn) {
-      console.debug((new Date().getTime() - start) + '  addNewDoc ');
-    }
-    return false;
   };
 
   LodLive.prototype.removeDoc = function(obj, callback) {
