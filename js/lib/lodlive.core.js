@@ -128,6 +128,13 @@
       this.msg = this.UI.nodeHover;
     }
 
+    // simple MD5 implementation to eliminate dependencies
+    // can still pass in MD5 (or some other algorithm) if desired
+    this.hashFunc = this.options.hashFunc || utils.hashFunc;
+
+    // TODO: move to renderer
+    this.boxTemplate =  this.options.boxTemplate || DEFAULT_BOX_TEMPLATE;
+
     var httpClientFactory = require('../../src/http-client.js');
 
     var httpClient = httpClientFactory.create(
@@ -149,41 +156,34 @@
 
     this.refs = refStoreFactory.create();
 
-    // container elements
-    this.container = container.css('position', 'relative');
-    this.context = jQuery('<div class="lodlive-graph-context"></div>').appendTo(container).wrap('<div class="lodlive-graph-container"></div>');
-    if (typeof container === 'string') {
-      container = jQuery(container);
-    }
-    if (!container.length) {
-      throw 'LodLive: no container found';
-    }
-    enableDrag(this);
-
     var rendererFactory = require('../../src/renderer.js');
 
     this.renderer = rendererFactory.create(
-      this.container,
-      this.context,
       this.options.arrows,
       this.options.UI.tools,
       this.options.UI.nodeIcons,
       this.refs
     );
+
+    this.renderer.init(container);
+    this.container = this.renderer.container;
+    this.context = this.renderer.context;
+
+    // TODO: move to renderer.init()
+    enableDrag(this);
+
+    // temporary, need access from both components
+    this.renderer.hashFunc = this.hashFunc;
+    this.renderer.boxTemplate = this.boxTemplate
   }
 
   LodLive.prototype.init = function(firstUri) {
-    var instance = this;
-
     // instance data
     this.imagesMap = {};
     this.mapsMap = {};
     this.infoPanelMap = {};
     this.connection = {};
-    // simple MD5 implementation to eliminate dependencies, can still pass in MD5 (or some other algorithm) if desired
-    this.hashFunc = this.options.hashFunc || utils.hashFunc;
     this.innerPageMap = {};
-    this.boxTemplate =  this.options.boxTemplate || DEFAULT_BOX_TEMPLATE;
     this.ignoreBnodes = this.UI.ignoreBnodes;
 
     // TODO: look these up on the context object as data-lodlive-xxxx attributes
@@ -202,23 +202,15 @@
     this.doCollectImages = false;
     this.doDrawMap = false;
 
-    var firstBox = $(this.boxTemplate);
-
-    this.renderer.centerBox(firstBox);
-
-    firstBox.attr('id', this.hashFunc(firstUri));
-    firstBox.attr('rel', firstUri);
-    firstBox.css('zIndex',1);
-    this.context.append(firstBox);
-
     this.classMap = {
       // TODO: let CSS drive color
       counter : Math.floor(Math.random() * 13) + 1
     };
 
-    // carico il primo documento
+    var firstBox = this.renderer.firstBox(firstUri);
     this.openDoc(firstUri, firstBox);
 
+    // TODO: do this in renderer.init()?
     this.renderer.msg('', 'init');
   };
 

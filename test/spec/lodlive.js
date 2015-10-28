@@ -28,7 +28,7 @@ describe('lodlive', function () {
   });
 
   it('should init', function () {
-    var centerBox = this.sandbox.spy(LodLiveRenderer.prototype, 'centerBox');
+    var firstBox = this.sandbox.spy(LodLiveRenderer.prototype, 'firstBox');
     var openDoc = this.sandbox.spy(LodLive.prototype, 'openDoc');
 
     var firstUri = 'http://dbpedia.org/resource/Will_Smith';
@@ -37,7 +37,7 @@ describe('lodlive', function () {
     ExampleProfile.endpoints.jsonp = false;
     jQuery('#graph').lodlive({ profile: ExampleProfile, firstUri: firstUri });
 
-    expect(centerBox.calledOnce).to.be.true;
+    expect(firstBox.calledOnce).to.be.true;
     expect(openDoc.calledOnce).to.be.true;
 
     expect(this.requests.length).to.equal(1);
@@ -53,7 +53,7 @@ describe('lodlive', function () {
   });
 
   it('should render sparql results', function () {
-    var centerBox = this.sandbox.spy(LodLiveRenderer.prototype, 'centerBox');
+    var firstBox = this.sandbox.spy(LodLiveRenderer.prototype, 'firstBox');
     var openDoc = this.sandbox.spy(LodLive.prototype, 'openDoc');
     var format = this.sandbox.spy(LodLive.prototype, 'format');
     var addNewDoc = this.sandbox.spy(LodLive.prototype, 'addNewDoc');
@@ -66,7 +66,7 @@ describe('lodlive', function () {
     // ExampleProfile.debugOn = true;
     jQuery('#graph').lodlive({ profile: ExampleProfile, firstUri: firstUri });
 
-    expect(centerBox.calledOnce).to.be.true;
+    expect(firstBox.calledOnce).to.be.true;
     expect(openDoc.calledOnce).to.be.true;
 
     expect(this.requests.length).to.equal(1);
