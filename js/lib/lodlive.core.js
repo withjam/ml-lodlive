@@ -76,9 +76,7 @@
 
   /* experimental renderer component */
 
-  function LodLiveRenderer(container, context, arrows, tools) {
-    this.container = container;
-    this.context = context;
+  function LodLiveRenderer(arrows, tools) {
     this.arrows = arrows;
     this.tools = tools;
   }
@@ -129,39 +127,41 @@
   };
 
   /**
-   * Centers the initial box (for firstUri)
+   * Creates (and centers) the first URI box
    */
-  LodLiveRenderer.prototype.centerBox = function(aBox) {
+  LodLiveRenderer.prototype.firstBox = function(firstUri) {
     var renderer = this;
-    var ch = renderer.context.height();
-    var cw = renderer.context.width();
+    var ctx = renderer.context;
+    var ch = ctx.height();
+    var cw = ctx.width();
 
-    var bw = aBox.width() || 65;
-    var bh = aBox.height() || 65;
+    // FIXME: we don't want to assume we scroll the entire window here
+    // since we could be just a portion of the screen or have multiples
+    ctx.parent().scrollTop(ch / 2 - ctx.parent().height() / 2 + 60);
+    ctx.parent().scrollLeft(cw / 2 - ctx.parent().width() / 2 + 60);
 
-    var start;
+    // console.log(ctx.parent().scrollTop());
 
-    var top = (ch - 65) / 2 + (renderer.context.scrollTop() || 0);
-    var left = (cw - 65) / 2 + (renderer.context.scrollLeft() || 0);
-    var props = {
-      position : 'absolute',
-      left : left,
-      top : top,
-      opacity: 0
-    };
+    var top = (ch - 65) / 2 + (ctx.scrollTop() || 0);
+    var left = (cw - 65) / 2 + (ctx.scrollLeft() || 0);
 
     //console.log('centering top: %s, left: %s', top, left);
 
-    //FIXME: we don't want to assume we scroll the entire window here, since we could be just a portion of the screen or have multiples
-    renderer.context.parent().scrollTop(ch / 2 - renderer.context.parent().height() / 2 + 60);
-    renderer.context.parent().scrollLeft(cw / 2 - renderer.context.parent().width() / 2 + 60);
+    var aBox = $(renderer.boxTemplate)
+    .attr('id', renderer.hashFunc(firstUri))
+    .attr('rel', firstUri)
+    // TODO: move styles to external sheet where possible
+    .css({
+      left : left,
+      top : top,
+      opacity: 0,
+      zIndex: 1
+    })
+    .animate({ opacity: 1}, 1000);
 
-    // console.log(inst.context.parent().scrollTop());
+    renderer.context.append(aBox);
 
-    //window.scrollBy(cw / 2 - jwin.width() / 2 + 25, ch / 2 - jwin.height() / 2 + 65);
-
-    aBox.css(props);
-    aBox.animate({ opacity: 1}, 1000);
+    return aBox;
   };
 
   /**
@@ -503,9 +503,28 @@
     });
   };
 
+  LodLiveRenderer.prototype.init = function(container) {
+    if (typeof container === 'string') {
+      container = $(container);
+    }
+    if (!container.length) {
+      throw new Error('LodLive: no container found');
+    }
+
+    // TODO: move styles to external sheet
+    this.container = container.css('position', 'relative');
+    this.context = $('<div class="lodlive-graph-context"></div>');
+
+    var graphContainer = $('<div class="lodlive-graph-container"></div>');
+
+    this.context.appendTo(this.container).wrap(graphContainer);
+    // TODO:
+    // renderer.enableDrag();
+  };
+
   var rendererFactory = {
-    create: function(container, context, arrows, tools) {
-      return new LodLiveRenderer(container, context, arrows, tools);
+    create: function(arrows, tools) {
+      return new LodLiveRenderer(arrows, tools);
     }
   };
 
@@ -809,6 +828,13 @@
       this.msg = this.UI.nodeHover;
     }
 
+    // simple MD5 implementation to eliminate dependencies
+    // can still pass in MD5 (or some other algorithm) if desired
+    this.hashFunc = this.options.hashFunc || LodLiveUtils.hashFunc;
+
+    // TODO: move to renderer
+    this.boxTemplate =  this.options.boxTemplate || DEFAULT_BOX_TEMPLATE;
+
     var httpClient = httpClientFactory.create(
       this.options.connection['http:'].endpoint,
       this.options.endpoints.all,
@@ -822,38 +848,31 @@
       httpClient
     );
 
-    // container elements
-    this.container = container.css('position', 'relative');
-    this.context = jQuery('<div class="lodlive-graph-context"></div>').appendTo(container).wrap('<div class="lodlive-graph-container"></div>');
-    if (typeof container === 'string') {
-      container = jQuery(container);
-    }
-    if (!container.length) {
-      throw 'LodLive: no container found';
-    }
-    enableDrag(this);
-
     this.renderer = rendererFactory.create(
-      this.container,
-      this.context,
       this.options.arrows,
       this.options.UI.tools
     );
+
+    this.renderer.init(container);
+    this.container = this.renderer.container;
+    this.context = this.renderer.context;
+
+    // TODO: move to renderer.init()
+    enableDrag(this);
+
+    // temporary, need access from both components
+    this.renderer.hashFunc = this.hashFunc;
+    this.renderer.boxTemplate = this.boxTemplate
   }
 
   LodLive.prototype.init = function(firstUri) {
-    var instance = this;
-
     // instance data
     this.imagesMap = {};
     this.mapsMap = {};
     this.infoPanelMap = {};
     this.connection = {};
-    // simple MD5 implementation to eliminate dependencies, can still pass in MD5 (or some other algorithm) if desired
-    this.hashFunc = this.options.hashFunc || LodLiveUtils.hashFunc;
     this.innerPageMap = {};
     this.storeIds = {};
-    this.boxTemplate =  this.options.boxTemplate || DEFAULT_BOX_TEMPLATE;
     this.ignoreBnodes = this.UI.ignoreBnodes;
 
     // TODO: look these up on the context object as data-lodlive-xxxx attributes
@@ -875,23 +894,15 @@
     this.doCollectImages = false;
     this.doDrawMap = false;
 
-    var firstBox = $(this.boxTemplate);
-
-    this.renderer.centerBox(firstBox);
-
-    firstBox.attr('id', this.hashFunc(firstUri));
-    firstBox.attr('rel', firstUri);
-    firstBox.css('zIndex',1);
-    this.context.append(firstBox);
-
     this.classMap = {
       // TODO: let CSS drive color
       counter : Math.floor(Math.random() * 13) + 1
     };
 
-    // carico il primo documento
+    var firstBox = this.renderer.firstBox(firstUri);
     this.openDoc(firstUri, firstBox);
 
+    // TODO: do this in renderer.init()?
     this.renderer.msg('', 'init');
   };
 
