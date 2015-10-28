@@ -941,6 +941,30 @@
   };
 
   /**
+   * Removes an active object reference from `subject`
+   *
+   * @param {String} subject - the Id of an active subject
+   * @param {String} object - the Id of an object of `subject`
+   */
+  LodLive.prototype.removeObjectRef = function(subject, object) {
+    var objects = this.getObjectRefs(subject);
+    var index = objects.indexOf(object);
+
+    if (index > -1) {
+      objects.splice(index, 1);
+    }
+  };
+
+  /**
+   * Removes all references to `object`
+   *
+   * @param {String} object - the Id of an object
+   */
+  LodLive.prototype.removeAsObject = function(object) {
+    delete this.storeIds['rev' + object];
+  };
+
+  /**
    * Gets the Ids of all active subjects with references to `object`
    *
    * @param {String} object - the Id of an active object
@@ -974,6 +998,30 @@
     }
 
     this.setSubjectRefs(object, subjects);
+  };
+
+  /**
+   * Removes an active subject reference from `object`
+   *
+   * @param {String} object - the Id of an active object
+   * @param {String} subject - the Id of a subject of `object`
+   */
+  LodLive.prototype.removeSubjectRef = function(object, subject) {
+    var subjects = this.getSubjectRefs(object);
+    var index = subjects.indexOf(subject);
+
+    if (index > -1) {
+      subjects.splice(index, 1);
+    }
+  };
+
+  /**
+   * Removes all references from `subject`
+   *
+   * @param {String} subject - the Id of an subject
+   */
+  LodLive.prototype.removeAsSubject = function(subject) {
+    delete this.storeIds['gen' + subject];
   };
 
   // TODO: remove unnecessary param
@@ -1106,46 +1154,53 @@
 
   LodLive.prototype.removeDoc = function(obj, callback) {
     var inst = this;
+
     var isRoot = inst.context.find('.lodlive-node').length == 1;
     if (isRoot) {
         alert('Cannot Remove Only Box');
         return;
     }
-    var start;
-    if (inst.debugOn) {
-      start = new Date().getTime();
-    }
 
-    inst.context.find('.lodlive-toolbox').remove(); // why remove and not hide?
+    // TODO: why remove and not hide?
+    inst.context.find('.lodlive-toolbox').remove();
 
     var id = obj.attr('id');
+
+    // get subjects where id is the object
+    var subjectIds = inst.getSubjectRefs(id);
+
+    // get objects where id is the subject
+    var objectIds = inst.getObjectRefs(id)
+
+    // clear canvas holding lines from obj
     inst.context.find('#line-' + id).clearCanvas();
 
-    var generatedRev = inst.storeIds['rev' + id];
-    if (generatedRev) {
-      for (var a = 0; a < generatedRev.length; a++) {
-        inst.context.find('#line-' + generatedRev[a]).clearCanvas();
-      }
-    }
+    // clear canvases holding lines to obj
+    subjectIds.forEach(function(subjectId) {
+      inst.context.find('#line-' + subjectId).clearCanvas();
+    });
+
     inst.docInfo();
-    var cp = inst.context.find('.lodLiveControlPanel');
 
-    if (inst.doCollectImages) {
-      var imagesMap = inst.imagesMap;
-      if (imagesMap[id]) {
-        delete imagesMap[id];
-        inst.updateImagePanel(cp);
-        cp.find('a[class*=img-' + id + ']').remove();
-      }
-    }
+    // Image rendering has been disabled; keeping for posterity ...
+    // var cp = inst.context.find('.lodLiveControlPanel');
+    // if (inst.doCollectImages) {
+    //   var imagesMap = inst.imagesMap;
+    //   if (imagesMap[id]) {
+    //     delete imagesMap[id];
+    //     inst.updateImagePanel(cp);
+    //     cp.find('a[class*=img-' + id + ']').remove();
+    //   }
+    // }
 
-    if (inst.doDrawMap) {
-      var mapsMap = inst.mapsMap;
-      if (mapsMap[id]) {
-        delete mapsMap[id];
-        inst.updateMapPanel(cp);
-      }
-    }
+    // Map rendering has been disabled; keeping for posterity ...
+    // if (inst.doDrawMap) {
+    //   var mapsMap = inst.mapsMap;
+    //   if (mapsMap[id]) {
+    //     delete mapsMap[id];
+    //     inst.updateMapPanel(cp);
+    //   }
+    // }
 
     obj.fadeOut('normal', null, function() {
       obj.remove();
@@ -1161,81 +1216,37 @@
         }
       });
 
+      // re-show predicate boxes that pointed to this object
       inst.context.find('div[relmd5=' + id + ']').each(function() {
         var found = $(this);
         found.show();
         found.removeClass('exploded');
       });
 
-      var generated = inst.storeIds['gen' + id];
-      var generatedRev = inst.storeIds['rev' + id];
-      var int, int2, generatedBy;
+      // remove references to id
+      subjectIds.forEach(function(subjectId) {
+        inst.removeObjectRef(subjectId, id);
+      });
+      objectIds.forEach(function(objectId) {
+        inst.removeSubjectRef(objectId, id);
+      });
 
-      if (generatedRev) {
+      // remove references from id
+      inst.removeAsSubject(id);
+      inst.removeAsObject(id);
 
-        for (int = 0; int < generatedRev.length; int++) {
+      // draw all lines for cleared canvases
+      subjectIds.forEach(function(subjectId) {
+        var objectIds = inst.getObjectRefs(subjectId);
 
-          generatedBy = inst.storeIds['gen' + generatedRev[int]];
-
-          if (generatedBy) {
-
-            for (int2 = 0; int2 < generatedBy.length; int2++) {
-
-              if (generatedBy[int2] === id) {
-
-                generatedBy.splice(int2, 1);
-
-              }
-            }
-          }
-          // don't need to set it again since it modifies the same object
-          // inst.storeIds['gen' + generatedRev[int]] = generatedBy;
-        }
-      }
-      // really wish there were comments here, why these two loops?
-      if (generated) {
-
-        for (int = 0; int < generated.length; int++) {
-
-          generatedBy = inst.storeIds['rev' + generated[int]];
-
-          if (generatedBy) {
-            for (int2 = 0; int2 < generatedBy.length; int2++) {
-              if (generatedBy[int2] == id) {
-                generatedBy.splice(int2, 1);
-              }
-            }
-          }
-          // don't need to set it again since it modifies the same object
-          // inst.storeIds['rev' + generated[int] = generatedBy;
-        }
-      }
-
-      generatedRev = inst.storeIds['rev' +  id];
-      //TODO: three loops? look for a way to simplify
-      if (generatedRev) {
-
-        for (int = 0; int < generatedRev.length; int++) {
-
-          generated = inst.storeIds['gen' + generatedRev[int]];
-          if (generated) {
-
-            for (int2 = 0; int2 < generated.length; int2++) {
-
-              inst.renderer.drawaLine(inst.context.find('#' + generatedRev[int]), inst.context.find('#' + generated[int2]));
-
-            }
-          }
-        }
-      }
-      delete inst.storeIds['rev' + id];
-      delete inst.storeIds['gen' + id];
-
+        objectIds.forEach(function(objectId) {
+          inst.renderer.drawaLine(
+            inst.context.find('#' + subjectId),
+            inst.context.find('#' + objectId)
+          );
+        });
+      });
     });
-
-    if (inst.debugOn) {
-      console.debug((new Date().getTime() - start) + '  removeDoc ');
-    }
   };
 
   LodLive.prototype.addClick = function(obj, callback) {
