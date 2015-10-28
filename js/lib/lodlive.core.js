@@ -748,18 +748,16 @@
           var divid = instance.ll_dragging.attr('id');
           instance.ll_isdragging = true;
           // just started the drag
+
           // remove any lines connected to this node
           // TODO: find a better way to handle lines
           $('#line-' + divid).clearCanvas();
-          var generatedRev = instance.storeIds['rev' + divid];
-          // find all the generated lines
-          if (generatedRev) {
-            // this finds all lines each drag start, not my favorite but fix later
-            for (var a = 0; a < generatedRev.length; a++) {
-              var generated = instance.storeIds['gen' + generatedRev[a]];
-              $('#line-' + generatedRev[a]).clearCanvas();
-            }
-          }
+
+          var subjectIds = instance.getSubjectRefs(divid);
+
+          subjectIds.forEach(function(subjectId) {
+            $('#line-' + subjectId).clearCanvas();
+          });
         }
         instance.ll_dragging.css({ left: cx + scrx - instance.ll_dragoffx, top: cy + scry - instance.ll_dragoffy });
       } else if (instance.ll_panning) {
@@ -1357,33 +1355,35 @@
   };
 
   LodLive.prototype.drawAllLines = function(obj) {
+    var inst = this;
+    var id = obj.attr('id');
 
-    var inst = this, id = obj.attr('id'), a;
+    // get objects where id is the subject
+    var objectIds = inst.getObjectRefs(id)
 
-    var generated = inst.storeIds['gen' + id];
-    var generatedRev = inst.storeIds['rev' + id];
-    // elimino la riga se giÃ  presente (in caso di
-    // spostamento di un
-    // box)
+    // get subjects where id is the object
+    var subjectIds = inst.getSubjectRefs(id);
+
+    // remove line if exists
     inst.context.find('#line-' + id).clearCanvas();
-    if (generated) {
-      for (a = 0; a < generated.length; a++) {
-        inst.renderer.drawaLine(obj, inst.context.find('#' + generated[a]));
-      }
-    }
 
-    if (generatedRev) {
-      for (a = 0; a < generatedRev.length; a++) {
-        generated = inst.storeIds['gen' + generatedRev[a]];
-        $('#line-' + generatedRev[a]).clearCanvas();
-        if (generated) {
-          for (var a2 = 0; a2 < generated.length; a2++) {
-            inst.renderer.drawaLine(inst.context.find('#' + generatedRev[a]), inst.context.find('#' + generated[a2]));
-          }
-        }
-      }
-    }
+    objectIds.forEach(function(objectId) {
+      inst.renderer.drawaLine(
+        obj,
+        inst.context.find('#' + objectId)
+      );
+    });
 
+    subjectIds.forEach(function(subjectId) {
+      var nestedObjectIds = inst.getObjectRefs(subjectId);
+
+      nestedObjectIds.forEach(function(objectId) {
+        inst.renderer.drawaLine(
+          inst.context.find('#' + subjectId),
+          inst.context.find('#' + objectId)
+        );
+      });
+    });
   };
 
   LodLive.prototype.formatDoc = function(destBox, values, uris, bnodes, URI) {
