@@ -76,9 +76,10 @@
 
   /* experimental renderer component */
 
-  function LodLiveRenderer(arrows, tools) {
+  function LodLiveRenderer(arrows, tools, refs) {
     this.arrows = arrows;
     this.tools = tools;
+    this.refs = refs;
   }
 
   /**
@@ -523,8 +524,8 @@
   };
 
   var rendererFactory = {
-    create: function(arrows, tools) {
-      return new LodLiveRenderer(arrows, tools);
+    create: function(arrows, tools, refs) {
+      return new LodLiveRenderer(arrows, tools, refs);
     }
   };
 
@@ -713,6 +714,141 @@
     window.sparqlClientFactory = sparqlClientFactory;
   }
 
+  function LodLiveRefStore() {}
+
+  /**
+   * Gets the Ids of all active objects with references from `subject`
+   *
+   * @param {String} subject - the Id of an active subject
+   * @return {Array<String>} object Ids
+   */
+  LodLiveRefStore.prototype.getObjectRefs = function(subject) {
+    return this.storeIds['gen' + subject] || [];
+  };
+
+  /**
+   * Sets `objects` as the list of references from `subject`
+   *
+   * @param {String} subject - the Id of an active subject
+   * @param {Array<String>} objects - the Ids of `subject`'s objects
+   */
+  LodLiveRefStore.prototype.setObjectRefs = function(subject, objects) {
+    this.storeIds['gen' + subject] = objects;
+  }
+
+  /**
+   * Adds an active object reference from `subject`
+   *
+   * @param {String} subject - the Id of an active subject
+   * @param {String} object - the Id of an object of `subject`
+   */
+  LodLiveRefStore.prototype.addObjectRef = function(subject, object) {
+    var objects = this.getObjectRefs(subject);
+
+    if (objects.indexOf(object) === -1) {
+      objects.push(object);
+    }
+
+    this.setObjectRefs(subject, objects);
+  };
+
+  /**
+   * Removes an active object reference from `subject`
+   *
+   * @param {String} subject - the Id of an active subject
+   * @param {String} object - the Id of an object of `subject`
+   */
+  LodLiveRefStore.prototype.removeObjectRef = function(subject, object) {
+    var objects = this.getObjectRefs(subject);
+    var index = objects.indexOf(object);
+
+    if (index > -1) {
+      objects.splice(index, 1);
+    }
+  };
+
+  /**
+   * Removes all references to `object`
+   *
+   * @param {String} object - the Id of an object
+   */
+  LodLiveRefStore.prototype.removeAsObject = function(object) {
+    delete this.storeIds['rev' + object];
+  };
+
+  /**
+   * Gets the Ids of all active subjects with references to `object`
+   *
+   * @param {String} object - the Id of an active object
+   * @return {Array<String>} subject Ids
+   */
+  LodLiveRefStore.prototype.getSubjectRefs = function(object) {
+    return this.storeIds['rev' + object] || [];
+  };
+
+  /**
+   * Sets `subjects` as the list of references from `object`
+   *
+   * @param {String} subjects - the Ids of `object`'s subjects
+   * @param {Array<String>} object - the Id of an active object
+   */
+  LodLiveRefStore.prototype.setSubjectRefs = function(object, subjects) {
+    this.storeIds['rev' + object] = subjects;
+  }
+
+  /**
+   * Adds an active subject reference to `object`
+   *
+   * @param {String} object - the Id of an active object
+   * @param {String} subject - the Id of a subject of `object`
+   */
+  LodLiveRefStore.prototype.addSubjectRef = function(object, subject) {
+    var subjects = this.getSubjectRefs(object);
+
+    if (subjects.indexOf(subject) === -1) {
+      subjects.push(subject);
+    }
+
+    this.setSubjectRefs(object, subjects);
+  };
+
+  /**
+   * Removes an active subject reference from `object`
+   *
+   * @param {String} object - the Id of an active object
+   * @param {String} subject - the Id of a subject of `object`
+   */
+  LodLiveRefStore.prototype.removeSubjectRef = function(object, subject) {
+    var subjects = this.getSubjectRefs(object);
+    var index = subjects.indexOf(subject);
+
+    if (index > -1) {
+      subjects.splice(index, 1);
+    }
+  };
+
+  /**
+   * Removes all references from `subject`
+   *
+   * @param {String} subject - the Id of an subject
+   */
+  LodLiveRefStore.prototype.removeAsSubject = function(subject) {
+    delete this.storeIds['gen' + subject];
+  };
+
+  var refStoreFactory = {
+    create: function () {
+      var store = Object.create(LodLiveRefStore.prototype);
+      store.storeIds = {};
+      return store;
+    }
+  };
+
+  // temporary, for testing
+  if (!window.refStoreFactory) {
+    window.refStoreFactory = refStoreFactory;
+  }
+
   /** LodLiveProfile constructor - Not sure this is even necessary, a basic object should suffice - I don't think it adds any features or logic
     * @Class LodLiveProfile
     */
@@ -753,7 +889,7 @@
           // TODO: find a better way to handle lines
           $('#line-' + divid).clearCanvas();
 
-          var subjectIds = instance.getSubjectRefs(divid);
+          var subjectIds = instance.refs.getSubjectRefs(divid);
 
           subjectIds.forEach(function(subjectId) {
             $('#line-' + subjectId).clearCanvas();
@@ -846,9 +982,12 @@
       httpClient
     );
 
+    this.refs = refStoreFactory.create();
+
     this.renderer = rendererFactory.create(
       this.options.arrows,
-      this.options.UI.tools
+      this.options.UI.tools,
+      this.refs
     );
 
     this.renderer.init(container);
@@ -902,126 +1041,6 @@
 
     // TODO: do this in renderer.init()?
     this.renderer.msg('', 'init');
-  };
-
-  /**
-   * Gets the Ids of all active objects with references from `subject`
-   *
-   * @param {String} subject - the Id of an active subject
-   * @return {Array<String>} object Ids
-   */
-  LodLive.prototype.getObjectRefs = function(subject) {
-    return this.storeIds['gen' + subject] || [];
-  };
-
-  /**
-   * Sets `objects` as the list of references from `subject`
-   *
-   * @param {String} subject - the Id of an active subject
-   * @param {Array<String>} objects - the Ids of `subject`'s objects
-   */
-  LodLive.prototype.setObjectRefs = function(subject, objects) {
-    this.storeIds['gen' + subject] = objects;
-  }
-
-  /**
-   * Adds an active object reference from `subject`
-   *
-   * @param {String} subject - the Id of an active subject
-   * @param {String} object - the Id of an object of `subject`
-   */
-  LodLive.prototype.addObjectRef = function(subject, object) {
-    var objects = this.getObjectRefs(subject);
-
-    if (objects.indexOf(object) === -1) {
-      objects.push(object);
-    }
-
-    this.setObjectRefs(subject, objects);
-  };
-
-  /**
-   * Removes an active object reference from `subject`
-   *
-   * @param {String} subject - the Id of an active subject
-   * @param {String} object - the Id of an object of `subject`
-   */
-  LodLive.prototype.removeObjectRef = function(subject, object) {
-    var objects = this.getObjectRefs(subject);
-    var index = objects.indexOf(object);
-
-    if (index > -1) {
-      objects.splice(index, 1);
-    }
-  };
-
-  /**
-   * Removes all references to `object`
-   *
-   * @param {String} object - the Id of an object
-   */
-  LodLive.prototype.removeAsObject = function(object) {
-    delete this.storeIds['rev' + object];
-  };
-
-  /**
-   * Gets the Ids of all active subjects with references to `object`
-   *
-   * @param {String} object - the Id of an active object
-   * @return {Array<String>} subject Ids
-   */
-  LodLive.prototype.getSubjectRefs = function(object) {
-    return this.storeIds['rev' + object] || [];
-  };
-
-  /**
-   * Sets `subjects` as the list of references from `object`
-   *
-   * @param {String} subjects - the Ids of `object`'s subjects
-   * @param {Array<String>} object - the Id of an active object
-   */
-  LodLive.prototype.setSubjectRefs = function(object, subjects) {
-    this.storeIds['rev' + object] = subjects;
-  }
-
-  /**
-   * Adds an active subject reference to `object`
-   *
-   * @param {String} object - the Id of an active object
-   * @param {String} subject - the Id of a subject of `object`
-   */
-  LodLive.prototype.addSubjectRef = function(object, subject) {
-    var subjects = this.getSubjectRefs(object);
-
-    if (subjects.indexOf(subject) === -1) {
-      subjects.push(subject);
-    }
-
-    this.setSubjectRefs(object, subjects);
-  };
-
-  /**
-   * Removes an active subject reference from `object`
-   *
-   * @param {String} object - the Id of an active object
-   * @param {String} subject - the Id of a subject of `object`
-   */
-  LodLive.prototype.removeSubjectRef = function(object, subject) {
-    var subjects = this.getSubjectRefs(object);
-    var index = subjects.indexOf(subject);
-
-    if (index > -1) {
-      subjects.splice(index, 1);
-    }
-  };
-
-  /**
-   * Removes all references from `subject`
-   *
-   * @param {String} subject - the Id of an subject
-   */
-  LodLive.prototype.removeAsSubject = function(subject) {
-    delete this.storeIds['gen' + subject];
   };
 
   // TODO: remove unnecessary param
@@ -1092,12 +1111,12 @@
 
     if (!isInverse) {
       // TODO: add explaination for early return
-      if (inst.getObjectRefs(circleId).indexOf(aId) > -1) {
+      if (inst.refs.getObjectRefs(circleId).indexOf(aId) > -1) {
         return;
       }
 
-      inst.addObjectRef(circleId, aId);
-      inst.addSubjectRef(aId, circleId);
+      inst.refs.addObjectRef(circleId, aId);
+      inst.refs.addSubjectRef(aId, circleId);
     }
 
     var newObj = inst.context.find('#' + aId);
@@ -1167,10 +1186,10 @@
     var id = obj.attr('id');
 
     // get subjects where id is the object
-    var subjectIds = inst.getSubjectRefs(id);
+    var subjectIds = inst.refs.getSubjectRefs(id);
 
     // get objects where id is the subject
-    var objectIds = inst.getObjectRefs(id)
+    var objectIds = inst.refs.getObjectRefs(id)
 
     // clear canvas holding lines from obj
     inst.context.find('#line-' + id).clearCanvas();
@@ -1225,19 +1244,19 @@
 
       // remove references to id
       subjectIds.forEach(function(subjectId) {
-        inst.removeObjectRef(subjectId, id);
+        inst.refs.removeObjectRef(subjectId, id);
       });
       objectIds.forEach(function(objectId) {
-        inst.removeSubjectRef(objectId, id);
+        inst.refs.removeSubjectRef(objectId, id);
       });
 
       // remove references from id
-      inst.removeAsSubject(id);
-      inst.removeAsObject(id);
+      inst.refs.removeAsSubject(id);
+      inst.refs.removeAsObject(id);
 
       // draw all lines for cleared canvases
       subjectIds.forEach(function(subjectId) {
-        var objectIds = inst.getObjectRefs(subjectId);
+        var objectIds = inst.refs.getObjectRefs(subjectId);
 
         objectIds.forEach(function(objectId) {
           inst.renderer.drawaLine(
@@ -1370,10 +1389,10 @@
     var id = obj.attr('id');
 
     // get objects where id is the subject
-    var objectIds = inst.getObjectRefs(id)
+    var objectIds = inst.refs.getObjectRefs(id)
 
     // get subjects where id is the object
-    var subjectIds = inst.getSubjectRefs(id);
+    var subjectIds = inst.refs.getSubjectRefs(id);
 
     // remove line if exists
     inst.context.find('#line-' + id).clearCanvas();
@@ -1386,7 +1405,7 @@
     });
 
     subjectIds.forEach(function(subjectId) {
-      var nestedObjectIds = inst.getObjectRefs(subjectId);
+      var nestedObjectIds = inst.refs.getObjectRefs(subjectId);
 
       nestedObjectIds.forEach(function(objectId) {
         inst.renderer.drawaLine(
