@@ -198,76 +198,202 @@
   };
 
   /**
-   * Draws a line
+   * Gets all canvases containing lines related to `id`
+   *
+   * @param {String} id - the id of a subject or object node
+   * @returns {Array<Object>} an array of canvas objects
    */
-  LodLiveRenderer.prototype.drawaLine = function(from, to, propertyName) {
-    var renderer = this;
-    var start;
-    var pos1 = from.position();
-    var pos2 = to.position();
-    var aCanvas = $('#line-' + from.attr('id'));
-    // console.debug(new Date().getTime()+'moving - '+(new Date())+" -
-    // #line-" +
-    // from.attr("id") + "-" + to.attr("id"))
-    if (aCanvas.length == 1) {
-      if (propertyName) {
-        aCanvas.attr('data-propertyName-' + to.attr('id'), propertyName);
-      }
-      renderer.processDraw(pos1.left + from.width() / 2, pos1.top + from.height() / 2, pos2.left + to.width() / 2, pos2.top + to.height() / 2, aCanvas, to.attr('id'));
-    } else {
-      aCanvas = $('<canvas data-propertyName-' + to.attr('id') + '="' + propertyName + '" height="' + renderer.context.height() + '" width="' + renderer.context.width() + '" id="line-' + from.attr('id') + '"></canvas>');
-      renderer.context.append(aCanvas);
-      aCanvas.css({
-        'position' : 'absolute',
-        'zIndex' : '0',
-        'top' : 0,
-        'left' : 0
-      });
-      renderer.processDraw(pos1.left + from.width() / 2, pos1.top + from.height() / 2, pos2.left + to.width() / 2, pos2.top + to.height() / 2, aCanvas, to.attr('id'));
-    }
+  LodLiveRenderer.prototype.getRelatedCanvases = function(id) {
+    var canvases = [];
+    var subjectIds = this.refs.getSubjectRefs(id);
+
+    // canvas holding lines from id
+    canvases.push($('#line-' + id));
+
+    // canvases holding lines to id
+    subjectIds.forEach(function(subjectId) {
+      canvases.push($('#line-' + subjectId));
+    });
+
+    return canvases;
   };
 
-  LodLiveRenderer.prototype.processDraw = function(x1, y1, x2, y2, canvas, toId) {
-    var renderer = this;
-    var start;
+  /**
+   * Clear all lines related to `id`, or clear all canvases
+   *
+   * @param {String} [id] - the id of a subject or object node
+   * @param {Array<Object>} [canvases] - an array of canvas objects
+   */
+  LodLiveRenderer.prototype.clearLines = function(arg) {
+    var canvases;
 
-    // recupero il nome della proprieta'
-    var label = '';
-
-    var lineStyle = 'standardLine';
-    //FIXME:  don't use IDs
-    if (renderer.context.find('#' + toId).length > 0) {
-
-      label = canvas.attr('data-propertyName-' + toId);
-
-      // TODO: literal regexp?
-      var labeArray = label.split('\|');
-
-      label = '\n';
-
-      for (var o = 0; o < labeArray.length; o++) {
-
-        if (renderer.arrows[$.trim(labeArray[o])]) {
-          lineStyle = renderer.arrows[$.trim(labeArray[o])] + 'Line';
-        }
-
-        var shortKey = LodLive.shortenKey(labeArray[o]);
-        var lastHash = shortKey.lastIndexOf('#');
-        var lastSlash = shortKey.lastIndexOf('/');
-
-        if (label.indexOf('\n' + shortKey + '\n') == -1) {
-          label += shortKey + '\n';
-        }
-      }
-    }
-    //if (lineStyle === 'standardLine') { it appears they all end up back here anyway
-    if (lineStyle !== 'isSameAsLine') {
-
-      renderer.standardLine(label, x1, y1, x2, y2, canvas, toId);
-
+    if (Array.isArray(arg)) {
+      canvases = arg;
     } else {
-      //TODO: doesn't make sense to have these live in different files.  Should make line drawers an extensible interface
-      renderer.customLines(renderer.context, lineStyle, label, x1, y1, x2, y2, canvas, toId);
+      canvases = this.getRelatedCanvases(arg);
+    }
+
+    canvases.forEach(function(canvas) {
+      canvas.clearCanvas();
+    });
+  };
+
+  /**
+   * Gets all node pairs related to `id`
+   *
+   * @param {String} id - the id of a subject or object node
+   * @param {Boolean} excludeSelf - exclude pairs that include the identified node (default `false`)
+   * @returns {Array<Object>} an array containing pairs of related nodes, and the canvas for their line
+   */
+  LodLiveRenderer.prototype.getRelatedNodePairs = function(id, excludeSelf) {
+    var renderer = this;
+    var pairs = [];
+    var node;
+    var nodeCanvas;
+
+    // get objects where id is the subject
+    var objectIds = renderer.refs.getObjectRefs(id)
+
+    // get subjects where id is the object
+    var subjectIds = renderer.refs.getSubjectRefs(id);
+
+    if (!excludeSelf) {
+      node = renderer.context.find('#' + id);
+      nodeCanvas = $('#line-' + id);
+
+      objectIds.forEach(function(objectId) {
+        pairs.push({
+          from: node,
+          to: renderer.context.find('#' + objectId),
+          canvas: nodeCanvas
+        });
+      });
+    }
+
+    subjectIds.forEach(function(subjectId) {
+      var nestedObjectIds = renderer.refs.getObjectRefs(subjectId);
+      var subjectNode = renderer.context.find('#' + subjectId);
+      var subjectCanvas = renderer.context.find('#line-' + subjectId);
+
+      nestedObjectIds.forEach(function(objectId) {
+        if (excludeSelf && objectId === id) {
+          return;
+        }
+
+        pairs.push({
+          from: subjectNode,
+          to: renderer.context.find('#' + objectId),
+          canvas: subjectCanvas
+        });
+      });
+    });
+
+    return pairs;
+  };
+
+  /**
+   * Draw all lines related to `id`, or draw lines for all provided node pairs
+   *
+   * @param {String} [id] - the id of a subject or object node
+   * @param {Array<Object>} [pairs] an array containing pairs of related nodes and their canvas
+   */
+  LodLiveRenderer.prototype.drawLines = function(arg) {
+    var renderer = this;
+    var pairs;
+
+    if (Array.isArray(arg)) {
+      pairs = arg;
+    } else {
+      pairs = renderer.getRelatedNodePairs(arg);
+    }
+
+    pairs.forEach(function(pair) {
+      renderer.drawLine(pair.from, pair.to, pair.canvas);
+    });
+  };
+
+  /**
+   * Draws a line from `from` to `to`, on `canvas`
+   *
+   * @param {Object} from - jQuery node
+   * @param {Object} to - jQuery node
+   * @param {Object} [canvas] - jQuery canvas node
+   * @param {String} [propertyName] - the predicates from which to build the line label
+   */
+  LodLiveRenderer.prototype.drawLine = function(from, to, canvas, propertyName) {
+    var renderer = this;
+    var pos1 = from.position();
+    var pos2 = to.position();
+    var fromId = from.attr('id');
+    var toId = to.attr('id');
+
+    if (!canvas) {
+      canvas = $('#line-' + fromId);
+    }
+
+    if (!canvas.length) {
+      canvas = $('<canvas></canvas>')
+      .attr('height', renderer.context.height())
+      .attr('width', renderer.context.width())
+      .attr('id', 'line-' + fromId)
+      .css({
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        zIndex: '0'
+      });
+
+      canvas.data().lines = {};
+
+      renderer.context.append(canvas);
+    }
+
+    // TODO: just build the label directly, skip the data-propertyName-{ID} attribute
+    if (propertyName && !canvas.data('propertyName-' + toId)) {
+      canvas.attr('data-propertyName-' + toId, propertyName);
+    }
+
+    if (!canvas.data().lines[toId]) {
+      canvas.data().lines[toId] = {};
+    }
+
+    var line = canvas.data().lines[toId];
+
+    var lineStyle = line.lineStyle || 'standardLine';
+    var label = line.label;
+    var labelArray;
+
+    if (!label) {
+      labelArray = canvas.attr('data-propertyName-' + toId).split(/\|/);
+
+      label = labelArray.map(function(labelPart) {
+        labelPart = $.trim(labelPart);
+
+        if (renderer.arrows[ labelPart ]) {
+          lineStyle = renderer.arrows[ labelPart ] + 'Line';
+        }
+
+        return LodLive.shortenKey(labelPart);
+      })
+      // deduplicate
+      .filter(function(value, index, self) {
+        return self.indexOf(value) === index;
+      })
+      .join(', ');
+
+      line.label = label;
+      line.lineStyle = lineStyle;
+    }
+
+    var x1 = pos1.left + from.width() / 2;
+    var y1 = pos1.top + from.height() / 2;
+    var x2 = pos2.left + to.width() / 2;
+    var y2 = pos2.top + to.height() / 2;
+
+    if (lineStyle === 'isSameAsLine') {
+      renderer.isSameAsLine(label, x1, y1, x2, y2, canvas, toId);
+    } else {
+      renderer.standardLine(label, x1, y1, x2, y2, canvas, toId);
     }
   };
 
@@ -301,7 +427,7 @@
         y : (y1 + y1) / 2
       });
     }
-    label = $.trim(label).replace(/\n/g, ', ');
+
     canvas.drawText({// inserisco l'etichetta
       fillStyle : '#606060',
       strokeStyle : '#606060',
@@ -378,7 +504,6 @@
         y : (y1 + y1) / 2
       });
     }
-    label = $.trim(label).replace(/\n/g, ', ');
 
     // inserisco l'etichetta
     // add the label
@@ -424,16 +549,6 @@
       x2 : topx,
       y2 : topy
     });
-  };
-
-  /**
-   *  Invokes a line drawing method
-   */
-  LodLiveRenderer.prototype.customLines = function(context, method) {
-    console.log('customLines', method);
-    if (this[method]) {
-      return this[method].apply(this, Array.prototype.slice.call(arguments, 2));
-    }
   };
 
   LodLiveRenderer.prototype.msg = function(msg, action, type, endpoint, inverse) {
@@ -864,6 +979,8 @@
   };
 
   function enableDrag(instance) {
+    var canvases = [];
+    var nodes = [];
 
     // watch mouse move events on the container to move anything being dragged
     instance.container.on('mousemove', function(event) {
@@ -885,17 +1002,15 @@
           instance.ll_isdragging = true;
           // just started the drag
 
-          // remove any lines connected to this node
-          // TODO: find a better way to handle lines
-          $('#line-' + divid).clearCanvas();
-
-          var subjectIds = instance.refs.getSubjectRefs(divid);
-
-          subjectIds.forEach(function(subjectId) {
-            $('#line-' + subjectId).clearCanvas();
-          });
+          canvases = instance.renderer.getRelatedCanvases(divid);
+          nodes = instance.renderer.getRelatedNodePairs(divid);
+          instance.renderer.clearLines(canvases);
         }
-        instance.ll_dragging.css({ left: cx + scrx - instance.ll_dragoffx, top: cy + scry - instance.ll_dragoffy });
+
+        instance.ll_dragging.css({
+          left: cx + scrx - instance.ll_dragoffx,
+          top: cy + scry - instance.ll_dragoffy
+        });
       } else if (instance.ll_panning) {
         instance.context.parent().scrollLeft( scrx + diffx);
         instance.context.parent().scrollTop( scry + diffy);
@@ -923,7 +1038,7 @@
     function cancelDrag() {
         if (instance.ll_dragging) {
           // redraw the lines TODO: figure out a better way to handle lines
-          instance.drawAllLines(instance.ll_dragging);
+          instance.renderer.drawLines(nodes);
         }
         instance.ll_isdragging = false;
         instance.ll_dragging = false;
@@ -1167,7 +1282,7 @@
     }
 
     if (!isInverse) {
-      inst.renderer.drawaLine(originalCircle, newObj, propertyName);
+      inst.renderer.drawLine(originalCircle, newObj, null, propertyName);
     }
   };
 
@@ -1185,21 +1300,29 @@
 
     var id = obj.attr('id');
 
+    inst.renderer.clearLines(id);
+
     // get subjects where id is the object
     var subjectIds = inst.refs.getSubjectRefs(id);
 
     // get objects where id is the subject
     var objectIds = inst.refs.getObjectRefs(id)
 
-    // clear canvas holding lines from obj
-    inst.context.find('#line-' + id).clearCanvas();
-
-    // clear canvases holding lines to obj
+    // remove references to id
     subjectIds.forEach(function(subjectId) {
-      inst.context.find('#line-' + subjectId).clearCanvas();
+      inst.refs.removeObjectRef(subjectId, id);
+    });
+    objectIds.forEach(function(objectId) {
+      inst.refs.removeSubjectRef(objectId, id);
     });
 
-    inst.docInfo();
+    // get all pairs, excluding self
+    var pairs = inst.renderer.getRelatedNodePairs(id, true);
+    inst.renderer.drawLines(pairs);
+
+    // remove references from id
+    inst.refs.removeAsSubject(id);
+    inst.refs.removeAsObject(id);
 
     // Image rendering has been disabled; keeping for posterity ...
     // var cp = inst.context.find('.lodLiveControlPanel');
@@ -1221,6 +1344,8 @@
     //   }
     // }
 
+    inst.docInfo();
+
     obj.fadeOut('normal', null, function() {
       obj.remove();
       $.each(inst.innerPageMap, function(key, element) {
@@ -1240,30 +1365,6 @@
         var found = $(this);
         found.show();
         found.removeClass('exploded');
-      });
-
-      // remove references to id
-      subjectIds.forEach(function(subjectId) {
-        inst.refs.removeObjectRef(subjectId, id);
-      });
-      objectIds.forEach(function(objectId) {
-        inst.refs.removeSubjectRef(objectId, id);
-      });
-
-      // remove references from id
-      inst.refs.removeAsSubject(id);
-      inst.refs.removeAsObject(id);
-
-      // draw all lines for cleared canvases
-      subjectIds.forEach(function(subjectId) {
-        var objectIds = inst.refs.getObjectRefs(subjectId);
-
-        objectIds.forEach(function(objectId) {
-          inst.renderer.drawaLine(
-            inst.context.find('#' + subjectId),
-            inst.context.find('#' + objectId)
-          );
-        });
       });
     });
   };
@@ -1381,38 +1482,6 @@
         }];
         inst.formatDoc(docInfo, values, [], [], URI);
       }
-    });
-  };
-
-  LodLive.prototype.drawAllLines = function(obj) {
-    var inst = this;
-    var id = obj.attr('id');
-
-    // get objects where id is the subject
-    var objectIds = inst.refs.getObjectRefs(id)
-
-    // get subjects where id is the object
-    var subjectIds = inst.refs.getSubjectRefs(id);
-
-    // remove line if exists
-    inst.context.find('#line-' + id).clearCanvas();
-
-    objectIds.forEach(function(objectId) {
-      inst.renderer.drawaLine(
-        obj,
-        inst.context.find('#' + objectId)
-      );
-    });
-
-    subjectIds.forEach(function(subjectId) {
-      var nestedObjectIds = inst.refs.getObjectRefs(subjectId);
-
-      nestedObjectIds.forEach(function(objectId) {
-        inst.renderer.drawaLine(
-          inst.context.find('#' + subjectId),
-          inst.context.find('#' + objectId)
-        );
-      });
     });
   };
 
