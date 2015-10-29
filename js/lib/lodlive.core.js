@@ -29,83 +29,6 @@
 
   }
 
-  function enableDrag(instance) {
-    var canvases = [];
-    var nodes = [];
-
-    // watch mouse move events on the container to move anything being dragged
-    instance.container.on('mousemove', function(event) {
-      var cx, cy, scrx, scry, lastx, lasty, diffx, diffy;
-      cx = event.clientX;
-      cy = event.clientY;
-      lastx = instance.ll_lastx;
-      lasty = instance.ll_lasty;
-      diffx = lastx - cx;
-      diffy = lasty - cy;
-      instance.ll_lasty = cy;
-      instance.ll_lastx = cx;
-      scrx = instance.context.parent().scrollLeft();
-      scry = instance.context.parent().scrollTop();
-      if (instance.ll_dragging) {
-        // dragging a node
-        if (!instance.ll_isdragging) {
-          var divid = instance.ll_dragging.attr('id');
-          instance.ll_isdragging = true;
-          // just started the drag
-
-          canvases = instance.renderer.getRelatedCanvases(divid);
-          nodes = instance.renderer.getRelatedNodePairs(divid);
-          instance.renderer.clearLines(canvases);
-        }
-
-        instance.ll_dragging.css({
-          left: cx + scrx - instance.ll_dragoffx,
-          top: cy + scry - instance.ll_dragoffy
-        });
-      } else if (instance.ll_panning) {
-        instance.context.parent().scrollLeft( scrx + diffx);
-        instance.context.parent().scrollTop( scry + diffy);
-      }
-      // do nothing otherwise
-    });
-
-    instance.container.on('mousedown', '.lodlive-node', function(event) {
-      var node = jQuery(this), divid = node.attr('id');
-      // mark the node as being dragged using event-delegation
-      instance.ll_dragging = node;
-      instance.ll_panning = false;
-      // store offset of event so node moves properly
-      instance.ll_dragoffx = event.offsetX;
-      instance.ll_dragoffy = event.offsetY;
-      event.stopPropagation();
-      event.preventDefault();
-    });
-    instance.container.on('mousedown', function(event) {
-      instance.ll_dragging = false;
-      instance.ll_panning = true;
-      event.stopPropagation();
-      event.preventDefault();
-    });
-    function cancelDrag() {
-        if (instance.ll_dragging) {
-          // redraw the lines TODO: figure out a better way to handle lines
-          instance.renderer.drawLines(nodes);
-        }
-        instance.ll_isdragging = false;
-        instance.ll_dragging = false;
-        instance.ll_panning = false;
-    }
-    instance.container.on('mouseup', cancelDrag);
-    jQuery(document).on('keydown', function(event) {
-      console.log('keypress', event);
-      if (event.keyCode === 27) {
-        // esc key
-        cancelDrag();
-      }
-    });
-
-  }
-
   // instance methods
 
   /**
@@ -168,9 +91,6 @@
     this.renderer.init(container);
     this.container = this.renderer.container;
     this.context = this.renderer.context;
-
-    // TODO: move to renderer.init()
-    enableDrag(this);
 
     // temporary, need access from both components
     this.renderer.hashFunc = this.hashFunc;
