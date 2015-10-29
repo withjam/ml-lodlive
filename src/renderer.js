@@ -211,6 +211,32 @@ LodLiveRenderer.prototype.generateTools = function(container, obj, inst) {
   return tools;
 };
 
+LodLiveRenderer.prototype.reDrawLines = function(target) {
+  var renderer = this;
+  var id = target.attr('id');
+  var nodes = renderer.getRelatedNodePairs(id);
+
+  if (!nodes || !nodes.length) return;
+
+  var canvases = renderer.getRelatedCanvases(id);
+  var shouldContinue = true;
+
+  function draw() {
+    renderer.clearLines(canvases);
+    renderer.drawLines(nodes);
+
+    if (shouldContinue) {
+      requestAnimationFrame(draw);
+    }
+  }
+
+  requestAnimationFrame(draw);
+
+  return function() {
+    shouldContinue = false;
+  };
+};
+
 /**
  * Gets all canvases containing lines related to `id`
  *
@@ -656,16 +682,7 @@ LodLiveRenderer.prototype.init = function(container) {
   var draggable = require('./draggable.js');
 
   draggable(this.container, this.context, '.lodlive-node', function(dragState) {
-    var id = dragState.target.attr('id');
-    var canvases = renderer.getRelatedCanvases(id);
-    var nodes = renderer.getRelatedNodePairs(id);
-
-    // TODO: re-render lines constantly
-    renderer.clearLines(canvases);
-
-    return function() {
-      renderer.drawLines(nodes);
-    };
+    return renderer.reDrawLines(dragState.target);
   });
 };
 
