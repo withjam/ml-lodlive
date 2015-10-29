@@ -620,6 +620,8 @@
   };
 
   LodLiveRenderer.prototype.init = function(container) {
+    var renderer = this;
+
     if (typeof container === 'string') {
       container = $(container);
     }
@@ -634,8 +636,19 @@
     var graphContainer = $('<div class="lodlive-graph-container"></div>');
 
     this.context.appendTo(this.container).wrap(graphContainer);
-    // TODO:
-    // renderer.enableDrag();
+
+    enableDrag(this.container, this.context, '.lodlive-node', function(dragState) {
+      var id = dragState.target.attr('id');
+      var canvases = renderer.getRelatedCanvases(id);
+      var nodes = renderer.getRelatedNodePairs(id);
+
+      // TODO: re-render lines constantly
+      renderer.clearLines(canvases);
+
+      return function() {
+        renderer.drawLines(nodes);
+      };
+    });
   };
 
   var rendererFactory = {
@@ -978,81 +991,78 @@
     return lastSlash > lastHash ? str.substring(lastSlash + 1) : str.substring(lastHash + 1);
   };
 
-  function enableDrag(instance) {
-    var canvases = [];
-    var nodes = [];
+  function enableDrag(container, context, draggableSelector, dragStart) {
+    var dragState = {};
+    var dragStop = null;
 
     // watch mouse move events on the container to move anything being dragged
-    instance.container.on('mousemove', function(event) {
-      var cx, cy, scrx, scry, lastx, lasty, diffx, diffy;
-      cx = event.clientX;
-      cy = event.clientY;
-      lastx = instance.ll_lastx;
-      lasty = instance.ll_lasty;
-      diffx = lastx - cx;
-      diffy = lasty - cy;
-      instance.ll_lasty = cy;
-      instance.ll_lastx = cx;
-      scrx = instance.context.parent().scrollLeft();
-      scry = instance.context.parent().scrollTop();
-      if (instance.ll_dragging) {
-        // dragging a node
-        if (!instance.ll_isdragging) {
-          var divid = instance.ll_dragging.attr('id');
-          instance.ll_isdragging = true;
+    container.on('mousemove', function(event) {
+      var cx = event.clientX;
+      var cy = event.clientY;
+      var scrx = context.parent().scrollLeft();
+      var scry = context.parent().scrollTop();
+      var lastx = dragState.lastx;
+      var lasty = dragState.lasty;
+      var diffx = lastx - cx;
+      var diffy = lasty - cy;
+
+      dragState.lastx = cx;
+      dragState.lasty = cy;
+
+      // dragging a node
+      if (dragState.target) {
+        if (!dragState.isDragging) {
           // just started the drag
-
-          canvases = instance.renderer.getRelatedCanvases(divid);
-          nodes = instance.renderer.getRelatedNodePairs(divid);
-          instance.renderer.clearLines(canvases);
+          dragState.isDragging = true;
+          dragStop = dragStart(dragState);
         }
 
-        instance.ll_dragging.css({
-          left: cx + scrx - instance.ll_dragoffx,
-          top: cy + scry - instance.ll_dragoffy
+        dragState.target.css({
+          left: cx + scrx - dragState.offsetX,
+          top: cy + scry - dragState.offsetY
         });
-      } else if (instance.ll_panning) {
-        instance.context.parent().scrollLeft( scrx + diffx);
-        instance.context.parent().scrollTop( scry + diffy);
+      } else if (dragState.panning) {
+        context.parent().scrollLeft(scrx + diffx);
+        context.parent().scrollTop(scry + diffy);
       }
-      // do nothing otherwise
     });
 
-    instance.container.on('mousedown', '.lodlive-node', function(event) {
-      var node = jQuery(this), divid = node.attr('id');
+    container.on('mousedown', draggableSelector, function(event) {
       // mark the node as being dragged using event-delegation
-      instance.ll_dragging = node;
-      instance.ll_panning = false;
+      dragState.target = $(this);
+      dragState.panning = false;
+
       // store offset of event so node moves properly
-      instance.ll_dragoffx = event.offsetX;
-      instance.ll_dragoffy = event.offsetY;
+      dragState.offsetX = event.offsetX;
+      dragState.offsetY = event.offsetY;
+
       event.stopPropagation();
       event.preventDefault();
     });
-    instance.container.on('mousedown', function(event) {
-      instance.ll_dragging = false;
-      instance.ll_panning = true;
+
+    container.on('mousedown', function(event) {
+      dragState.target = null;
+      dragState.panning = true;
       event.stopPropagation();
       event.preventDefault();
     });
+
     function cancelDrag() {
-        if (instance.ll_dragging) {
-          // redraw the lines TODO: figure out a better way to handle lines
-          instance.renderer.drawLines(nodes);
-        }
-        instance.ll_isdragging = false;
-        instance.ll_dragging = false;
-        instance.ll_panning = false;
+      if (dragStop) dragStop();
+      dragStop = null;
+      dragState.isDragging = false;
+      dragState.target = null;
+      dragState.panning = false;
     }
-    instance.container.on('mouseup', cancelDrag);
-    jQuery(document).on('keydown', function(event) {
-      // console.log('keypress', event);
+
+    container.on('mouseup', cancelDrag);
+
+    $(document).on('keydown', function(event) {
+      // esc key
       if (event.keyCode === 27) {
-        // esc key
         cancelDrag();
       }
     });
-
   }
 
   // instance methods
@@ -1108,9 +1118,6 @@
     this.renderer.init(container);
     this.container = this.renderer.container;
     this.context = this.renderer.context;
-
-    // TODO: move to renderer.init()
-    enableDrag(this);
 
     // temporary, need access from both components
     this.renderer.hashFunc = this.hashFunc;
