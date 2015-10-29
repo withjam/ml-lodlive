@@ -30,6 +30,8 @@
   }
 
   function enableDrag(instance) {
+    var canvases = [];
+    var nodes = [];
 
     // watch mouse move events on the container to move anything being dragged
     instance.container.on('mousemove', function(event) {
@@ -51,17 +53,15 @@
           instance.ll_isdragging = true;
           // just started the drag
 
-          // remove any lines connected to this node
-          // TODO: find a better way to handle lines
-          $('#line-' + divid).clearCanvas();
-
-          var subjectIds = instance.refs.getSubjectRefs(divid);
-
-          subjectIds.forEach(function(subjectId) {
-            $('#line-' + subjectId).clearCanvas();
-          });
+          canvases = instance.renderer.getRelatedCanvases(divid);
+          nodes = instance.renderer.getRelatedNodePairs(divid);
+          instance.renderer.clearLines(canvases);
         }
-        instance.ll_dragging.css({ left: cx + scrx - instance.ll_dragoffx, top: cy + scry - instance.ll_dragoffy });
+
+        instance.ll_dragging.css({
+          left: cx + scrx - instance.ll_dragoffx,
+          top: cy + scry - instance.ll_dragoffy
+        });
       } else if (instance.ll_panning) {
         instance.context.parent().scrollLeft( scrx + diffx);
         instance.context.parent().scrollTop( scry + diffy);
@@ -89,7 +89,7 @@
     function cancelDrag() {
         if (instance.ll_dragging) {
           // redraw the lines TODO: figure out a better way to handle lines
-          instance.drawAllLines(instance.ll_dragging);
+          instance.renderer.drawLines(nodes);
         }
         instance.ll_isdragging = false;
         instance.ll_dragging = false;
@@ -349,7 +349,7 @@
         } else {
           inst.openDoc(rel, newObj);
         }
-        inst.renderer.drawaLine(obj, newObj, propertyName);
+        inst.renderer.drawLine(obj, newObj, null, propertyName);
       } else {
         if (inst.debugOn) {
           console.debug((new Date().getTime() - start) + '  addNewDoc 09 ');
@@ -361,7 +361,7 @@
         if (inst.debugOn) {
           console.debug((new Date().getTime() - start) + '  addNewDoc 10 ');
         }
-        inst.renderer.drawaLine(obj, newObj, propertyName);
+        inst.renderer.drawLine(obj, newObj, null, propertyName);
       } else {
         if (inst.debugOn) {
           console.debug((new Date().getTime() - start) + '  addNewDoc 11 ');
@@ -395,21 +395,29 @@
 
     var id = obj.attr('id');
 
+    inst.renderer.clearLines(id);
+
     // get subjects where id is the object
     var subjectIds = inst.refs.getSubjectRefs(id);
 
     // get objects where id is the subject
     var objectIds = inst.refs.getObjectRefs(id)
 
-    // clear canvas holding lines from obj
-    inst.context.find('#line-' + id).clearCanvas();
-
-    // clear canvases holding lines to obj
+    // remove references to id
     subjectIds.forEach(function(subjectId) {
-      inst.context.find('#line-' + subjectId).clearCanvas();
+      inst.refs.removeObjectRef(subjectId, id);
+    });
+    objectIds.forEach(function(objectId) {
+      inst.refs.removeSubjectRef(objectId, id);
     });
 
-    inst.docInfo();
+    // get all pairs, excluding self
+    var pairs = inst.renderer.getRelatedNodePairs(id, true);
+    inst.renderer.drawLines(pairs);
+
+    // remove references from id
+    inst.refs.removeAsSubject(id);
+    inst.refs.removeAsObject(id);
 
     // Image rendering has been disabled; keeping for posterity ...
     // var cp = inst.context.find('.lodLiveControlPanel');
@@ -431,6 +439,8 @@
     //   }
     // }
 
+    inst.docInfo();
+
     obj.fadeOut('normal', null, function() {
       obj.remove();
       $.each(inst.innerPageMap, function(key, element) {
@@ -449,30 +459,6 @@
         var found = $(this);
         found.show();
         found.removeClass('exploded');
-      });
-
-      // remove references to id
-      subjectIds.forEach(function(subjectId) {
-        inst.refs.removeObjectRef(subjectId, id);
-      });
-      objectIds.forEach(function(objectId) {
-        inst.refs.removeSubjectRef(objectId, id);
-      });
-
-      // remove references from id
-      inst.refs.removeAsSubject(id);
-      inst.refs.removeAsObject(id);
-
-      // draw all lines for cleared canvases
-      subjectIds.forEach(function(subjectId) {
-        var objectIds = inst.refs.getObjectRefs(subjectId);
-
-        objectIds.forEach(function(objectId) {
-          inst.renderer.drawaLine(
-            inst.context.find('#' + subjectId),
-            inst.context.find('#' + objectId)
-          );
-        });
       });
     });
 
@@ -594,38 +580,6 @@
         }];
         inst.formatDoc(docInfo, values, [], [], URI);
       }
-    });
-  };
-
-  LodLive.prototype.drawAllLines = function(obj) {
-    var inst = this;
-    var id = obj.attr('id');
-
-    // get objects where id is the subject
-    var objectIds = inst.refs.getObjectRefs(id)
-
-    // get subjects where id is the object
-    var subjectIds = inst.refs.getSubjectRefs(id);
-
-    // remove line if exists
-    inst.context.find('#line-' + id).clearCanvas();
-
-    objectIds.forEach(function(objectId) {
-      inst.renderer.drawaLine(
-        obj,
-        inst.context.find('#' + objectId)
-      );
-    });
-
-    subjectIds.forEach(function(subjectId) {
-      var nestedObjectIds = inst.refs.getObjectRefs(subjectId);
-
-      nestedObjectIds.forEach(function(objectId) {
-        inst.renderer.drawaLine(
-          inst.context.find('#' + subjectId),
-          inst.context.find('#' + objectId)
-        );
-      });
     });
   };
 
