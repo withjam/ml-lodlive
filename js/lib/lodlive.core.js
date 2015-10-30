@@ -270,6 +270,74 @@
   };
 
   /**
+   * Paginates related boxes in `objectList` and `innerObjectList`
+   */
+  LodLiveRenderer.prototype.paginateRelatedBoxes = function(containerBox, objectList, innerObjectList, chordsList) {
+    var page = 0;
+    var prevChords = chordsList[0];
+    var nextChords = chordsList[15];
+    var totPages = objectList.length > 14 ? (objectList.length / 14 + (objectList.length % 14 > 0 ? 1 : 0)) : 1;
+
+    objectList.forEach(function(objectListItem, i) {
+      var aPage, prevPage, nextPage;
+
+      if (i % 14 === 0) {
+        page++;
+
+        aPage = $('<div></div>')
+        .addClass('page page' + page)
+        .attr('style', 'display:none');
+
+        if (page > 1 && totPages > 1) {
+          prevPage = $('<div></div>')
+          .addClass('llpages pagePrev')
+          // TODO: can the icon be rotated?
+          // .addClass('fa fa-arrow-left')
+          .attr('data-page', 'page' + (page - 1))
+          .attr('style', 'top:' + (prevChords[1] - 8) + 'px;left:' + (prevChords[0] - 8) + 'px');
+
+          aPage.append(prevPage);
+        }
+
+        if (totPages > 1 && page < totPages - 1) {
+          nextPage = $('<div></div>')
+          .addClass('llpages pageNext')
+          // TODO: can the icon be rotated?
+          // .addClass('fa fa-arrow-right')
+          .attr('data-page', 'page' + (page + 1))
+          .attr('style', 'top:' + (nextChords[1] - 8) + 'px;left:' + (nextChords[0] - 8) + 'px');
+
+          aPage.append(nextPage);
+        }
+
+        containerBox.append(aPage);
+      }
+
+      containerBox.children('.page' + page).append(objectListItem);
+    });
+
+    var innerPage = $('<div class="innerPage"></div>');
+
+    innerObjectList.forEach(function(innerObject) {
+      innerPage.append(innerObject);
+    });
+
+    if (innerObjectList.length > 0) {
+      containerBox.append(innerPage);
+    }
+
+    containerBox.children('.page').children('.llpages').click(function() {
+      var llpages = $(this);
+      containerBox.find('.lastClick').removeClass('lastClick').click();
+      llpages.parent().fadeOut('fast', null, function() {
+        $(this).parent().children('.' + llpages.attr('data-page')).fadeIn('fast');
+      });
+    });
+
+    containerBox.children('.page1').fadeIn('fast');
+  };
+
+  /**
    * Gets all canvases containing lines related to `id`
    *
    * @param {String} id - the id of a subject or object node
@@ -2428,54 +2496,8 @@
     var objectList = connectedNodes.objectList.concat(invertedNodes.objectList);
     var innerObjectList = connectedNodes.innerObjectList.concat(invertedNodes.innerObjectList);
 
-    var page = 0;
-    var totPages = objectList.length > 14 ? (objectList.length / 14 + (objectList.length % 14 > 0 ? 1 : 0)) : 1;
-    for (var i = 0; i < objectList.length; i++) {
-      if (i % 14 == 0) {
-        page++;
-        var aPage = $('<div class="page page' + page + '" style="display:none"></div>');
-        if (page > 1 && totPages > 1) {
-          aPage.append('<div class="llpages pagePrev sprite" data-page="page' + (page - 1) + '" style="top:' + (chordsList[0][1] - 8) + 'px;left:' + (chordsList[0][0] - 8) + 'px"></div>');
-        }
-        if (totPages > 1 && page < totPages - 1) {
-          aPage.append('<div class="llpages pageNext sprite" data-page="page' + (page + 1) + '" style="top:' + (chordsList[15][1] - 8) + 'px;left:' + (chordsList[15][0] - 8) + 'px"></div>');
-        }
-        containerBox.append(aPage);
-      }
-      containerBox.children('.page' + page).append(objectList[i]);
-    }
-    page = 0;
-    totPages = innerObjectList.length / 24 + (innerObjectList.length % 24 > 0 ? 1 : 0);
-    if (innerObjectList.length > 0) {
-      containerBox.append('<div class="innerPage"></div>');
-      for (var i = 0; i < innerObjectList.length; i++) {
-        containerBox.children('.innerPage').append(innerObjectList[i]);
-      }
-    }
-    containerBox.children('.page1').fadeIn('fast');
-    containerBox.children('.page').children('.llpages').click(function() {
-      var llpages = $(this);
-      containerBox.find('.lastClick').removeClass('lastClick').click();
-      llpages.parent().fadeOut('fast', null, function() {
-        $(this).parent().children('.' + llpages.attr('data-page')).fadeIn('fast');
-      });
-    }); {
-      // append the tools
-      jQuery.each(inst.UI.nodeIcons, function(index) {
-        var opts = this, obj;
-        if (opts.builtin) {
-          obj = jQuery(_builtinTools[opts.builtin] || '<span class="no such builtin"></span>');
-        } else {  // construct custom action box
-          var obj = $('<div class="actionBox custom"></div>').data('action-handler', opts.handler);
-          $('<span></span>').addClass(opts.icon).attr('title',opts.title).appendTo(obj);
-        }
-        obj.appendTo(anchorBox);
-      });
-    }
-    if (inst.debugOn) {
-      console.debug((new Date().getTime() - start) + '  format ');
-    }
-  };
+    // paginate and display the related boxes
+    inst.renderer.paginateRelatedBoxes(containerBox, objectList, innerObjectList, chordsList);
 
     // append the tools
     inst.renderer.generateNodeIcons(anchorBox);
