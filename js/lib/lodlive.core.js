@@ -167,6 +167,7 @@
       this.context,
       this.options.arrows,
       this.options.UI.tools,
+      this.options.UI.nodeIcons,
       this.refs
     );
   }
@@ -1621,27 +1622,10 @@
       llpages.parent().fadeOut('fast', null, function() {
         $(this).parent().children('.' + llpages.attr('data-page')).fadeIn('fast');
       });
-    }); {
-      // append the tools
-      jQuery.each(inst.UI.nodeIcons, function(index) {
-        var opts = this, obj;
-        if (opts.builtin) {
-          obj = jQuery(_builtinTools[opts.builtin] || '<span class="no such builtin"></span>');
-        } else {  // construct custom action box
-          var obj = $('<div class="actionBox custom"></div>').data('action-handler', opts.handler);
-          $('<span></span>').addClass(opts.icon).attr('title',opts.title).appendTo(obj);
-        }
-        obj.appendTo(anchorBox);
-      });
-    }
-    if (inst.debugOn) {
-      console.debug((new Date().getTime() - start) + '  format ');
-    }
-  };
+    });
 
-  var _builtinTools = {
-    'docInfo': '<div class="actionBox docInfo" rel="docInfo"><span class="fa fa-list"></span></div>',
-    'tools': '<div class="actionBox tools" rel="tools"><span class="fa fa-cog"></span></div>'
+    // append the tools
+    inst.renderer.generateNodeIcons(anchorBox);
   };
 
   LodLive.prototype.openDoc = function(anUri, destBox, fromInverse) {
