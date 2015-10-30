@@ -1063,38 +1063,8 @@
     var objectList = connectedNodes.objectList.concat(invertedNodes.objectList);
     var innerObjectList = connectedNodes.innerObjectList.concat(invertedNodes.innerObjectList);
 
-    var page = 0;
-    var totPages = objectList.length > 14 ? (objectList.length / 14 + (objectList.length % 14 > 0 ? 1 : 0)) : 1;
-    for (var i = 0; i < objectList.length; i++) {
-      if (i % 14 == 0) {
-        page++;
-        var aPage = $('<div class="page page' + page + '" style="display:none"></div>');
-        if (page > 1 && totPages > 1) {
-          aPage.append('<div class="llpages pagePrev sprite" data-page="page' + (page - 1) + '" style="top:' + (chordsList[0][1] - 8) + 'px;left:' + (chordsList[0][0] - 8) + 'px"></div>');
-        }
-        if (totPages > 1 && page < totPages - 1) {
-          aPage.append('<div class="llpages pageNext sprite" data-page="page' + (page + 1) + '" style="top:' + (chordsList[15][1] - 8) + 'px;left:' + (chordsList[15][0] - 8) + 'px"></div>');
-        }
-        containerBox.append(aPage);
-      }
-      containerBox.children('.page' + page).append(objectList[i]);
-    }
-    page = 0;
-    totPages = innerObjectList.length / 24 + (innerObjectList.length % 24 > 0 ? 1 : 0);
-    if (innerObjectList.length > 0) {
-      containerBox.append('<div class="innerPage"></div>');
-      for (var i = 0; i < innerObjectList.length; i++) {
-        containerBox.children('.innerPage').append(innerObjectList[i]);
-      }
-    }
-    containerBox.children('.page1').fadeIn('fast');
-    containerBox.children('.page').children('.llpages').click(function() {
-      var llpages = $(this);
-      containerBox.find('.lastClick').removeClass('lastClick').click();
-      llpages.parent().fadeOut('fast', null, function() {
-        $(this).parent().children('.' + llpages.attr('data-page')).fadeIn('fast');
-      });
-    });
+    // paginate and display the related boxes
+    inst.renderer.paginateRelatedBoxes(containerBox, objectList, innerObjectList, chordsList);
 
     // append the tools
     inst.renderer.generateNodeIcons(anchorBox);
