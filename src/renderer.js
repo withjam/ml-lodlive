@@ -511,6 +511,38 @@ LodLiveRenderer.prototype.docInfoNestedBnodes = function(key, spanNode) {
 };
 
 /**
+ * Add title to box
+ */
+LodLiveRenderer.prototype.addBoxTitle = function(title, thisUri, destBox, containerBox) {
+  var renderer = this;
+
+  var jResult = $('<div></div>')
+  .addClass('boxTitle');
+
+  // TODO: this is a hack; find some other way to catch this condition
+  if (title === utils.lang('resourceMissing')) {
+    jResult.append('<a target="_blank" href="' + thisUri + '">' + thisUri + '</a>')
+    // TODO: fa-external-link?
+    .append('<span class="spriteLegenda"></span>');
+  } else {
+    if (!title) {
+      title = utils.lang('noName');
+    }
+
+    var result = $('<span class="ellipsis_text"></span>');
+    result.text(title);
+    jResult.append(result);
+  }
+
+  jResult.attr('data-tooltip', title);
+  destBox.append(jResult);
+
+  renderer.hover(destBox, function() {
+    renderer.msg(title, 'show', 'fullInfo', containerBox.attr('data-endpoint'));
+  });
+};
+
+/**
  * Gets all canvases containing lines related to `id`
  *
  * @param {String} id - the id of a subject or object node
