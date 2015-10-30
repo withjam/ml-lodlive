@@ -237,6 +237,39 @@
   };
 
   /**
+   * Add title to box
+   */
+  LodLiveRenderer.prototype.addBoxTitle = function(title, thisUri, destBox, containerBox) {
+    var renderer = this;
+
+    var jResult = $('<div></div>')
+    .addClass('boxTitle');
+
+    // TODO: this is a hack; find some other way to catch this condition
+    if (title === LodLiveUtils.lang('resourceMissing')) {
+      jResult.append('<a target="_blank" href="' + thisUri + '">' + thisUri + '</a>')
+      // TODO: fa-external-link?
+      .append('<span class="spriteLegenda"></span>');
+    } else {
+      if (!title) {
+        title = LodLiveUtils.lang('noName');
+      }
+
+      var result = $('<span class="ellipsis_text"></span>');
+      result.text(title);
+      jResult.append(result);
+    }
+
+    jResult.attr('data-tooltip', title);
+    destBox.append(jResult);
+
+    renderer.hover(destBox, function() {
+      console.log('destbox hover title', title);
+      renderer.msg(title, 'show', 'fullInfo', containerBox.attr('data-endpoint'));
+    });
+  };
+
+  /**
    * Gets all canvases containing lines related to `id`
    *
    * @param {String} id - the id of a subject or object node
@@ -2044,56 +2077,43 @@
     // gestisco l'inserimento di messaggi di sistema come errori o altro
     titles.push('http://system/msg');
 
-    // aggiungo al box il titolo
-    var result = '<div class="boxTitle"><span class="ellipsis_text">';
-    for (var a = 0; a < titles.length; a++) {
-      var resultArray = inst.getJsonValue(values, titles[a], titles[a].indexOf('http') == 0 ? '' : titles[a]);
-      if (titles[a].indexOf('http') != 0) {
-        if (result.indexOf($.trim(unescape(titles[a])) + ' \n') == -1) {
-          result += $.trim(unescape(titles[a])) + ' \n';
-        }
-      } else {
-        for (var af = 0; af < resultArray.length; af++) {
-          if (result.indexOf(unescape(resultArray[af]) + ' \n') == -1) {
-            result += unescape(resultArray[af]) + ' \n';
-          }
-        }
-      }
+    var titlePieces = [];
 
-    }
-    var dataEndpoint = containerBox.attr('data-endpoint') || '';
+    titles.forEach(function(title) {
+      var titleValues;
+
+      if (title.indexOf('http') !== 0) {
+        titlePieces.push($.trim(unescape(title)));
+      } else {
+        titleValues = inst.getJsonValue(values, title, title.indexOf('http') === 0 ? '' : title);
+        titleValues.forEach(function(titleValue) {
+          titlePieces.push(unescape(titleValue));
+        });
+      }
+    });
+
+    var title = titlePieces
+    // deduplicate
+    .filter(function(value, index, self) {
+      return self.indexOf(value) === index;
+    })
+    .join('\n');
 
     // TODO: early return?
     if (uris.length == 0 && values.length == 0) {
-      result = '<div class="boxTitle" data-tooltip="' + LodLiveUtils.lang('resourceMissing') + '"><a target="_blank" href="' + thisUri + '"><span class="spriteLegenda"></span>' + thisUri + '</a>';
-    }
-
-    result += '</span></div>';
-    var jResult = $(result);
-    if (jResult.text() == '' && docType == 'bnode') {
-      jResult.text('[blank node]');
-    } else if (jResult.text() == '') {
-      var titleDef = '(Error)';
+      title = LodLiveUtils.lang('resourceMissing');
+    } else if (!title && docType === 'bnode') {
+      title = '[blank node]';
+    } else if (!title) {
+      title = '(Error)';
       try {
-          titleDef = inst.options.default.document.titleName[thisUri];
-      }catch(ex) {
-          titleDef = inst.options.default.document.titleProperties[thisUri];
-      }
-      if(titleDef){
-          jResult.text(titleDef);
-      } else {
-        jResult.text(LodLiveUtils.lang('noName'));
+        title = inst.options.default.document.titleName[thisUri];
+      } catch(ex) {
+        title = inst.options.default.document.titleProperties[thisUri];
       }
     }
-    destBox.append(jResult);
 
-    var resourceTitle = jResult.text();
-    jResult.data('tooltip', resourceTitle);
-
-    inst.renderer.hover(destBox, function() {
-      console.log('destbox hover title', resourceTitle);
-      inst.renderer.msg(resourceTitle, 'show', 'fullInfo', containerBox.attr('data-endpoint'));
-    });
+    inst.renderer.addBoxTitle(title, thisUri, destBox, containerBox);
 
     // calcolo le uri e le url dei documenti correlati
     var connectedDocs = [];
