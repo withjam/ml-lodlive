@@ -134,3 +134,25 @@
 }
 
 .lodlive-node.pinned .lodlive-node-label { border: dashed 1px white; background-color: #9CF; }
+
+.lodlive-node .page .pageNext {
+  background-position: -1390px -412px;
+  cursor: pointer;
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  border: 0;
+  z-index: 101;
+  text-align: center;
+}
+
+.lodlive-node .page .pagePrev {
+  background-position: -1414px -410px;
+  cursor: pointer;
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  border: 0;
+  z-index: 101;
+  text-align: center;
+}

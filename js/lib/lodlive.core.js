@@ -292,7 +292,7 @@
           prevPage = $('<div></div>')
           .addClass('llpages pagePrev')
           // TODO: can the icon be rotated?
-          // .addClass('fa fa-arrow-left')
+          .addClass('fa fa-arrow-left')
           .attr('data-page', 'page' + (page - 1))
           .attr('style', 'top:' + (prevChords[1] - 8) + 'px;left:' + (prevChords[0] - 8) + 'px');
 
@@ -303,7 +303,7 @@
           nextPage = $('<div></div>')
           .addClass('llpages pageNext')
           // TODO: can the icon be rotated?
-          // .addClass('fa fa-arrow-right')
+          .addClass('fa fa-arrow-right')
           .attr('data-page', 'page' + (page + 1))
           .attr('style', 'top:' + (nextChords[1] - 8) + 'px;left:' + (nextChords[0] - 8) + 'px');
 
