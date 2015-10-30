@@ -21,8 +21,18 @@
   var DEFAULT_BOX_TEMPLATE = '<div class="boxWrapper lodlive-node defaultBoxTemplate"><div class="ll-node-anchor"></div><div class="lodlive-node-label box sprite"></div></div>';
 
   /**
+   * Built-in "always on" tools
+   */
+  // TODO: rename
+  var _builtinTools = {
+    'docInfo': '<div class="actionBox docInfo" rel="docInfo"><span class="fa fa-list"></span></div>',
+    'tools': '<div class="actionBox tools" rel="tools"><span class="fa fa-cog"></span></div>'
+  };
+
+  /**
    * Built-in tools
    */
+  // TODO: rename
   var _builtins = {
     'expand': {
       title: 'Expand all',
@@ -76,9 +86,10 @@
 
   /* experimental renderer component */
 
-  function LodLiveRenderer(arrows, tools, refs) {
+  function LodLiveRenderer(arrows, tools, nodeIcons, refs) {
     this.arrows = arrows;
     this.tools = tools;
+    this.nodeIcons = nodeIcons;
     this.refs = refs;
   }
 
@@ -166,6 +177,27 @@
   };
 
   /**
+   * Generate "always on" tools
+   */
+  // TODO: rename
+  LodLiveRenderer.prototype.generateNodeIcons = function(anchorBox) {
+    var renderer = this;
+
+    renderer.nodeIcons.forEach(function(opts) {
+      var obj;
+
+      if (opts.builtin) {
+        // TODO: throw error if not exist
+        obj = jQuery(_builtinTools[opts.builtin] || '<span class="no such builtin"></span>');
+      } else {  // construct custom action box
+        obj = $('<div class="actionBox custom"></div>').data('action-handler', opts.handler);
+        $('<span></span>').addClass(opts.icon).attr('title',opts.title).appendTo(obj);
+      }
+      obj.appendTo(anchorBox);
+    });
+  };
+
+  /**
    * Generate tools for a box
    */
   LodLiveRenderer.prototype.generateTools = function(container, obj, inst) {
@@ -175,19 +207,26 @@
     if (!tools.length) {
       tools = $('<div class="lodlive-toolbox"></div>').hide();
 
-      jQuery.each(renderer.tools, function() {
-        // TODO: use param instead
-        var toolConfig = this;
-        var t;
+      renderer.tools.forEach(function(toolConfig) {
+        var icon;
 
         if (toolConfig.builtin) {
           toolConfig = _builtins[toolConfig.builtin];
         }
 
+        // TODO: throw error
         if (!toolConfig) return;
 
-        t = jQuery('<div class="innerActionBox" title="' + LodLiveUtils.lang(toolConfig.title) + '"><span class="' + toolConfig.icon + '"></span></div>');
-        t.appendTo(tools).on('click', function() { toolConfig.handler.call($(this), obj, inst); });
+        icon = $('<span></span>').addClass(toolConfig.icon);
+
+        $('<div></div>')
+        .addClass('innerActionBox')
+        .attr('title', LodLiveUtils.lang(toolConfig.title))
+        .append(icon)
+        .appendTo(tools)
+        .on('click', function() {
+          toolConfig.handler.call($(this), obj, inst);
+        });
       });
 
       var toolWrapper = $('<div class="lodlive-toolbox-wrapper"></div>').append(tools);
@@ -652,8 +691,8 @@
   };
 
   var rendererFactory = {
-    create: function(arrows, tools, refs) {
-      return new LodLiveRenderer(arrows, tools, refs);
+    create: function(arrows, tools, nodeIcons, refs) {
+      return new LodLiveRenderer(arrows, tools, nodeIcons, refs);
     }
   };
 
@@ -1112,6 +1151,7 @@
     this.renderer = rendererFactory.create(
       this.options.arrows,
       this.options.UI.tools,
+      this.options.UI.nodeIcons,
       this.refs
     );
 
@@ -2417,9 +2457,8 @@
     }
   };
 
-  var _builtinTools = {
-    'docInfo': '<div class="actionBox docInfo" rel="docInfo"><span class="fa fa-list"></span></div>',
-    'tools': '<div class="actionBox tools" rel="tools"><span class="fa fa-cog"></span></div>'
+    // append the tools
+    inst.renderer.generateNodeIcons(anchorBox);
   };
 
   LodLive.prototype.openDoc = function(anUri, destBox, fromInverse) {
