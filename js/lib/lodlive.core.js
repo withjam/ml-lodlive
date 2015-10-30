@@ -213,7 +213,7 @@
       });
 
       if (isInverse) {
-        fromInverse = 'div[data-property="' + propertyName + '"][rel="' + rel + '"]';
+        fromInverse = inst.context.find('div[data-property="' + propertyName + '"][rel="' + rel + '"]');
       }
 
       inst.openDoc(rel, newObj, fromInverse);
@@ -298,10 +298,6 @@
 
   LodLive.prototype.addClick = function(obj, callback) {
     var inst = this;
-    var start;
-    if (inst.debugOn) {
-      start = new Date().getTime();
-    }
 
     // per ogni nuova risorsa collegata al documento corrente imposto le
     // azioni "onclick"
@@ -358,15 +354,6 @@
         }
       }
     });
-
-    //FIXME: why do we need a callback if not async?
-    if (callback) {
-      callback();
-    }
-
-    if (inst.debugOn) {
-      console.debug((new Date().getTime() - start) + '  addClick ');
-    }
   };
 
   /**
@@ -1359,203 +1346,142 @@
 
   LodLive.prototype.openDoc = function(anUri, destBox, fromInverse) {
     var inst = this;
-    // assuming this based on other methods ...
     var lodLiveProfile = inst.options;
 
     if (!anUri) {
       $.error('LodLive: no uri for openDoc');
     }
 
-    var start;
-    if (inst.debugOn) {
-      start = new Date().getTime();
-    }
-
-    var uris = [];
-    var values = [];
-
-    if (inst.debugOn) console.log('composing query with anUri', anUri);
-
     // TODO: what is methods && what is doStats? neither exist ...
     // if (inst.doStats) {
     //   methods.doStats(anUri);
     // }
 
-    // NOTE: previously extracted endpoint from SPARQLquery
     destBox.attr('data-endpoint', lodLiveProfile.connection['http:'].endpoint);
 
-    // TODO: figure out why this doesn't work ...
-    // destBox.data('endpoint', lodLiveProfile.connection['http:'].endpoint);
+    var inverses = [];
 
-    // var SPARQLquery = inst.composeQuery(anUri, 'documentUri');
+    function callback(info) {
+      inst.format(destBox.children('.box'), info.values, info.uris, inverses);
+      inst.addClick(destBox);
 
-    // NOTE: previously fell back to inst.guessingEndpoint(anUri,
-    // (if SPARQLquery was http://system/dummy)
-    // callbacks:
-    //   success: inst.openDoc(anUri, destBox, fromInverse);
-    //   failure: inst.parseRawResource(destBox, anUri, fromInverse);
+      if (fromInverse && fromInverse.length) {
+        $(fromInverse).click();
+      }
 
-      inst.sparqlClient.documentUri(anUri, {
-        beforeSend : function() {
-          // destBox.children('.box').html('<img style=\"margin-top:' + (destBox.children('.box').height() / 2 - 8) + 'px\" src="img/ajax-loader.gif"/>');
-          return inst.renderer.loading(destBox.children('.box'))
-        },
-        success : function(info) {
-          // reformat values for compatility
+      if (inst.doAutoExpand) {
+        inst.autoExpand(destBox);
+      }
+    };
 
-          // escape values
-          info.values = info.values.map(function(value) {
-            var keys = Object.keys(value)
-            keys.forEach(function(key) {
-              value[key] = escape(value[key])
-            })
-            return value
-          });
+    inst.sparqlClient.documentUri(anUri, {
+      beforeSend : function() {
+        // destBox.children('.box').html('<img style=\"margin-top:' + (destBox.children('.box').height() / 2 - 8) + 'px\" src="img/ajax-loader.gif"/>');
+        return inst.renderer.loading(destBox.children('.box'))
+      },
+      success : function(info) {
+        // reformat values for compatility
 
-          // TODO: filter info.uris where object value === anURI (??)
-
-          // escape URIs
-          info.uris = info.uris.map(function(value) {
-            var keys = Object.keys(value)
-            keys.forEach(function(key) {
-              value[key] = escape(value[key])
-            })
-            return value
-          });
-
-          // parse bnodes, escape and add to URIs
-
-          // TODO: refactor `format()` and remove this
-          info.bnodes.forEach(function(bnode) {
-            var keys = Object.keys(bnode)
-            var value = {};
-            keys.forEach(function(key) {
-              value[key] = escape(anUri + '~~' + bnode[key])
-            })
-            info.uris.push(value);
+        // escape values
+        info.values = info.values.map(function(value) {
+          var keys = Object.keys(value)
+          keys.forEach(function(key) {
+            value[key] = escape(value[key])
           })
+          return value
+        });
 
-          delete info.bnodes;
+        // TODO: filter info.uris where object value === anURI (??)
 
-          if (inst.debugOn) {
-            console.debug((new Date().getTime() - start) + '  openDoc eval uris & values');
-          }
+        // escape URIs
+        info.uris = info.uris.map(function(value) {
+          var keys = Object.keys(value)
+          keys.forEach(function(key) {
+            value[key] = escape(value[key])
+          })
+          return value
+        });
 
-          // s/b unnecessary
-          // destBox.children('.box').html('');
+        // parse bnodes, escape and add to URIs
 
-          if (inst.doInverse) {
+        // TODO: refactor `format()` and remove this
+        info.bnodes.forEach(function(bnode) {
+          var keys = Object.keys(bnode)
+          var value = {};
+          keys.forEach(function(key) {
+            value[key] = escape(anUri + '~~' + bnode[key])
+          })
+          info.uris.push(value);
+        })
 
-            // SPARQLquery = inst.composeQuery(anUri, 'inverse');
+        delete info.bnodes;
 
-            inst.sparqlClient.inverse(anUri, {
-              beforeSend : function() {
-                // destBox.children('.box').html('<img id="1234" style=\"margin-top:' + (destBox.children('.box').height() / 2 - 5) + 'px\" src="img/ajax-loader.gif"/>');
-                return inst.renderer.loading(destBox.children('.box'));
-              },
-              success : function(inverseInfo) {
-                var inverses = [];
+        // s/b unnecessary
+        // destBox.children('.box').html('');
 
-                // escape values
-                inverseInfo.values = inverseInfo.values.map(function(value) {
-                  var keys = Object.keys(value)
-                  keys.forEach(function(key) {
-                    value[key] = escape(value[key])
-                  })
-                  return value
-                });
-
-                // escape URIs
-                inverseInfo.uris = inverseInfo.uris.map(function(value) {
-                  var keys = Object.keys(value)
-                  keys.forEach(function(key) {
-                    value[key] = escape(value[key])
-                  })
-                  return value
-                });
-
-                inverses = inverseInfo.uris.concat(inverseInfo.values);
-
-                // parse bnodes, escape and add to URIs
-
-                // parse bnodes and add to URIs
-                // TODO: refactor `format()` and remove this
-                inverseInfo.bnodes.forEach(function(bnode) {
-                  var keys = Object.keys(bnode);
-                  var value = {};
-                  keys.forEach(function(key) {
-                    value[key] = anUri + '~~' + bnode[key];
-                  });
-                  inverses.push(value);
-                });
-
-                if (inst.debugOn) {
-                  console.debug((new Date().getTime() - start) + '  openDoc inverse eval uris ');
-                }
-
-                var callback = function() {
-                  // s/b unnecessary
-                  // destBox.children('.box').html('');
-
-                  inst.format(destBox.children('.box'), values, uris, inverses);
-                  inst.addClick(destBox, fromInverse ? function() {
-                    //TODO: dynamic selector across the entire doc here seems strange, what are the the possibilities?  Is it only a DOM element?
-                    try {
-                      //TODO: find out if we only pass jquery objects in as fromInverse, no need to wrap it again
-                      $(fromInverse).click();
-                    } catch (e) {
-                    }
-                  } : null);
-                  if (inst.doAutoExpand) {
-                    inst.autoExpand(destBox);
-                  }
-                };
-
-                if (inst.doAutoSameas) {
-                  inst.findInverseSameAs(anUri, inverses, callback);
-                } else {
-                  callback();
-                }
-
-              },
-              error : function(e, b, v) {
-                // s/b unnecessary
-                // destBox.children('.box').html('');
-
-                inst.format(destBox.children('.box'), values, uris);
-
-                inst.addClick(destBox, fromInverse ? function() {
-                  try {
-                    $(fromInverse).click();
-                  } catch (e) {
-                  }
-                } : null);
-                if (inst.doAutoExpand) {
-                  inst.autoExpand(destBox);
-                }
-              }
-            });
-          } else {
-            inst.format(destBox.children('.box'), info.values, info.uris);
-            inst.addClick(destBox, fromInverse ? function() {
-              try {
-                $(fromInverse).click();
-              } catch (e) {
-              }
-            } : null);
-            if (inst.doAutoExpand) {
-              inst.autoExpand(destBox);
-            }
-          }
-        },
-        error : function(e, b, v) {
-          inst.renderer.errorBox(destBox);
+        if (!inst.doInverse) {
+          return callback(info);
         }
-      });
 
-    if (inst.debugOn) {
-      console.debug((new Date().getTime() - start) + '  openDoc');
-    }
+        inst.sparqlClient.inverse(anUri, {
+          beforeSend : function() {
+            // destBox.children('.box').html('<img id="1234" style=\"margin-top:' + (destBox.children('.box').height() / 2 - 5) + 'px\" src="img/ajax-loader.gif"/>');
+            return inst.renderer.loading(destBox.children('.box'));
+          },
+          success : function(inverseInfo) {
+            // escape values
+            inverseInfo.values = inverseInfo.values.map(function(value) {
+              var keys = Object.keys(value)
+              keys.forEach(function(key) {
+                value[key] = escape(value[key])
+              })
+              return value
+            });
+
+            // escape URIs
+            inverseInfo.uris = inverseInfo.uris.map(function(value) {
+              var keys = Object.keys(value)
+              keys.forEach(function(key) {
+                value[key] = escape(value[key])
+              })
+              return value
+            });
+
+            inverses = inverseInfo.uris.concat(inverseInfo.values);
+
+            // parse bnodes, escape and add to URIs
+
+            // parse bnodes and add to URIs
+            // TODO: refactor `format()` and remove this
+            inverseInfo.bnodes.forEach(function(bnode) {
+              var keys = Object.keys(bnode);
+              var value = {};
+              keys.forEach(function(key) {
+                value[key] = anUri + '~~' + bnode[key];
+              });
+              inverses.push(value);
+            });
+
+            if (inst.doAutoSameas) {
+              inst.findInverseSameAs(anUri, inverses, function() {
+                callback(info);
+              });
+            } else {
+              callback(info);
+            }
+          },
+          error : function(e, b, v) {
+            // s/b unnecessary
+            // destBox.children('.box').html('');
+
+            callback(info);
+          }
+        });
+      },
+      error : function(e, b, v) {
+        inst.renderer.errorBox(destBox);
+      }
+    });
   };
 
   LodLive.prototype.findInverseSameAs = function(anUri, inverse, callback) {
