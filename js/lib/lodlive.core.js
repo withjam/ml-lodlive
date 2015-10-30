@@ -323,6 +323,7 @@
     });
 
     if (innerObjectList.length > 0) {
+      innerPage.hide();
       containerBox.append(innerPage);
     }
 
@@ -1271,7 +1272,6 @@
     this.mapsMap = {};
     this.infoPanelMap = {};
     this.connection = {};
-    this.innerPageMap = {};
     this.storeIds = {};
     this.ignoreBnodes = this.UI.ignoreBnodes;
 
@@ -1306,56 +1306,19 @@
     this.renderer.msg('', 'init');
   };
 
-  // TODO: remove unnecessary param
-  LodLive.prototype.autoExpand = function(obj) {
+  LodLive.prototype.autoExpand = function() {
     var inst = this;
-    var expandables = [];
 
-    var start;
-    if (inst.debugOn) {
-      start = new Date().getTime();
-    }
-
-    function accumulateExpandables() {
+    inst.context.find('.relatedBox:not([class*=exploded])')
+    .each(function() {
       var box = $(this);
       var aId = box.attr('relmd5');
 
       // if a subject box exists
       if (inst.context.children('#' + aId).length) {
-        expandables.push(box);
+        box.click();
       }
-    }
-
-    // accumulate expandable property boxes, including hidden ones
-    // TODO: deconstruct innerPageMap
-    $.each(inst.innerPageMap, function(key, element) {
-      var closed = element.children('.relatedBox:not([class*=exploded])');
-
-      // attach .innerPage, if necessary
-      if (closed.length && !element.parent().length) {
-        inst.context.append(element);
-      }
-
-      closed.each(accumulateExpandables);
     });
-
-    // accumulate expandable property boxes
-    inst.context.find('.relatedBox:not([class*=exploded])').each(accumulateExpandables);
-
-    // TODO: object identity doesn't work with jquery; group by id?
-    // expandables = expandables.filter(function(value, index, self) {
-    //   return self.indexOf(value) === index;
-    // });
-
-    expandables.forEach(function(box) {
-      box.click();
-    });
-
-    inst.context.children('.innerPage').detach();
-
-    if (inst.debugOn) {
-      console.debug((new Date().getTime() - start) + '  autoExpand ');
-    }
   };
 
   LodLive.prototype.addNewDoc = function(originalCircle, ele) {
@@ -1496,17 +1459,6 @@
 
     obj.fadeOut('normal', null, function() {
       obj.remove();
-      $.each(inst.innerPageMap, function(key, element) {
-        if (element.children('.' + id).length) {
-          var keyEle = inst.context.find('#' + key);
-          keyEle.append(element);
-          var lastClick = keyEle.find('.lastClick').attr('rel');
-          if (!keyEle.children('.innerPage').children('.' + lastClick).length) {
-            //TODO: again, why detaching?
-            keyEle.children('.innerPage').detach();
-          }
-        }
-      });
 
       // re-show predicate boxes that pointed to this object
       inst.context.find('div[relmd5=' + id + ']').each(function() {
@@ -1550,15 +1502,12 @@
           box.removeClass('lastClick');
           obj.find('.' + box.attr('rel')).fadeOut('fast');
           box.fadeTo('fast', 1);
-          obj.children('.innerPage').detach();
+          obj.children('.innerPage').hide();
         } else {
           box.data('show', true);
-          obj.append(inst.innerPageMap[obj.attr('id')]);
+          obj.children('.innerPage').show();
           inst.docInfo();
           obj.find('.lastClick').removeClass('lastClick').click();
-          if (!obj.children('.innerPage').length) {
-            obj.append(inst.innerPageMap[obj.attr('id')]);
-          }
           box.addClass('lastClick');
           obj.find('.' + box.attr('rel') + ':not([class*=exploded])').fadeIn('fast');
           box.fadeTo('fast', 0.3);
@@ -1570,8 +1519,6 @@
       });
     });
 
-    inst.innerPageMap[obj.attr('id')] = obj.children('.innerPage');
-    obj.children('.innerPage').detach();
     // aggiungo le azioni dei tools
     obj.on('click', '.actionBox', function(evt) {
       var el = $(this), handler = el.data('action-handler'), rel = el.attr('rel');
