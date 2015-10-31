@@ -339,6 +339,279 @@
   };
 
   /**
+   * Renders doc-info missing message
+   *
+   * @returns {Object} a jQuery node
+   */
+  LodLiveRenderer.prototype.docInfoMissing = function() {
+    var renderer = this;
+
+    var sectionNode = $('<div class="section"></div>');
+    var textNode = $('<div></div>').text(LodLiveUtils.lang('resourceMissingDoc'));
+
+    // TODO: no text, nothing to show, nothing to hover ...
+    var labelNode = $('<label></label>')
+    .attr('data-title',  LodLiveUtils.lang('resourceMissingDoc'));
+
+    renderer.hover(labelNode);
+
+    sectionNode.append(labelNode).append(textNode);
+
+    return sectionNode;
+  };
+
+  /**
+   * Renders doc-info types
+   *
+   * @param {Array<String>} types
+   * @returns {Object} a jQuery node
+   */
+  LodLiveRenderer.prototype.docInfoTypes = function(types) {
+    var renderer = this;
+
+    if (!types.length) return null;
+
+    // TODO: get types from profile
+    var labelNode = $('<label data-title="http://www.w3.org/1999/02/22-rdf-syntax-ns#type">type</label>');
+
+    renderer.hover(labelNode);
+
+    var wrapperNode = $('<div></div>');
+
+    types.forEach(function(type) {
+      var typeNode = $('<span></span>')
+      .attr('title', type)
+      // space required to allow wrapping
+      // TODO: create an <ul/> ?
+      .text(LodLive.shortenKey(type) + ' ');
+
+      wrapperNode.append(typeNode);
+    });
+
+    var sectionNode = $('<div class="section"></div>')
+    .append(labelNode)
+    .append(wrapperNode);
+
+    return sectionNode;
+  };
+
+  /**
+   * Renders doc-info images
+   *
+   * @param {Array<String>} images
+   * @returns {Object} a jQuery node
+   */
+  LodLiveRenderer.prototype.docInfoImages = function(images) {
+    if (!images.length) return null;
+
+    var sectionNode = $('<div class="section" style="height:80px"></div>');
+
+    images.forEach(function(imgObj) {
+      var key = Object.keys(imgObj)[0];
+      var value = imgObj[key];
+
+      var linkNode = $('<a></a>').attr('href', unescape(value));
+      var imgNode = $('<img/>').attr('src', unescape(value));
+
+      linkNode.append(imgNode);
+      sectionNode.append(linkNode);
+
+      imgNode.load(function() {
+        var width = imgNode.width();
+        var height = imgNode.height();
+
+        if (width > height) {
+          imgNode.height(height * 80 / width);
+          imgNode.width(80);
+        } else {
+          imgNode.width(width * 80 / height);
+          imgNode.height(80);
+        }
+      });
+
+      imgNode.error(function() {
+        imgNode.attr('title', LodLiveUtils.lang('noImage') + ' \n' + imgNode.attr('src'));
+        // TODO: use a font-awesome icon instead?
+        // imgNode.attr('src', 'img/immagine-vuota-' + $.jStorage.get('selectedLanguage') + '.png');
+      });
+
+      // TODO: find a replacement for this missing dependency
+      // sectionNode.fancybox({
+      //   'transitionIn' : 'elastic',
+      //   'transitionOut' : 'elastic',
+      //   'speedIn' : 400,
+      //   'type' : 'image',
+      //   'speedOut' : 200,
+      //   'hideOnContentClick' : true,
+      //   'showCloseButton' : false,
+      //   'overlayShow' : false
+      // });
+    });
+
+    return sectionNode;
+  };
+
+  /**
+   * Renders doc-info links
+   *
+   * @param {Array<String>} images
+   * @returns {Object} a jQuery node
+   */
+  LodLiveRenderer.prototype.docInfoLinks = function(links) {
+    var renderer = this;
+
+    if (!links.length) return null;
+
+    var sectionNode = $('<div class="section"></div>');
+    // TODO: move styles to external sheet
+    var wrapperNode = $('<ul style="padding:0;margin:0;display:block;overflow:hidden;tex-overflow:ellipses"></ul>');
+
+    links.forEach(function(linkObj) {
+      var key = Object.keys(linkObj)[0];
+      var value = linkObj[key];
+
+      var listItemNode = $('<li></li>');
+      var linkNode = $('<a class="relatedLink" target="_blank"></a>')
+      .attr('data-title', key + ' \n ' + unescape(value))
+      .attr('href', unescape(value))
+      .text(unescape(value));
+
+      // TODO: delegate hover
+      renderer.hover(linkNode);
+
+      listItemNode.append(linkNode);
+      wrapperNode.append(listItemNode);
+    });
+
+    sectionNode.append(wrapperNode);
+
+    return sectionNode;
+  };
+
+  /**
+   * Renders doc-info values
+   *
+   * @param {Array<String>} values
+   * @returns {Object} a jQuery node
+   */
+  LodLiveRenderer.prototype.docInfoValues = function(values) {
+    var renderer = this;
+
+    if (!values.length) return null;
+
+    var wrapperNode = $('<div></div>');
+
+    values.forEach(function(valueObj) {
+      var key = Object.keys(valueObj)[0];
+      var value = valueObj[key];
+
+      // TODO: lookup replacements from properties mapper?
+      var shortKey = LodLive.shortenKey(key);
+
+      var sectionNode = $('<div class="section"></div>');
+      var labelNode = $('<label></label>')
+      .attr('data-title', key)
+      .text(shortKey);
+
+      renderer.hover(labelNode);
+
+      var textNode = $('<div></div>').text(value);
+
+      sectionNode.append(labelNode).append(textNode);
+
+      wrapperNode.append(sectionNode);
+    });
+
+    return wrapperNode;
+  };
+
+  /**
+   * Renders doc-info bnode placeholders
+   *
+   * @param {Array<String>} bnodes
+   * @returns {Array<Object>} an array of jQuery nodes
+   */
+  LodLiveRenderer.prototype.docInfoBnodes = function(bnodes) {
+    var renderer = this;
+
+    return bnodes.map(function(bnodeObj) {
+      var key = Object.keys(bnodeObj)[0];
+      var value = bnodeObj[key];
+      var shortKey = LodLive.shortenKey(key);
+
+      var bnodeNode = $('<div class="section"></div>');
+      var labelNode = $('<label></label>')
+      .attr('data-title', key)
+      .text(shortKey);
+
+      renderer.hover(labelNode);
+
+      var spanNode = $('<span class="bnode"></span>')
+
+      bnodeNode.append(labelNode).append(spanNode);
+
+      return {
+        value: value,
+        spanNode: spanNode,
+        bnodeNode: bnodeNode
+      };
+    });
+  };
+
+  /**
+   * Renders doc-info bnode values
+   *
+   * @param {Array<String>} values
+   * @param {Object} spanNode - a jQuery node (placeholder for value)
+   * @returns {Object} a jQuery node
+   */
+  LodLiveRenderer.prototype.docInfoBnodeValues = function(values, spanNode) {
+    spanNode.attr('class', '')
+
+    values.forEach(function(valueObj) {
+      var key = Object.keys(valueObj)[0]
+      var value = valueObj[key];
+      var shortKey = LodLive.shortenKey(key);
+
+      var labelNode = $('<em></em>')
+      .attr('title', key)
+      .text(shortKey);
+
+      var textNode = $('<span></span>').text(': ' + value);
+
+      var valueNode = $('<div></div>').append(labelNode).append(textNode);
+
+      spanNode.append(valueNode);
+    });
+  };
+
+  /**
+   * Renders doc-info bnode nested placeholders
+   *
+   * @param {String} key
+   * @param {Object} spanNode - a jQuery node (placeholder for value)
+   * @returns {Object} a jQuery node
+   */
+  LodLiveRenderer.prototype.docInfoNestedBnodes = function(key, spanNode) {
+    var renderer = this;
+
+    var wrapperNode = $('<span></span>');
+    var labelNode = $('<label></label')
+    .attr('data-title', key)
+    .text(LodLive.shortenKey(key))
+
+    renderer.hover(labelNode);
+
+    var bnodeNode = $('<span class="bnode"></span>')
+
+    wrapperNode.append(labelNode).append(bnodeNode);
+
+    spanNode.attr('class', '').append(wrapperNode);
+
+    return bnodeNode;
+  };
+
+  /**
    * Gets all canvases containing lines related to `id`
    *
    * @param {String} id - the id of a subject or object node
@@ -928,7 +1201,23 @@
         },
         bnode: function(iri, callbacks) {
           var axis = 'bnode';
-          return httpClient({ query: getQuery(axis, iri) }, callbacks);
+          var params = { query: getQuery(axis, iri) };
+
+          return httpClient(params, {
+            beforeSend: callbacks.beforeSend,
+            error: callbacks.error,
+            success : function(json) {
+              var info;
+
+              if ( !(json && json.results && json.results.bindings) ) {
+                console.error(json);
+                return callbacks.error(new Error('malformed results'));
+              }
+
+              info = parseResults(json.results.bindings);
+              callbacks.success(info);
+            }
+          });
         },
         documentUri: function(iri, callbacks) {
           var axis = 'documentUri';
@@ -1570,17 +1859,16 @@
   LodLive.prototype.formatDoc = function(destBox, values, uris, bnodes, URI) {
     var inst = this;
 
-    var start;
-    if (inst.debugOn) {
-      console.debug('formatDoc ' + 0);
-      start = new Date().getTime();
-    }
-
     //TODO:  Some of these seem like they should be Utils functions instead of on the instance, not sure yet
     // recupero il doctype per caricare le configurazioni specifiche
     var docType = inst.getJsonValue(uris, 'http://www.w3.org/1999/02/22-rdf-syntax-ns#type', 'default');
     // carico le configurazioni relative allo stile
     destBox.addClass(inst.getProperty('document', 'className', docType));
+
+    if (!values.length && !bnodes.length) {
+      return destBox.append(inst.renderer.docInfoMissing());
+    }
+
     // ed ai path degli oggetti di tipo immagine
     var images = inst.getProperty('images', 'properties', docType);
     // ed ai path dei link esterni
@@ -1598,224 +1886,46 @@
       weblinks = [weblinks];
     }
 
-    var result = '<div></div>';
-    var jResult = $(result);
-    // destBox.append(jResult);
-
-    // estraggo i contenuti
-    var contents = [];
-    $.each(values, function(key, value) {
-      for (var akey in value) {
-        var newVal = {};
-        newVal[akey] = value[akey];
-        contents.push(newVal);
-      }
-    });
-
-    if (inst.debugOn) {
-      console.debug('formatDoc ' + 1);
-    }
-    // calcolo le uri e le url dei documenti correlati
     var connectedImages = [];
     var connectedWeblinks = [];
+
+    // TODO: get type IRIs from profile
     var types = [];
 
-    $.each(uris, function(key, value) {
-      for (var akey in value) {
-        var newVal = {};
-        newVal[akey] = value[akey];
-        // escludo la definizione della classe, le proprieta'
-        // relative alle immagini ed ai link web
-        if (akey != 'http://www.w3.org/1999/02/22-rdf-syntax-ns#type') {
-          if ($.inArray(akey, images) != -1) {
-            connectedImages.push(newVal);
-          } else if ($.inArray(akey, weblinks) != -1) {
-            connectedWeblinks.push(newVal);
-          }
-        } else {
-          types.push(unescape(value[akey]));
+    uris.forEach(function(uriObj) {
+      // TODO: confirm one key?
+      var key = Object.keys(uriObj)[0];
+      var value = uriObj[key];
+      var newVal = {};
+
+      // TODO: iterate type IRIs
+      if (key !== 'http://www.w3.org/1999/02/22-rdf-syntax-ns#type') {
+        newVal[key] = value;
+        if (images.indexOf(key) > -1) {
+          connectedImages.push(newVal);
+        } else if (weblinks.indexOf(key) > -1) {
+          connectedWeblinks.push(newVal);
         }
+
+      } else {
+        types.push(unescape(value));
       }
     });
 
-    if (inst.debugOn) {
-      console.debug('formatDoc ' + 2);
-    }
+    // TODO: iterate values, looking up replacements in profile property mapper?
 
-    // aggiungo al box le immagini correlate
-    var imagesj = null;
-    if (connectedImages.length > 0) {
-      imagesj = $('<div class="section" style="height:80px"></div>');
-      $.each(connectedImages, function(key, value) {
-        for (var akey in value) {
-          imagesj.append('<a class="relatedImage" href="' + unescape(value[akey]) + '"><img src="' + unescape(value[akey]) + '"/></a>');
-        }
-      });
-    }
+    destBox.append(inst.renderer.docInfoTypes(types));
+    destBox.append(inst.renderer.docInfoImages(connectedImages));
+    destBox.append(inst.renderer.docInfoLinks(connectedWeblinks));
+    destBox.append(inst.renderer.docInfoValues(values));
 
-    if (inst.debugOn) {
-      console.debug('formatDoc ' + 3);
-    }
+    var renderedBnodes = inst.renderer.docInfoBnodes(bnodes);
 
-    var webLinkResult = null;
-    // aggiungo al box i link esterni correlati
-    if (connectedWeblinks.length > 0) {
-      webLinkResult = '<div class="section"><ul style="padding:0;margin:0;display:block;overflow:hidden;tex-overflow:ellipses">';
-      $.each(connectedWeblinks, function(key, value) {
-        for (var akey in value) {
-          webLinkResult += '<li><a class="relatedLink" target="_blank" data-title="' + akey + ' \n ' + unescape(value[akey]) + '" href="' + unescape(value[akey]) + '">' + unescape(value[akey]) + '</a></li>';
-        }
-      });
-      webLinkResult += '</ul></div>';
-      // jContents.append(webLinkResult);
-    }
+    renderedBnodes.forEach(function(obj) {
+      destBox.append(obj.bnodeNode);
 
-    if (inst.debugOn) {
-      console.debug('formatDoc ' + 4);
-    }
-    // aggiungo al box le informazioni descrittive della risorsa
-    var jContents = $('<div></div>');
-
-    if (inst.debugOn) {
-      console.debug('formatDoc ' + 5);
-    }
-
-    if (types.length > 0) {
-      var jSection = $('<div class="section"><label data-title="http://www.w3.org/1999/02/22-rdf-syntax-ns#type">type</label><div></div></div>');
-
-      inst.renderer.hover( jSection.find('label') );
-
-      for (var int = 0; int < types.length; int++) {
-        var shortKey = LodLive.shortenKey(types[int]);
-        // is this really appended to ALL children divs or we looking for something specific?
-        jSection.children('div').append('<span title="' + types[int] + '">' + shortKey + ' </span>');
-      }
-
-      jContents.append(jSection);
-    }
-
-    if (inst.debugOn) {
-      console.debug('formatDoc ' + 6);
-    }
-
-    if (imagesj) {
-      jContents.append(imagesj);
-    }
-
-    if (webLinkResult) {
-      //TODO: delegate hover
-      var jWebLinkResult = $(webLinkResult);
-      inst.renderer.hover( jWebLinkResult.find('a') );
-      jContents.append(jWebLinkResult);
-    }
-
-    if (inst.debugOn) {
-      console.debug('formatDoc ' + 7);
-    }
-
-    if (propertiesMapper) {
-      $.each(propertiesMapper, function(filter, label) {
-        //show all properties
-        $.each(contents, function(key, value) {
-          for (var akey in value) {
-            if (filter == akey) {
-              var shortKey = label;
-              try {
-                var jSection = $('<div class="section"><label data-title="' + akey + '">' + shortKey + '</label><div>' + unescape(value[akey]) + '</div></div>');
-                inst.renderer.hover( jSection.find('label') );
-                jContents.append(jSection);
-              } catch (e) {
-                // /console.debug(value[akey] + " --- " + shortKey);
-              }
-              return true;
-            }
-          }
-        });
-      });
-
-    } else {
-      //show all properties
-      $.each(contents, function(key, value) {
-        for (var akey in value) {
-          var shortKey = akey;
-          // calcolo una forma breve per la visualizzazione
-          // dell'etichetta della proprieta'
-          while (shortKey.indexOf('/') > -1) {
-            shortKey = shortKey.substring(shortKey.indexOf('/') + 1);
-          }
-          while (shortKey.indexOf('#') > -1) {
-            shortKey = shortKey.substring(shortKey.indexOf('#') + 1);
-          }
-          try {
-
-            var jSection = $('<div class="section"><label data-title="' + akey + '">' + shortKey + '</label><div>' + unescape(value[akey]) + '</div></div>');
-            inst.renderer.hover( jSection.find('label') );
-            jContents.append(jSection);
-          } catch (e) { // what are we catching here?
-            // /console.debug(value[akey] + " --- " + shortKey);
-          }
-        }
-      });
-    }
-
-    if (bnodes.length > 0) {
-      // processo i blanknode
-      $.each(bnodes, function(key, value) {
-        for (var akey in value) {
-          var shortKey = LodLive.shortenKey(akey);
-
-          var jBnode = $('<div class="section"><label data-title="' + akey + '">' + shortKey + '</label><span class="bnode"></span></div><div class="separ sprite"></div>');
-          inst.renderer.hover( jBnode.find('label') );
-          inst.resolveBnodes(unescape(value[akey]), URI, jBnode, jContents);
-
-        }
-      });
-    }
-
-    if (contents.length == 0 && bnodes.length == 0) {
-      var jSection = $('<div class="section"><label data-title="' + LodLiveUtils.lang('resourceMissingDoc') + '"></label><div>' + LodLiveUtils.lang('resourceMissingDoc') + '</div></div><div class="separ sprite"></div>');
-      inst.renderer.hover( jSection.find('label') );
-      jContents.append(jSection);
-    }
-
-    destBox.append(jResult);
-    destBox.append(jContents);
-    // destBox.append("<div class=\"separLast\"></div>");
-
-    // aggiungo le funzionalita' per la visualizzazione delle immagini
-    //FIXME: consolidate this
-    jContents.find('.relatedImage').each(function() {
-      $(this).fancybox({
-        'transitionIn' : 'elastic',
-        'transitionOut' : 'elastic',
-        'speedIn' : 400,
-        'type' : 'image',
-        'speedOut' : 200,
-        'hideOnContentClick' : true,
-        'showCloseButton' : false,
-        'overlayShow' : false
-      });
-
-      $(this).find('img').each(function() {
-        $(this).load(function() {
-          if ($(this).width() > $(this).height()) {
-            $(this).height($(this).height() * 80 / $(this).width());
-            $(this).width(80);
-          } else {
-            $(this).width($(this).width() * 80 / $(this).height());
-            $(this).height(80);
-          }
-        });
-        $(this).error(function() {
-          $(this).attr('title', LodLiveUtils.lang('noImage') + ' \n' + $(this).attr('src'));
-          $(this).attr('src', 'img/immagine-vuota-' + $.jStorage.get('selectedLanguage') + '.png');
-        });
-      });
+      inst.resolveBnodes(unescape(obj.value), URI, obj.spanNode, destBox);
     });
-
-    if (inst.debugOn) {
-      console.debug((new Date().getTime() - start) + '  formatDoc ');
-    }
   };
 
   LodLive.prototype.getAjaxDataType = function() {
@@ -1823,65 +1933,45 @@
     return this.options.endpoints.jsonp ? 'jsonp' : 'json';
   };
 
-  LodLive.prototype.resolveBnodes = function(val, URI, destBox, jContents) {
+  LodLive.prototype.resolveBnodes = function(val, URI, spanNode, destBox) {
     var inst = this;
 
-    var start;
-    if (inst.debugOn) {
-      start = new Date().getTime();
-    }
-
+    // TODO: figure out how to fall back to URI
     inst.sparqlClient.bnode(val, {
       beforeSend : function() {
         // destBox.find('span[class=bnode]').html('<img src="img/ajax-loader-black.gif"/>');
-        if (inst.debugOn) {
-          console.debug('beforeSend resolveBnodes')
-        }
-        return inst.renderer.loading( destBox.find('span[class=bnode]') );
+        return inst.renderer.loading(spanNode);
       },
-      success : function(json) {
+      success : function(info ) {
         // s/b unnecessary
         // destBox.find('span[class=bnode]').html('');
-        json = json['results']['bindings'];
-        $.each(json, function(key, value) {
-          var shortKey = LodLive.shortenKey(value.property.value);
-          if (value.object.type == 'uri') {
 
-          } else if (value.object.type == 'bnode') {
-            var jBnode = $('<span><label data-title="' + value.property.value + '"> / ' + shortKey + '</label><span class="bnode"></span></span>');
-            inst.renderer.hover( jBnode.find('label' ) );
-            destBox.find('span[class=bnode]').attr('class', '').append(jBnode);
-            inst.resolveBnodes(value.object.value, URI, destBox, jContents);
-          } else {
-            destBox.find('span[class=bnode]').append('<div><em title="' + value.property.value + '">' + shortKey + '</em>: ' + value.object.value + '</div>');
-            // destBox.find('span[class=bnode]').attr("class",
-            // "");
-          }
-          jContents.append(destBox);
-          if (jContents.height() + 40 > $(window).height()) {
+        if (info.values.length) {
+          inst.renderer.docInfoBnodeValues(info.values, spanNode);
+        }
 
-            // TODO: slimScroll is no long included, and seems to be unnecessary
-            // jContents.slimScroll({
-            //   height : $(window).height() - 40,
-            //   color : '#fff'
-            // });
+        info.bnodes.forEach(function(bnodeObj) {
+          var key = Object.keys(bnodeObj)[0]
+          var value = bnodeObj[value];
 
-            jContents.parent().find('div.separLast').remove();
-          } else {
-            jContents.parent().append('<div class="separLast"></div>');
-          }
+          var nestedBnodeNode = inst.renderer.docInfoNestedBnodes(key, spanNode);
+
+          inst.resolveBnodes(unescape(value), URI, nestedBnodeNode, destBox);
         });
+
+        // // TODO: slimScroll is no long included, and seems to be unnecessary
+        // if (destBox.height() + 40 > $(window).height()) {
+        //   destBox.slimScroll({
+        //     height : $(window).height() - 40,
+        //     color : '#fff'
+        //   });
+        // }
       },
       error : function(e, b, v) {
         // s/b unnecessary
         // destBox.find('span[class=bnode]').html('');
       }
     });
-
-    if (inst.debugOn) {
-      console.debug((new Date().getTime() - start) + '  resolveBnodes ');
-    }
-    return val;
   };
 
   //TODO: this doesn't need to be on the prototype since it's a stateless utility function - are the metrics necessary?
