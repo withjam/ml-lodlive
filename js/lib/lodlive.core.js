@@ -185,29 +185,16 @@
 
   };
 
-  LodLive.prototype.addNewDoc = function(obj, ele, callback) {
-    var inst = this, start;
-    if (inst.debugOn) {
-      start = new Date().getTime();
-    }
-
-    var aId = ele.attr('relmd5');
-    var newObj = inst.context.find('#' + aId);
-    var isInverse = ele.is('.inverse');
+  LodLive.prototype.addNewDoc = function(originalCircle, ele) {
+    var inst = this;
     var exist = true;
-    ele = $(ele);
+    var fromInverse = null;
 
-    // verifico se esistono box rappresentativi dello stesso documento
-    // nella pagina
-    if (!newObj.length) {
-
-      newObj = $(inst.boxTemplate);
-      exist = false;
-
-    }
-
+    var rel = ele.attr('rel');
+    var aId = ele.attr('relmd5');
     var circleId = ele.data('circleid');
-    var originalCircus = $('#' + circleId);
+    var propertyName = ele.data('property');
+    var isInverse = ele.is('.inverse');
 
     // TODO: rename for clarity ?
     // var subjectId = circleId; var objectId = aId;
@@ -222,26 +209,39 @@
       inst.refs.addSubjectRef(aId, circleId);
     }
 
-    var propertyName = ele.data('property');
-    var rel = ele.attr('rel');
-    newObj.attr('id', aId);
-    newObj.attr('rel', rel);
+    var newObj = inst.context.find('#' + aId);
 
-    var fromInverse = isInverse ? 'div[data-property="' + propertyName + '"][rel="' + rel + '"]' : null;
-    if (inst.debugOn) {
-      console.debug((new Date().getTime() - start) + '  addNewDoc 05 ');
+    // verifico se esistono box rappresentativi dello stesso documento
+    // nella pagina
+    if (!newObj.length) {
+      exist = false;
+      newObj = $(inst.boxTemplate)
+      .attr('id', aId)
+      .attr('rel', rel);
     }
+
     // nascondo l'oggetto del click e carico la risorsa successiva
     ele.hide();
+
     if (!exist) {
-      if (inst.debugOn) {
-        console.debug((new Date().getTime() - start) + '  addNewDoc 06 ');
-      }
       var pos = parseInt(ele.attr('data-circlePos'), 10);
       var parts = parseInt(ele.attr('data-circleParts'), 10);
-      var chordsListExpand = inst.circleChords(parts > 10 ? (pos % 2 > 0 ? originalCircus.width() * 3 : originalCircus.width() * 2) : originalCircus.width() * 5 / 2, parts, originalCircus.position().left + obj.width() / 2, originalCircus.position().top + originalCircus.height() / 2, null, pos);
+
+      var radiusFactor = parts > 10 ?
+                         2 + (pos % 2) :
+                         5 / 2;
+
+      var chordsListExpand = inst.circleChords(
+        originalCircle.width() * radiusFactor,
+        parts,
+        originalCircle.position().left + originalCircle.width() / 2,
+        originalCircle.position().top + originalCircle.height() / 2,
+        null,
+        pos
+      );
+
       inst.context.append(newObj);
-      //FIXME: eliminate inline CSS where possible
+      // FIXME: eliminate inline CSS where possible
       newObj.css({
         left : (chordsListExpand[0][0] - newObj.height() / 2),
         top : (chordsListExpand[0][1] - newObj.width() / 2),
@@ -249,45 +249,16 @@
         zIndex : 99
       });
 
-      if (inst.debugOn) {
-        console.debug((new Date().getTime() - start) + '  addNewDoc 07 ');
+      if (isInverse) {
+        fromInverse = 'div[data-property="' + propertyName + '"][rel="' + rel + '"]';
       }
-      if (!isInverse) {
-        if (inst.debugOn) {
-          console.debug((new Date().getTime() - start) + '  addNewDoc 08 ');
-        }
-        if (inst.doInverse) {
-          inst.openDoc(rel, newObj, fromInverse);
-        } else {
-          inst.openDoc(rel, newObj);
-        }
-        inst.renderer.drawLine(obj, newObj, null, propertyName);
-      } else {
-        if (inst.debugOn) {
-          console.debug((new Date().getTime() - start) + '  addNewDoc 09 ');
-        }
-        inst.openDoc(rel, newObj, fromInverse);
-      }
-    } else {
-      if (!isInverse) {
-        if (inst.debugOn) {
-          console.debug((new Date().getTime() - start) + '  addNewDoc 10 ');
-        }
-        inst.renderer.drawLine(obj, newObj, null, propertyName);
-      } else {
-        if (inst.debugOn) {
-          console.debug((new Date().getTime() - start) + '  addNewDoc 11 ');
-        }
-      }
+
+      inst.openDoc(rel, newObj, fromInverse);
     }
-    //TODO: why is there a callback if this is not asnyc?
-    if (callback) {
-      callback();
+
+    if (!isInverse) {
+      inst.renderer.drawLine(originalCircle, newObj, null, propertyName);
     }
-    if (inst.debugOn) {
-      console.debug((new Date().getTime() - start) + '  addNewDoc ');
-    }
-    return false;
   };
 
   LodLive.prototype.removeDoc = function(obj, callback) {
@@ -298,12 +269,9 @@
         alert('Cannot Remove Only Box');
         return;
     }
-    var start;
-    if (inst.debugOn) {
-      start = new Date().getTime();
-    }
 
-    inst.context.find('.lodlive-toolbox').remove(); // why remove and not hide?
+    // TODO: why remove and not hide?
+    inst.context.find('.lodlive-toolbox').remove();
 
     var id = obj.attr('id');
 
@@ -367,16 +335,13 @@
         }
       });
 
+      // re-show predicate boxes that pointed to this object
       inst.context.find('div[relmd5=' + id + ']').each(function() {
         var found = $(this);
         found.show();
         found.removeClass('exploded');
       });
     });
-
-    if (inst.debugOn) {
-      console.debug((new Date().getTime() - start) + '  removeDoc ');
-    }
   };
 
   LodLive.prototype.addClick = function(obj, callback) {
