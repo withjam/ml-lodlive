@@ -137,9 +137,20 @@
 
     var httpClientFactory = require('../../src/http-client.js');
 
-    this.httpClient = httpClientFactory.create(
+    // TODO: local only
+    var httpClient = this.httpClient = httpClientFactory.create(
+      this.options.connection['http:'].endpoint,
+      this.options.endpoints.all,
       this.options.connection['http:'].accepts,
       this.getAjaxDataType()
+    );
+
+    var sparqlClientFactory = require('../../src/sparql-client.js');
+
+    this.sparqlClient = sparqlClientFactory.create(
+      this.options.connection['http:'].sparql,
+      this.options.default.sparql,
+      httpClient
     );
 
     // container elements
@@ -969,22 +980,22 @@
       inst.container.append(docInfo);
     }
 
+    // duplicated code ...
     var URI = obj.attr('rel');
     docInfo.attr('rel', URI);
 
     // predispongo il div contenente il documento
 
-    var SPARQLquery = inst.composeQuery(URI, 'document');
     var uris = [];
     var bnodes = [];
     var values = [];
-    if (SPARQLquery.indexOf('http://system/dummy') === 0) {
 
-      inst.parseRawResourceDoc(docInfo, URI);
+    // var SPARQLquery = inst.composeQuery(URI, 'document');
 
-    } else {
+    // NOTE: previously fell back to inst.parseRawResourceDoc(docInfo, URI);
+    // (if SPARQLquery was http://system/dummy)
 
-      inst.httpClient(SPARQLquery, {
+      inst.sparqlClient('document', URI, {
         success : function(json) {
           json = json.results && json.results.bindings;
 
@@ -1012,8 +1023,6 @@
           inst.formatDoc(docInfo, values, uris, bnodes, URI);
         }
       });
-    }
-
   };
 
   LodLive.prototype.processDraw = function(x1, y1, x2, y2, canvas, toId) {
@@ -1432,9 +1441,7 @@
       start = new Date().getTime();
     }
 
-    var SPARQLquery = inst.composeQuery(val, 'bnode', URI);
-
-    inst.httpClient(SPARQLquery, {
+    inst.sparqlClient('bnode', val, {
       beforeSend : function() {
         destBox.find('span[class=bnode]').html('<img src="img/ajax-loader-black.gif"/>');
 
@@ -1699,14 +1706,12 @@
 
     }
     var dataEndpoint = containerBox.attr('data-endpoint') || '';
-    if ((values.length == 0 && uris.length == 0) || dataEndpoint.indexOf('http://system/dummy') == 0) {
-      if (containerBox.attr('data-endpoint').indexOf('http://system/dummy') != -1) {
-        containerBox.attr('data-endpoint', LodLiveUtils.lang('endpointNotConfigured'));
-      }
-      if (uris.length == 0 && values.length == 0) {
-        result = '<div class="boxTitle" data-tooltip="' + LodLiveUtils.lang('resourceMissing') + '"><a target="_blank" href="' + thisUri + '"><span class="spriteLegenda"></span>' + thisUri + '</a>';
-      }
+
+    // TODO: early return?
+    if (uris.length == 0 && values.length == 0) {
+      result = '<div class="boxTitle" data-tooltip="' + LodLiveUtils.lang('resourceMissing') + '"><a target="_blank" href="' + thisUri + '"><span class="spriteLegenda"></span>' + thisUri + '</a>';
     }
+
     result += '</span></div>';
     var jResult = $(result);
     if (jResult.text() == '' && docType == 'bnode') {
@@ -2164,42 +2169,27 @@
     var values = [];
 
     if (inst.debugOn) console.log('composing query with anUri', anUri);
-    //TODO: composeQuery looks like a static function, look into it
-    var SPARQLquery = inst.composeQuery(anUri, 'documentUri');
 
-    if (inst.doStats) {
-      // TODO: what is methods?
-      methods.doStats(anUri);
-    }
+    // TODO: what is methods && what is doStats? neither exist ...
+    // if (inst.doStats) {
+    //   methods.doStats(anUri);
+    // }
 
-    if (SPARQLquery.indexOf('endpoint=') != -1) {
+    // NOTE: previously extracted endpoint from SPARQLquery
+    destBox.attr('data-endpoint', lodLiveProfile.connection['http:'].endpoint);
 
-      var endpoint = SPARQLquery.substring(SPARQLquery.indexOf('endpoint=') + 9);
-      endpoint = endpoint.substring(0, endpoint.indexOf('&'));
-      destBox.attr('data-endpoint', endpoint);
+    // TODO: figure out why this doesn't work ...
+    // destBox.data('endpoint', lodLiveProfile.connection['http:'].endpoint);
 
-    } else {
+    // var SPARQLquery = inst.composeQuery(anUri, 'documentUri');
 
-      destBox.attr('data-endpoint', SPARQLquery.substring(0, SPARQLquery.indexOf('?')));
+    // NOTE: previously fell back to inst.guessingEndpoint(anUri,
+    // (if SPARQLquery was http://system/dummy)
+    // callbacks:
+    //   success: inst.openDoc(anUri, destBox, fromInverse);
+    //   failure: inst.parseRawResource(destBox, anUri, fromInverse);
 
-    }
-    //TODO: is system/dummy just a flag that it should guess? If so, maybe just set a property on the query object called shouldGuess = true
-    if (SPARQLquery.indexOf('http://system/dummy') == 0) {
-
-      // guessing endpoint from URI
-      inst.guessingEndpoint(anUri, function() {
-
-        inst.openDoc(anUri, destBox, fromInverse);
-
-      }, function() {
-
-        inst.parseRawResource(destBox, anUri, fromInverse);
-
-      });
-
-    } else {
-
-      inst.httpClient(SPARQLquery, {
+      inst.sparqlClient('documentUri', anUri, {
         beforeSend : function() {
           destBox.children('.box').html('<img style=\"margin-top:' + (destBox.children('.box').height() / 2 - 8) + 'px\" src="img/ajax-loader.gif"/>');
         },
@@ -2227,11 +2217,11 @@
           }
           destBox.children('.box').html('');
           if (inst.doInverse) {
-            SPARQLquery = inst.composeQuery(anUri, 'inverse');
 
             var inverses = [];
+            // SPARQLquery = inst.composeQuery(anUri, 'inverse');
 
-            inst.httpClient(SPARQLquery, {
+            inst.sparqlClient('inverse', anUri, {
               beforeSend : function() {
                 destBox.children('.box').html('<img style=\"margin-top:' + (destBox.children('.box').height() / 2 - 5) + 'px\" src="img/ajax-loader.gif"/>');
               },
@@ -2306,7 +2296,6 @@
         }
       });
 
-    }
     if (inst.debugOn) {
       console.debug((new Date().getTime() - start) + '  openDoc');
     }

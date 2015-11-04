@@ -19,9 +19,9 @@ describe('httpClient', function () {
   it('should not require callbacks', function () {
     var self = this
     var ajax = this.sandbox.stub($, 'ajax')
-    var httpClient = httpClientFactory.create('accepts', 'json')
+    var httpClient = httpClientFactory.create('endpoint', 'param=value', 'accepts', 'json')
 
-    httpClient('endpoint', '?param=value&query=QUERY', {})
+    httpClient({ query: 'QUERY' }, {})
 
     expect(ajax.calledOnce).to.be.true
 
@@ -46,9 +46,9 @@ describe('httpClient', function () {
       error: self.sandbox.stub()
     }
 
-    var httpClient = httpClientFactory.create('accepts', 'json')
+    var httpClient = httpClientFactory.create('endpoint', 'param=value', 'accepts', 'json')
 
-    httpClient('endpoint', '?param=value&query=QUERY', callbacks)
+    httpClient({ query: 'QUERY' }, callbacks)
 
     expect(ajax.calledOnce).to.be.true
 

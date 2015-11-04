@@ -1,19 +1,40 @@
 'use strict'
 
 var httpClientFactory = {
-  create: function(accepts, dataType) {
-    return function httpClient(url, params, callbacks) {
-      // TODO: parse params arg
-      if (!callbacks) {
-        callbacks = params;
-        params = ''
-      }
+  /*
+   * Create a new httpClient instance
+   *
+   * @param {String} endpoint - the request endpoint URL
+   * @param {Object|String} defaultParams - the default URL params
+   * @param {String} accepts - accepts header mime-type (from profile)
+   * @param {String} dataType - `json` or `jsonp`
+   * @return {Function} an httpClient instance
+   */
+  create: function(endpoint, defaultParams, accepts, dataType) {
 
-      var fullUrl = url + params;
-      var afterSend;
+    function parseParams(params) {
+      // TODO if (typeof defaultParams === 'object') ...
 
-      $.ajax({
-        url : fullUrl,
+      return defaultParams + '&' + $.param(params)
+    }
+
+    /**
+     * Makes an http request
+     *
+     * @param {Object} params - URL params
+     * @param {Object} callbacks
+     *
+     * @prop {Function} callbacks.beforeSend
+     * @prop {Function} callbacks.success
+     * @prop {Function} callbacks.error
+     */
+    return function httpClient(params, callbacks) {
+
+      var fullUrl = endpoint + '?' + parseParams(params);
+       var afterSend;
+
+       $.ajax({
+        url: fullUrl,
         contentType: 'application/json',
         accepts: accepts,
         dataType: dataType,
