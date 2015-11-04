@@ -10,6 +10,26 @@ function LodLiveRenderer(container, context, arrows, refs) {
 }
 
 /**
+ * Render a loading glyph
+ *
+ * @param {Element} target - a jQuery element
+ * @return {Function} a function to remove the loading glyph
+ */
+LodLiveRenderer.prototype.loading = function loading(target) {
+  var top = target.height() / 2 - 8;
+
+  // TODO: issue #18
+  // '<i class="fa fa-spinner fa-spin" style="margin-top:' + top + 'px;margin-left: 5px"/></i>'
+  var loader = $('<img class="loader" style="margin-top:' + top + 'px" src="img/ajax-loader.gif"/>');
+
+  target.append(loader);
+
+  return function() {
+    loader.remove();
+  };
+};
+
+/**
  * Draws a line
  */
 LodLiveRenderer.prototype.drawaLine = function(from, to, propertyName) {

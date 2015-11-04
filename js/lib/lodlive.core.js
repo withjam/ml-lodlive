@@ -1087,11 +1087,12 @@
 
     inst.sparqlClient.bnode(val, {
       beforeSend : function() {
-        destBox.find('span[class=bnode]').html('<img src="img/ajax-loader-black.gif"/>');
-
+        // destBox.find('span[class=bnode]').html('<img src="img/ajax-loader-black.gif"/>');
+        return inst.renderer.loading( destBox.find('span[class=bnode]') );
       },
       success : function(json) {
-        destBox.find('span[class=bnode]').html('');
+        // s/b unnecessary
+        // destBox.find('span[class=bnode]').html('');
         json = json['results']['bindings'];
         $.each(json, function(key, value) {
           var shortKey = utils.shortenKey(value.property.value);
@@ -1126,8 +1127,8 @@
         });
       },
       error : function(e, b, v) {
-        destBox.find('span').html('');
-
+        // s/b unnecessary
+        // destBox.find('span[class=bnode]').html('');
       }
     });
 
@@ -1835,7 +1836,8 @@
 
       inst.sparqlClient.documentUri(anUri, {
         beforeSend : function() {
-          destBox.children('.box').html('<img style=\"margin-top:' + (destBox.children('.box').height() / 2 - 8) + 'px\" src="img/ajax-loader.gif"/>');
+          // destBox.children('.box').html('<img style=\"margin-top:' + (destBox.children('.box').height() / 2 - 8) + 'px\" src="img/ajax-loader.gif"/>');
+          return inst.renderer.loading(destBox.children('.box'))
         },
         success : function(info) {
           // reformat values for compatility
@@ -1877,14 +1879,18 @@
           if (inst.debugOn) {
             console.debug((new Date().getTime() - start) + '  openDoc eval uris & values');
           }
-          destBox.children('.box').html('');
+
+          // s/b unnecessary
+          // destBox.children('.box').html('');
+
           if (inst.doInverse) {
 
             // SPARQLquery = inst.composeQuery(anUri, 'inverse');
 
             inst.sparqlClient.inverse(anUri, {
               beforeSend : function() {
-                destBox.children('.box').html('<img style=\"margin-top:' + (destBox.children('.box').height() / 2 - 5) + 'px\" src="img/ajax-loader.gif"/>');
+                // destBox.children('.box').html('<img id="1234" style=\"margin-top:' + (destBox.children('.box').height() / 2 - 5) + 'px\" src="img/ajax-loader.gif"/>');
+                return inst.renderer.loading(destBox.children('.box'));
               },
               success : function(inverseInfo) {
                 var inverses = [];
@@ -1927,7 +1933,9 @@
                 }
 
                 var callback = function() {
-                  destBox.children('.box').html('');
+                  // s/b unnecessary
+                  // destBox.children('.box').html('');
+
                   inst.format(destBox.children('.box'), values, uris, inverses);
                   inst.addClick(destBox, fromInverse ? function() {
                     //TODO: dynamic selector across the entire doc here seems strange, what are the the possibilities?  Is it only a DOM element?
@@ -1950,7 +1958,9 @@
 
               },
               error : function(e, b, v) {
-                destBox.children('.box').html('');
+                // s/b unnecessary
+                // destBox.children('.box').html('');
+
                 inst.format(destBox.children('.box'), values, uris);
 
                 inst.addClick(destBox, fromInverse ? function() {
