@@ -18,6 +18,8 @@
 
   var jwin = $(window), jbody = $(document.body);
 
+  var utils = require('../../src/utils.js');
+
   var DEFAULT_BOX_TEMPLATE = '<div class="boxWrapper lodlive-node defaultBoxTemplate"><div class="ll-node-anchor"></div><div class="lodlive-node-label box sprite"></div></div>';
 
   /** LodLiveProfile constructor - Not sure this is even necessary, a basic object should suffice - I don't think it adds any features or logic
@@ -26,13 +28,6 @@
   function LodLiveProfile() {
 
   }
-
-  //utility functions - might belong somewhere else but here for now so I can see them
-  LodLive.shortenKey = function(str) {
-    str = jQuery.trim(str);
-    var lastSlash = str.lastIndexOf('/'), lastHash = str.lastIndexOf('#');
-    return lastSlash > lastHash ? str.substring(lastSlash + 1) : str.substring(lastHash + 1);
-  };
 
   function enableDrag(instance) {
 
@@ -175,7 +170,7 @@
     this.infoPanelMap = {};
     this.connection = {};
     // simple MD5 implementation to eliminate dependencies, can still pass in MD5 (or some other algorithm) if desired
-    this.hashFunc = this.options.hashFunc || LodLiveUtils.hashFunc;
+    this.hashFunc = this.options.hashFunc || utils.hashFunc;
     this.innerPageMap = {};
     this.boxTemplate =  this.options.boxTemplate || DEFAULT_BOX_TEMPLATE;
     this.ignoreBnodes = this.UI.ignoreBnodes;
@@ -234,7 +229,7 @@
     msg = msg.replace(/http:\/\/.+~~/g, '');
     msg = msg.replace(/nodeID:\/\/.+~~/g, '');
     msg = msg.replace(/_:\/\/.+~~/g, '');
-    msg = LodLiveUtils.breakLines(msg);
+    msg = utils.breakLines(msg);
     msg = msg.replace(/\|/g, '<br />');
 
     msgs = msg.split(' \n ');
@@ -701,7 +696,7 @@
           toolConfig = _builtins[toolConfig.builtin];
         }
         if (!toolConfig) return;
-        t = jQuery('<div class="innerActionBox" title="' + LodLiveUtils.lang(toolConfig.title) + '"><span class="' + toolConfig.icon + '"></span></div>');
+        t = jQuery('<div class="innerActionBox" title="' + utils.lang(toolConfig.title) + '"><span class="' + toolConfig.icon + '"></span></div>');
         t.appendTo(tools).on('click', function() { toolConfig.handler.call($(this), obj, inst); });
       });
       var toolWrapper = $('<div class=\"lodlive-toolbox-wrapper\"></div>').append(tools);
@@ -774,7 +769,7 @@
           lineStyle = inst.options.arrows[$.trim(labeArray[o])] + 'Line';
         }
 
-        var shortKey = LodLive.shortenKey(labeArray[o]);
+        var shortKey = utils.shortenKey(labeArray[o]);
         var lastHash = shortKey.lastIndexOf('#');
         var lastSlash = shortKey.lastIndexOf('/');
 
@@ -790,7 +785,7 @@
 
     } else {
       //TODO: doesn't make sense to have these live in different files.  Should make line drawers an extensible interface
-      LodLiveUtils.customLines(inst.context, lineStyle, label, x1, y1, x2, y2, canvas, toId);
+      utils.customLines(inst.context, lineStyle, label, x1, y1, x2, y2, canvas, toId);
     }
 
     if (inst.debugOn) {
@@ -991,7 +986,7 @@
       });
 
       for (var int = 0; int < types.length; int++) {
-        var shortKey = LodLive.shortenKey(types[int]);
+        var shortKey = utils.shortenKey(types[int]);
         // is this really appended to ALL children divs or we looking for something specific?
         jSection.children('div').append('<span title="' + types[int] + '">' + shortKey + ' </span>');
       }
@@ -1085,7 +1080,7 @@
       // processo i blanknode
       $.each(bnodes, function(key, value) {
         for (var akey in value) {
-          var shortKey = LodLive.shortenKey(akey);
+          var shortKey = utils.shortenKey(akey);
 
           var jBnode = $('<div class="section"><label data-title="' + akey + '">' + shortKey + '</label><span class="bnode"></span></div><div class="separ sprite"></div>');
           jBnode.find('label').each(function() {
@@ -1102,7 +1097,7 @@
     }
 
     if (contents.length == 0 && bnodes.length == 0) {
-      var jSection = $('<div class="section"><label data-title="' + LodLiveUtils.lang('resourceMissingDoc') + '"></label><div>' + LodLiveUtils.lang('resourceMissingDoc') + '</div></div><div class="separ sprite"></div>');
+      var jSection = $('<div class="section"><label data-title="' + utils.lang('resourceMissingDoc') + '"></label><div>' + utils.lang('resourceMissingDoc') + '</div></div><div class="separ sprite"></div>');
       jSection.find('label').each(function() {
         $(this).hover(function() {
           inst.msg($(this).attr('data-title'), 'show');
@@ -1142,7 +1137,7 @@
           }
         });
         $(this).error(function() {
-          $(this).attr('title', LodLiveUtils.lang('noImage') + ' \n' + $(this).attr('src'));
+          $(this).attr('title', utils.lang('noImage') + ' \n' + $(this).attr('src'));
           $(this).attr('src', 'img/immagine-vuota-' + $.jStorage.get('selectedLanguage') + '.png');
         });
       });
@@ -1175,7 +1170,7 @@
         destBox.find('span[class=bnode]').html('');
         json = json['results']['bindings'];
         $.each(json, function(key, value) {
-          var shortKey = LodLive.shortenKey(value.property.value);
+          var shortKey = utils.shortenKey(value.property.value);
           if (value.object.type == 'uri') {
 
           } else if (value.object.type == 'bnode') {
@@ -1434,7 +1429,7 @@
 
     // TODO: early return?
     if (uris.length == 0 && values.length == 0) {
-      result = '<div class="boxTitle" data-tooltip="' + LodLiveUtils.lang('resourceMissing') + '"><a target="_blank" href="' + thisUri + '"><span class="spriteLegenda"></span>' + thisUri + '</a>';
+      result = '<div class="boxTitle" data-tooltip="' + utils.lang('resourceMissing') + '"><a target="_blank" href="' + thisUri + '"><span class="spriteLegenda"></span>' + thisUri + '</a>';
     }
 
     result += '</span></div>';
@@ -1451,7 +1446,7 @@
       if(titleDef){
           jResult.text(titleDef);
       } else {
-        jResult.text(LodLiveUtils.lang('noName'));
+        jResult.text(utils.lang('noName'));
       }
     }
     destBox.append(jResult);
@@ -1670,7 +1665,7 @@
           if (!inserted[akey]) {
             innerCounter = 1;
             inserted[akey] = true;
-            var objBox = $('<div class="groupedRelatedBox" rel="' + inst.hashFunc(akey) + '" data-property="' + akey + '"  data-title="' + akey + ' \n ' + (propertyGroup[akey].length) + ' ' + LodLiveUtils.lang('connectedResources') + '" ></div>');
+            var objBox = $('<div class="groupedRelatedBox" rel="' + inst.hashFunc(akey) + '" data-property="' + akey + '"  data-title="' + akey + ' \n ' + (propertyGroup[akey].length) + ' ' + utils.lang('connectedResources') + '" ></div>');
             objBox.css(inst.getRelationshipCSS(akey));
             // containerBox.append(objBox);
             var akeyArray = akey.split(' ');
@@ -1753,7 +1748,7 @@
             innerCounter = 1;
             inserted[akey] = true;
 
-            var objBox = $('<div class="groupedRelatedBox inverse" rel="' + inst.hashFunc(akey) + '-i"   data-property="' + akey + '" data-title="' + akey + ' \n ' + (propertyGroupInverted[akey].length) + ' ' + LodLiveUtils.lang('connectedResources') + '" ></div>');
+            var objBox = $('<div class="groupedRelatedBox inverse" rel="' + inst.hashFunc(akey) + '-i"   data-property="' + akey + '" data-title="' + akey + ' \n ' + (propertyGroupInverted[akey].length) + ' ' + utils.lang('connectedResources') + '" ></div>');
             objBox.css(inst.getRelationshipCSS(akey));
             // containerBox.append(objBox);
             var akeyArray = akey.split(' ');
@@ -2073,10 +2068,10 @@
 
     destBox.children('.box').addClass('errorBox');
     destBox.children('.box').html('');
-    var jResult = $('<div class="boxTitle"><span>' + LodLiveUtils.lang('enpointNotAvailable') + '</span></div>');
+    var jResult = $('<div class="boxTitle"><span>' + utils.lang('enpointNotAvailable') + '</span></div>');
     destBox.children('.box').append(jResult);
     destBox.children('.box').hover(function() {
-      inst.msg(LodLiveUtils.lang('enpointNotAvailableOrSLow'), 'show', 'fullInfo', destBox.attr('data-endpoint'));
+      inst.msg(utils.lang('enpointNotAvailableOrSLow'), 'show', 'fullInfo', destBox.attr('data-endpoint'));
     }, function() {
       inst.msg(null, 'hide');
     });
