@@ -145,7 +145,6 @@
       throw 'LodLive: no container found';
     }
     enableDrag(this);
-
   }
 
   LodLive.prototype.init = function(firstUri) {
@@ -173,8 +172,11 @@
     $.jStorage.set('doAutoSameas', $.jStorage.get('doAutoSameas', true));
     $.jStorage.set('doCollectImages', $.jStorage.get('doCollectImages', true));
     $.jStorage.set('doDrawMap', $.jStorage.get('doDrawMap', true));
-    $.jStorage.set('showInfoConsole', $.jStorage.get('showInfoConsole', true));
     */
+
+    // explicitly disabled, for now
+    this.doCollectImages = false;
+    this.doDrawMap = false;
 
     var firstBox = $(this.boxTemplate);
     this.centerBox(firstBox);
@@ -191,300 +193,7 @@
     // carico il primo documento
     this.openDoc(firstUri, firstBox);
 
-    this.controlPanel('init');
     this.msg('', 'init');
-
-  };
-
-  LodLive.prototype.controlPanel = function(action) {
-    var inst = this, panel = inst.controlPanelDiv;
-    var start;
-    if (this.debugOn) {
-      start = new Date().getTime();
-    }
-    // pannello di controllo dell'applicazione
-
-    if (action == 'init') {
-
-      panel = $('<div class="lodLiveControlPanel"></div>');
-      inst.controlPanelDiv = panel;
-      //FIXME: remove inline css where possible
-      panel.css({
-        left : 0,
-        top : 10,
-        position : 'fixed',
-        zIndex : 999
-      });
-      panel.append('<div class="lodlive-panel lodlive-panel-options sprite" ></div>');
-      panel.append('<div class="lodlive-panel lodlive-panel-legend sprite" ></div>');
-      panel.append('<div class="lodlive-panel lodlive-panel-help sprite" ></div>');
-      panel.append('<div class="lodlive-panel lodlive-panel-main" ></div>');
-      panel.append('<div class="lodlive-panel2 lodlive-panel-maps sprite" ></div>');
-      panel.append('<div class="lodlive-panel2 lodlive-panel-images sprite" ></div>');
-
-      panel.children('.lodlive-panel-main,.lodlive-panel-panel2').hover(function() {
-        $(this).setBackgroundPosition({
-          y : -450
-        });
-      }, function() {
-        $(this).setBackgroundPosition({
-          y : -400
-        });
-      });
-
-      this.context.append(panel);
-
-      panel.attr('data-top', panel.position().top);
-
-      panel.children('.lodlive-panel').click(function() {
-
-        var panelChild = $(this);
-        panel.children('.lodlive-panel,.lodlive-panel2').hide();
-        var close = $('<div class="lodlive-panel lodlive-panel-close sprite" ></div>');
-        close.click(function() {
-          close.remove();
-          panel.children('#panelContent').remove();
-          panel.removeClass('justX');
-          panel.children('.lodlive-panel,.lodlive-panel2').show();
-          panel.children('.inactive').hide();
-        });
-        close.hover(function() {
-          $(this).setBackgroundPosition({
-            y : -550
-          });
-        }, function() {
-          $(this).setBackgroundPosition({
-            y : -500
-          });
-        });
-        panel.append(close);
-        //FIXME: remove inline CSS where possible
-        close.css({
-          position : 'absolute',
-          left : 241,
-          top : 0
-        });
-        var panelContent = $('<div class="lodlive-panel lodlive-panel-content"></div>');
-
-        panel.append(panelContent);
-
-        if (panelChild.is('.lodlive-panel-options')) {
-
-          var anUl = $('<ul class="lodlive-panel-options-list"></ul>');
-          panelContent.append('<div></div>');
-          panelContent.children('div').append('<h2>' + LodLiveUtils.lang('options') + '</h2>').append(anUl);
-          anUl.append('<li ' + ( inst.doInverse ? 'class="checked"' : 'class="check"') + ' data-value="inverse" ><span class="spriteLegenda"></span>' + LodLiveUtils.lang('generateInverse') + '</li>');
-          anUl.append('<li ' + ( inst.doAutoExpand ? 'class="checked"' : 'class="check"') + ' data-value="autoExpand" ><span class="spriteLegenda"></span>' + LodLiveUtils.lang('autoExpand') + '</li>');
-          anUl.append('<li ' + ( inst.doAutoSameas ? 'class="checked"' : 'class="check"') + ' data-value="autoSameas"><span class="spriteLegenda"></span>' + LodLiveUtils.lang('autoSameAs') + '</li>');
-
-          anUl.append('<li ' + ( inst.doCollectImages ? 'class="checked"' : 'class="check"') + ' data-value="autoCollectImages"><span class="spriteLegenda"></span>' + LodLiveUtils.lang('autoCollectImages') + '</li>');
-          anUl.append('<li ' + ( inst.doDrawMap ? 'class="checked"' : 'class="check"') + ' data-value="autoDrawMap"><span class="spriteLegenda"></span>' + LodLiveUtils.lang('autoDrawMap') + '</li>');
-
-          anUl.append('<li>&#160;</li>');
-          anUl.append('<li class="reload"><span  class="spriteLegenda"></span>' + LodLiveUtils.lang('restart') + '</li>');
-          anUl.children('.reload').click(function() {
-            // TODO: what is context supposed to be?
-            context.lodlive('close');
-          });
-          anUl.children('li[data-value]').click(function() {
-
-            var child = $(this), childVal = child.data('value'), checked = child.is('.check, :checked');
-
-            if (child.is('.check')) {
-
-              switch(childVal) {
-                case 'inverse': inst.doInverse = checked; break;
-                case 'autoExpand': inst.doInverse = checked; break;
-                case 'autoSameas': inst.doAutoSameas = checked; break;
-                case 'autoCollectImages':
-                  inst.doCollectImages = checked;
-                  panel.children('div.lodlive-panel-images').toggleClass('inactive');
-                  break;
-                case 'autoDrawMap':
-                  inst.doDrawMap = checked;
-                  panel.children('div.lodlive-panel-maps').toggleClass('inactive');
-                  break;
-              }
-              child.toggleClass('checked');
-
-            } else if (child.is('.help')) {
-
-              var help = panel.find('.lodlive-panel-help').children('div').clone();
-
-              // FIXME: eliminate fancybox dependency
-              $('.videoHelp', help).fancybox({
-                'transitionIn' : 'elastic',
-                'transitionOut' : 'elastic',
-                'speedIn' : 400,
-                'type' : 'iframe',
-                'width' : 853,
-                'height' : 480,
-                'speedOut' : 200,
-                'hideOnContentClick' : false,
-                'showCloseButton' : true,
-                'overlayShow' : false
-              });
-
-              panelContent.append(help);
-
-              if (help.height() > jwin.height() + 10) {
-                panel.addClass('justX');
-              }
-
-            } else if (child.is('.legend')) {
-
-
-              var legend = panel.find('.legenda').children('div').clone();
-
-              var counter = 0;
-
-              legend.find('span.spriteLegenda').each(function() {
-                $(this).css({
-                  'background-position' : '-1px -' + (counter * 20) + 'px'
-                });
-                counter++;
-              });
-
-              panelContent.append(legend);
-
-              if (legend.height() > jwin.height() + 10) {
-                panel.addClass('justX');
-              }
-
-            }
-
-          });
-        }
-
-        if (!inst.doCollectImages) {
-
-          panel.children('div.lodlive-panel-images').addClass('inactive').hide();
-
-        }
-        if (!inst.doDrawMap) {
-
-          panel.children('div.lodlive-panel-maps').addClass('inactive').hide();
-
-        }
-
-        //TODO: can we consolidate behavior between panels?
-        panel.on('click', '.lodlive-panel2', function() {
-          var panel2 = $(this);
-
-          panel.children('.lodlive-panel,.lodlive-panel2').hide();
-
-          var close = $('<div class="lodlive-panel lodlive-close2 sprite" ></div>');
-
-          close.click(function() {
-
-            $(this).remove();
-            panel.find('.lodlive-maps-container, .lodlive-images-container, .inactive').hide();
-            panelContent.hide();
-            panel.removeClass('justX');
-            panel.children('.lodlive-panel,.lodlive-panel2').show();
-
-          });
-
-          //FIXME: remove inline CSS where possible
-          close.hover(function() {
-
-            $(this).setBackgroundPosition({
-              y : -550
-            });
-
-          }, function() {
-
-            $(this).setBackgroundPosition({
-              y : -500
-            });
-
-          });
-          //TODO: why do we append this each click on .panel2, can we just hide/show it?
-          panel.append(close);
-
-          var panel2Content = panel.find('.lodlive-panel2-content');
-
-          if (!panel2Content.length) {
-            panel2Content = $('<div class="lodlive-panel2-content"></div>');
-            panel.append(panel2Content);
-          } else {
-            panel2Content.show();
-          }
-
-          if (panel2.is('.maps')) {
-
-            var mapPanel = panel2Content.find('.lodlive-maps-container');
-
-            if (!mapPanel.length) {
-              mapPanel = $('<div class="lodlive-maps-container"></div>');
-
-              panel2Content.width(800); //FIXME: magic number
-
-              panel2Content.append(mapPanel);
-
-              //FIXME: can we eliminate gmap3 dependency? maybe take it as an option
-              mapPanel.gmap3({
-                action : 'init',
-                options : {
-                  zoom : 2,
-                  mapTypeId : google.maps.MapTypeId.HYBRID
-                }
-              });
-
-            } else {
-              mapPanel.show();
-            }
-
-            inst.updateMapPanel(panel);
-
-          } else if (panelChild.is('.images')) {
-
-            var imagePanel = panel2Content.find('.lodlive-images-container');
-
-            if (!imagePanel.length) {
-
-              imagePanel = $('<div class="lodlive-images-container"><span class="lodlive-images-count"></span></div>');
-              panel2Content.append(imagePanel);
-
-            } else {
-              imagePanel.show();
-            }
-            inst.updateImagePanel(panel);
-          }
-        });
-      });
-
-    } else if (action === 'move') {
-
-      //FIXME: remove inline CSS where possible;
-      if (panel.is('.justX')) {
-
-        panel.css({
-          position : 'absolute',
-          left : jbody.scrollLeft(),
-          top : panel.data('top')
-        });
-
-      } else {
-
-        panel.css({
-          left : 0,
-          top : 10,
-          position : 'fixed'
-        });
-        if (panel.position()) {
-          panel.data('top', panel.position().top);
-        }
-      }
-
-    }
-    if (inst.debugOn) {
-      console.debug((new Date().getTime() - start) + '  controlPanel ');
-    }
-  };
-
-  LodLive.prototype.close = function() {
-    document.location = document.location.pathname; // remove the query string
   };
 
   /**
@@ -648,385 +357,6 @@
 
     msgPanel.show();
 
-  };
-
-  //FIXME: replace globalInfoPanelMap
-  LodLive.prototype.queryConsole = function(action, toLog) {
-    var inst = this, id = inst.hashFunc(toLog.uriId), localId = inst.hashFunc(toLog.id), infoMap = inst.infoPanelMap, panel = infoMap[id];
-
-    switch (action) {
-      case 'init':
-        panel = inst.context.find('<div id="q' + id + '" class="lodlive-query-console"></div>');
-        infoMap[id] = panel;
-        inst.infoPanelMap = infoMap;
-        break;
-
-      case 'log':
-        if (panel && toLog) {
-
-          if (toLog.resource) {
-
-            panel.append('<h3 class="sprite"><span>' + toLog.resource + '</span><a class="sprite">&#160;</a></h3>');
-
-            panel.on('click', 'h3 a', function() {
-
-              inst.queryConsole('close', {
-                uriId : toLog.uriId
-              });
-            }).hover(function() {
-              $(this).setBackgroundPosition({
-                x : -641
-              });
-            }, function() {
-              $(this).setBackgroundPosition({
-                x : -611
-              });
-            });
-
-          }
-
-          if (toLog.title) {
-            var h4 = $('<h4 class="t' + localId + ' sprite"><span>' + toLog.title + '</span></h4>');
-            panel.append(h4);
-            h4.hover(function() {
-              h4.setBackgroundPosition({
-                y : -700
-              });
-            }, function() {
-              h4.setBackgroundPosition({
-                y : -650
-              });
-            });
-
-            h4.click(function() {
-
-              if (h4.data('show')) {
-
-                h4.data('show', false);
-                h4.setBackgroundPosition({
-                  x : -680
-                });
-                h4.removeClass('slideOpen');
-                h4.next('div').slideToggle();
-
-              } else {
-
-                h4.data('show', true);
-                h4.setBackgroundPosition({
-                  x : -1290
-                });
-                panel.find('.slideOpen').click();
-                h4.addClass('slideOpen');
-                h4.next('div').slideToggle();
-              }
-            });
-          }
-
-          if (toLog.text) {
-            var aDiv = $('<div><span><span class="contentArea">' + (toLog.text).replace(/</gi, '&lt;').replace(/>/gi, '&gt;') + '</span></span></div>');
-            var aEndpoint = $.trim(panel.find('h4.t' + localId).clone().find('strong').remove().end().text()); //TODO: this looks like it could be simplified
-
-            //FIXME: use regex to support http and https
-            if (aEndpoint.indexOf('http:') === 0) {
-
-              var aLink = $('<span class="linkArea sprite" title="' + LodLiveUtils.lang('executeThisQuery') + '"></span>');
-
-              aLink.click(function() {
-                window.open(aEndpoint + '?query=' + encodeURIComponent(toLog.text));
-              });
-
-              aLink.hover(function() {
-                aLink.setBackgroundPosition({
-                  x : -630
-                });
-              }, function() {
-                aLink.setBackgroundPosition({
-                  x : -610
-                });
-              });
-
-              aDiv.children('span').prepend(aLink);
-            }
-
-            aDiv.css({
-              opacity : 0.95
-            });
-
-            panel.append(aDiv);
-
-          }
-
-          if (toLog.error) {
-
-            panel.find('h4.t' + localId + ' > span').append('<strong style="float:right">' + LodLiveUtils.lang('enpointNotAvailable') + '</strong>');
-
-          }
-
-          // what is this?
-          if ( typeof toLog.founded == typeof 0) {
-
-            if (!toLog.founded) {
-
-              panel.find('h4.t' + localId + ' > span').append('<strong style="float:right">' + LodLiveUtils.lang('propsNotFound') + '</strong>');
-
-            } else {
-
-              panel.find('h4.t' + localId + ' > span').append('<strong style="float:right">' + toLog.founded + ' ' + LodLiveUtils.lang('propsFound') + ' </strong>');
-
-            }
-
-          }
-          infoMap[id] = panel;
-          globalInfoPanelMap = infoMap;
-
-        }
-        break;
-
-      case 'remove':
-        delete infoMap[id];
-        inst.infoPanelMap = infoMap;
-        break;
-
-      case 'show':
-        inst.context.append(panel); //TODO: why are we detaching and re-attaching?
-        break;
-
-      case 'close':
-        panel.detach();
-        break;
-
-    }
-
-  };
-
-  LodLive.prototype.updateMapPanel = function(panel) {
-    var inst = this, mapPanel;
-
-    if (inst.doDrawMap) {
-
-      mapPanel = inst.context.find('.lodlive-maps-container');
-
-      if (mapPanel.length && mapPanel.is(':visible')) {
-        //FIXME: eliminate google maps dependency in core
-        mapPanel.gmap3({
-          action : 'clear'
-        });
-        var panelContent = inst.context.find('.lodlive-panel2-content');
-        panelContent.width(800); //FIXME: magic number
-        var close = panel.find('.lodlive-close2');
-        var mapsMap = inst.mapsMap;
-        var mapKeys = Object.keys(mapsMap);
-        var mapSize = mapKeys.length;
-        var mapAction = mapSize > 1 ? { action: 'autofit' } : {};
-
-        while(mapSize--) {
-          var prop = mapKeys[mapSize];
-          //FIXME: eliminate google maps dependency from core
-          $('#mapPanel').gmap3({
-            action : 'addMarker',
-            latLng : [mapsMap[prop].lats, mapsMap[prop].longs],
-            title : unescape(mapsMap[prop].title)
-          }, mapAction);
-        }
-
-        //FIXME: eliminate inline CSS where possible
-        close.css({
-          position : 'absolute',
-          left : panelContent.width() + 1,
-          top : 0
-        });
-
-      } else {
-        inst.highlight(panel.children('.maps'), 2, 200, '-565px -450px');
-      }
-    }
-  };
-
-  LodLive.prototype.updateImagePanel = function(panel) {
-    var inst = this;
-
-    if (inst.doCollectImages) {
-
-      var imagePanel = panel.find('.lodlive-images-container span:visible');
-      if (imagePanel.length) {
-
-        var panelContent = panel.find('.lodlive-panel2-content');
-        var close = panel.find('.lodlive-close2');
-        var imageMap = inst.imagesMap;
-        var mapKeys = Object.keys(imageMap);
-        var mapSize = mapKeys.length;
-
-        if (mapSize > 0) {
-
-          imagePanel.children('.amsg').remove(); // why is this conditional, can we just remove it even if the map is empty?
-          var counter = 0;
-
-          while (mapSize--) {
-
-            var prop = mapKeys[mapSize];
-
-            for (var a = 0; a < imageMap[prop].length; a++) {
-
-              //FIXME: this whole thing is strange and seems very inefficient, but not completely aware enough of what it's doing to change it yet
-              // triple nested maps inside an array?? surely there's a better way
-              for (var key in imageMap[prop][a]) {
-
-                if (inst.noImagesMap[prop + counter]) {
-
-                  counter--; // counter could go to -1, logic is strange - is this just for tiling?
-
-                } else if (!imagePanel.children('.img-' + prop + '-' + counter).length) {
-
-                  var img = $('<a href="' + unescape(key) + '" class="sprite relatedImage img-' + prop + '-' + counter + '"><img rel="' + unescape(imageMap[prop][a][key]) + '" src="' + unescape(key) + '"/></a>"');
-                  img.attr('data-prop', prop);
-                  imagePanel.prepend(img);
-                  //FIXME: eliminate fancybox dependency from core
-                  img.fancybox({
-                    'transitionIn' : 'elastic',
-                    'transitionOut' : 'elastic',
-                    'speedIn' : 400,
-                    'type' : 'image',
-                    'speedOut' : 200,
-                    'hideOnContentClick' : true,
-                    'showCloseButton' : false,
-                    'overlayShow' : false
-                  });
-
-                  //FIXME: these should be a delegated event on the imagePanel; we don't need a counter to do wrapping;
-                  img.children('img').error(function() {
-                    img.remove();
-                    counter--;
-                    if (counter < 3) {
-
-                      panelContent.width(148); //FIXME: magic number - this should all be handled via CSS with reponsive images and inline-blocks
-
-                    } else {
-
-                      var tot = (counter / 3 + (counter % 3 > 0 ? 1 : 0) + '').split('.')[0];
-                      if (tot > 7) {
-                        tot = 7;
-                      }
-                      panelContent.width(20 + (tot) * 128);
-                    }
-                    //FIXME: eliminate inline CSS where possible
-                    close.css({
-                      position : 'absolute',
-                      left : panelContent.width() + 1,
-                      top : 0
-                    });
-                    // this is where we set images into the noImagesMap - pretty sure there's a better way but not lookng closely just yet
-                    inst.noImagesMap[prop + counter] = true;
-
-                  }).load(function() {
-
-                    var imageTag = $(this), titolo = imageTag.attr('rel'), imgW = imageTag.width(), imgH = imageTag.height();
-
-                    //wtf with all the specific sizing?  Need to use css and eliminate this
-                    if (imgW < imgH) {
-                      imageTag.height(imgH * 113 / imgW);
-                      imageTag.width(113);
-                    } else {
-                      //FIXME: eliminate inline CSS where possible
-                      imageTag.css({
-                        width : imgW * 113 / imgH,
-                        height : 113,
-                        marginLeft : -((imgW * 113 / imgH - 113) / 2)
-                      });
-                    }
-                    var controls = $('<span class="lodlive-image-controls"><span class="imgControlCenter" title="' + LodLiveUtils.lang('showResource') + '"></span><span class="imgControlZoom" title="' + LodLiveUtils.lang('zoomIn') + '"></span><span class="imgTitle">' + titolo + '</span></span>');
-                    img.append(controls);
-                    //FIXME: this totally needs to be in CSS - fthis
-                    img.hover(function() {
-                      imageTag.hide();
-                    }, function() {
-                      imageTag.show();
-                    });
-                    controls.children('.imgControlZoom').hover(function() {
-                      img.setBackgroundPosition({
-                        x : -1955
-                      });
-                    }, function() {
-                      img.setBackgroundPosition({
-                        x : -1825
-                      });
-                    });
-                    controls.children('.imgControlCenter').hover(function() {
-                      img.setBackgroundPosition({
-                        x : -2085
-                      });
-                    }, function() {
-                      img.setBackgroundPosition({
-                        x : -1825
-                      });
-                    });
-
-                    controls.children('.imgControlCenter').click(function() {
-                      panel.find('.lodlive-close2').click();
-                      inst.highlight($('#'+img.attr('data-prop')).children('.box'), 8, 100, '0 0');
-                      return false;
-                    });
-
-                    if (counter < 3) {
-                      panelContent.width(148);
-                    } else {
-                      var tot = (counter / 3 + (counter % 3 > 0 ? 1 : 0) + '').split('.')[0];
-                      if (tot > 7) {
-                        tot = 7;
-                      }
-                      panelContent.width(20 + (tot) * 128);
-                      close.css({
-                        position : 'absolute',
-                        left : panelContent.width() + 1,
-                        top : 0
-                      });
-                    }
-                  });
-
-                }
-                counter++;
-              }
-            }
-          }
-        } else {
-
-          panelContent.width(148);
-
-          if (!imagePanel.children('.amsg').length) {
-            imagePanel.append('<span class="amsg">' + LodLiveUtils.lang('imagesNotFound') + '</span>');
-          }
-        }
-
-        close.css({
-          position : 'absolute',
-          left : panelContent.width() + 1,
-          top : 0
-        });
-
-      } else {
-        inst.highlight(panel.children('.images'), 2, 200, '-610px -450px');
-      }
-    }
-
-  };
-
-  //FIXME: this needs to be a CSS animation for performance and decluttering
-  LodLive.prototype.highlight = function(object, times, speed, backmove) {
-    var inst = this;
-    if (times > 0) {
-      times--;
-      var css = object.css('background-position');
-      object.doTimeout(speed, function() {
-        object.css({
-          'background-position' : backmove
-        });
-        object.doTimeout(speed, function() {
-          object.css({
-            'background-position' : css
-          });
-          inst.highlight(object, times, speed, backmove);
-        });
-      });
-    }
   };
 
   LodLive.prototype.centerBox = function(aBox) {
@@ -1261,9 +591,6 @@
     inst.context.find('.lodlive-toolbox').remove(); // why remove and not hide?
 
     var id = obj.attr('id');
-    inst.queryConsole('remove', {
-      uriId : obj.attr('rel')
-    });
     inst.context.find('#line-' + id).clearCanvas();
 
     var generatedRev = inst.storeIds['rev' + id];
@@ -1273,24 +600,26 @@
       }
     }
     inst.docInfo();
-    var cp = inst.context.find('.lodLiveControlPanel');
 
-    if (inst.doCollectImages) {
-      var imagesMap = inst.imagesMap;
-      if (imagesMap[id]) {
-        delete imagesMap[id];
-        inst.updateImagePanel(cp);
-        cp.find('a[class*=img-' + id + ']').remove();
-      }
-    }
+    // Image rendering has been disabled; keeping for posterity ...
+    // var cp = inst.context.find('.lodLiveControlPanel');
+    // if (inst.doCollectImages) {
+    //   var imagesMap = inst.imagesMap;
+    //   if (imagesMap[id]) {
+    //     delete imagesMap[id];
+    //     inst.updateImagePanel(cp);
+    //     cp.find('a[class*=img-' + id + ']').remove();
+    //   }
+    // }
 
-    if (inst.doDrawMap) {
-      var mapsMap = inst.mapsMap;
-      if (mapsMap[id]) {
-        delete mapsMap[id];
-        inst.updateMapPanel(cp);
-      }
-    }
+    // Map rendering has been disabled; keeping for posterity ...
+    // if (inst.doDrawMap) {
+    //   var mapsMap = inst.mapsMap;
+    //   if (mapsMap[id]) {
+    //     delete mapsMap[id];
+    //     inst.updateMapPanel(cp);
+    //   }
+    // }
 
     obj.fadeOut('normal', null, function() {
       obj.remove();
@@ -1407,9 +736,7 @@
       title: 'More info',
       icon: 'fa fa-info-circle',
       handler: function(obj, inst) {
-        inst.queryConsole('show', {
-          uriId : obj.attr('rel')
-        });
+        // TODO: ?
       }
     },
     'rootNode': {
@@ -2840,15 +2167,6 @@
 
     var uris = [];
     var values = [];
-    if (inst.showInfoConsole) {
-      inst.queryConsole('init', {
-        uriId : anUri
-      });
-      inst.queryConsole('log', {
-        uriId : anUri,
-        resource : anUri
-      });
-    }
 
     if (inst.debugOn) console.log('composing query with anUri', anUri);
     //TODO: composeQuery looks like a static function, look into it
@@ -2913,13 +2231,7 @@
             }
 
           });
-          if (inst.showInfoConsole) {
-            inst.queryConsole('log', {
-              founded : conta,
-              id : SPARQLquery,
-              uriId : anUri
-            });
-          }
+
           if (inst.debugOn) {
             console.debug((new Date().getTime() - start) + '  openDoc eval uris & values');
           }
@@ -2944,16 +2256,6 @@
                   //TODO: replace evals
                   eval('inverses.push({\'' + value['property']['value'] + '\':\'' + (value.object.type == 'bnode' ? anUri + '~~' : '') + escape(value.object.value) + '\'})');
                 });
-
-                if (inst.showInfoConsole) {
-
-                  inst.queryConsole('log', {
-                    founded : conta,
-                    id : SPARQLquery,
-                    uriId : anUri
-                  });
-
-                }
 
                 if (inst.debugOn) {
                   console.debug((new Date().getTime() - start) + '  openDoc inverse eval uris ');
@@ -2987,13 +2289,7 @@
               error : function(e, b, v) {
                 destBox.children('.box').html('');
                 inst.format(destBox.children('.box'), values, uris);
-                if (inst.showInfoConsole) {
-                  inst.queryConsole('log', {
-                    error : 'error',
-                    id : SPARQLquery,
-                    uriId : anUri
-                  });
-                }
+
                 inst.addClick(destBox, fromInverse ? function() {
                   try {
                     $(fromInverse).click();
@@ -3155,50 +2451,6 @@
 
   };
 
-  LodLive.prototype.allClasses = function(SPARQLquery, destBox, destSelect, template) {
-    var inst = this;
-
-    var start;
-    if (inst.debugOn) {
-      start = new Date().getTime();
-    }
-
-    //TODO: if composeQuery is a static utility function then this can be as well
-    SPARQLquery = inst.composeQuery(SPARQLquery, 'allClasses');
-    var classes = [];
-    $.ajax({
-      url : SPARQLquery,
-      contentType: 'application/json',
-      accepts: inst.options.connection['http:'].accepts,
-      dataType: inst.getAjaxDataType(),
-      beforeSend : function() {
-        destBox.html('<img src="img/ajax-loader.gif"/>');
-      },
-      success : function(json) {
-        destBox.html(LodLiveUtils.lang('choose'));
-        json = json.results && json.results.bindings;
-        $.each(json, function(key, value) {
-          var aclass = json[key].object.value;
-          if (aclass.indexOf('http://www.openlinksw.com/') == -1) {
-            aclass = aclass.replace(/http:\/\//, '');
-            classes.push(aclass);
-          }
-
-        });
-        for (var i = 0; i < classes.length; i++) {
-          destSelect.append(template.replace(/\{CONTENT\}/g, classes[i]));
-        }
-      },
-      error : function(e, b, v) {
-        destSelect.append(template.replace(/\{CONTENT\}/g, 'si Ã¨ verificato un errore'));
-      }
-    });
-
-    if (inst.debugOn) {
-      console.debug((new Date().getTime() - start) + '  allClasses');
-    }
-  };
-
   LodLive.prototype.findInverseSameAs = function(anUri, counter, inverse, callback, tot) {
     var inst = this, lodLiveProfile = inst.options;
 
@@ -3243,16 +2495,6 @@
           contentType: 'application/json',
           accepts: inst.options.connection['http:'].accepts,
           dataType: inst.getAjaxDataType(),
-          beforeSend : function() {
-            if (inst.showInfoConsole) {
-              inst.queryConsole('log', {
-                title : value.endpoint,
-                text : LodLiveUtils.getSparqlConf('inverseSameAs', value, lodLiveProfile).replace(/\{URI\}/g, anUri),
-                id : SPARQLquery,
-                uriId : anUri
-              });
-            }
-          },
           success : function(json) {
             json = json['results']['bindings'];
             var conta = 0;
@@ -3264,13 +2506,7 @@
                 eval('inverse.splice(1,0,{\'' + 'http://www.w3.org/2002/07/owl#sameAs' + '\':\'' + escape(value.object.value) + '\'})');
               }
             });
-            if (inst.showInfoConsole) {
-              inst.queryConsole('log', {
-                founded : conta,
-                id : SPARQLquery,
-                uriId : anUri
-              });
-            }
+
             counter++;
             //TODO:  why callbacks and not just return?
             if (counter < tot) {
@@ -3281,14 +2517,6 @@
           },
 
           error : function(e, b, v) {
-
-            if (inst.showInfoConsole) {
-              inst.queryConsole('log', {
-                error : 'error',
-                id : SPARQLquery,
-                uriId : anUri
-              });
-            }
             counter++;
             if (counter < tot) {
               inst.findInverseSameAs(anUri, counter, inverse, callback, tot);
@@ -3305,60 +2533,6 @@
     });
     if (inst.debugOn) {
       console.debug((new Date().getTime() - start) + '  findInverseSameAs');
-    }
-  };
-
-  /** Find the subject
-    */
-  LodLive.prototype.findSubject = function(SPARQLquery, selectedClass, selectedValue, destBox, destInput) {
-    var inst = this, lodLiveProfile = inst.options;
-
-    var start;
-    if (inst.debugOn) {
-      start = new Date().getTime();
-    }
-
-    $.each(lodLiveProfile.connection, function(key, value) {
-
-      var keySplit = key.split(',');
-      for (var a = 0; a < keySplit.length; a++) {
-        if (SPARQLquery.indexOf(keySplit[a]) != -1) {
-          SPARQLquery = value.endpoint + '?' + (value.endpointType ? lodLiveProfile.endpoints[value.endpointType] : lodLiveProfile.endpoints.all) + '&query=' + escape(LodLiveUtils.getSparqlConf('findSubject', value, lodLiveProfile).replace(/\{CLASS\}/g, selectedClass).replace(/\{VALUE\}/g, selectedValue));
-          if (value.proxy) {
-            SPARQLquery = value.proxy + '?endpoint=' + value.endpoint + '&' + (value.endpointType ? lodLiveProfile.endpoints[value.endpointType] : lodLiveProfile.endpoints.all) + '&query=' + escape(LodLiveUtils.getSparqlConf('findSubject', value, lodLiveProfile).replace(/\{CLASS\}/g, selectedClass).replace(/\{VALUE\}/g, selectedValue));
-          }
-        }
-      }
-
-    });
-
-    var values = [];
-
-    $.ajax({
-      url : SPARQLquery,
-      contentType: 'application/json',
-      accepts: inst.options.connection['http:'].accepts,
-      dataType: inst.getAjaxDataType(),
-      beforeSend : function() {
-        destBox.html('<img src="img/ajax-loader.gif"/>');
-      },
-      success : function(json) {
-        destBox.html('');
-        json = json.results && json.results.bindings;
-        $.each(json, function(key, value) {
-          values.push(json[key].subject.value);
-        });
-        for (var i = 0; i < values.length; i++) {
-          destInput.val(values[i]);
-        }
-      },
-      error : function(e, b, v) {
-        destBox.html('errore: ' + e);
-      }
-    });
-
-    if (inst.debugOn) {
-      console.debug((new Date().getTime() - start) + '  findSubject');
     }
   };
 

@@ -45,7 +45,6 @@ describe('lodlive', function () {
 
     expect($('#graph .lodlive-graph-container').length).to.equal(1);
     expect($('#graph .lodlive-graph-context').length).to.equal(1);
-    expect($('#graph .lodLiveControlPanel').length).to.equal(1);
     expect($('#graph .lodlive-node').length).to.equal(1);
 
     var node = $('#graph .lodlive-node').first();
