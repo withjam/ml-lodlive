@@ -7,7 +7,6 @@ var gzip = require('gulp-gzip');
 var addsrc = require('gulp-add-src');
 var browserify = require('browserify');
 var buffer = require('vinyl-buffer');
-var eventStream = require('event-stream');
 var source = require('vinyl-source-stream');
 
 gulp.task('deps', function() {
@@ -17,14 +16,9 @@ gulp.task('deps', function() {
 });
 
 gulp.task('scripts', function() {
-  return eventStream.merge(
-      gulp.src('./js/lib/lodlive.utils.js'),
-
-      browserify({ entries: [ './js/lib/lodlive.core.js' ] })
-      .bundle()
-      .pipe(source('ml-lodlive-components.js'))
-      .pipe(buffer())
-    )
+  return browserify({ entries: [ './js/lib/lodlive.core.js' ] }).bundle()
+    .pipe(source('ml-lodlive-components.js'))
+    .pipe(buffer())
     .pipe(concat('ml-lodlive.js'))
     .pipe(gulp.dest('./dist/'))
     .pipe(uglify())

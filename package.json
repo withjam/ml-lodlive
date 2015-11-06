@@ -10,7 +10,6 @@
     "browserify": "^11.1.0",
     "browserify-istanbul": "^0.2.1",
     "chai": "^3.3.0",
-    "event-stream": "^3.3.2",
     "gulp": "^3.9.0",
     "gulp-add-src": "^0.2.0",
     "gulp-concat": "^2.4.3",
