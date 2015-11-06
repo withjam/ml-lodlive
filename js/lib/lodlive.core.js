@@ -55,18 +55,16 @@
           var divid = instance.ll_dragging.attr('id');
           instance.ll_isdragging = true;
           // just started the drag
+
           // remove any lines connected to this node
           // TODO: find a better way to handle lines
           $('#line-' + divid).clearCanvas();
-          var generatedRev = instance.storeIds['rev' + divid];
-          // find all the generated lines
-          if (generatedRev) {
-            // this finds all lines each drag start, not my favorite but fix later
-            for (var a = 0; a < generatedRev.length; a++) {
-              var generated = instance.storeIds['gen' + generatedRev[a]];
-              $('#line-' + generatedRev[a]).clearCanvas();
-            }
-          }
+
+          var subjectIds = instance.refs.getSubjectRefs(divid);
+
+          subjectIds.forEach(function(subjectId) {
+            $('#line-' + subjectId).clearCanvas();
+          });
         }
         instance.ll_dragging.css({ left: cx + scrx - instance.ll_dragoffx, top: cy + scry - instance.ll_dragoffy });
       } else if (instance.ll_panning) {
@@ -152,6 +150,10 @@
       httpClient
     );
 
+    var refStoreFactory = require('../../src/ref-store.js');
+
+    this.refs = refStoreFactory.create();
+
     // container elements
     this.container = container.css('position', 'relative');
     this.context = jQuery('<div class="lodlive-graph-context"></div>').appendTo(container).wrap('<div class="lodlive-graph-container"></div>');
@@ -175,7 +177,6 @@
     // simple MD5 implementation to eliminate dependencies, can still pass in MD5 (or some other algorithm) if desired
     this.hashFunc = this.options.hashFunc || LodLiveUtils.hashFunc;
     this.innerPageMap = {};
-    this.storeIds = {};
     this.boxTemplate =  this.options.boxTemplate || DEFAULT_BOX_TEMPLATE;
     this.ignoreBnodes = this.UI.ignoreBnodes;
 
@@ -373,46 +374,17 @@
     var circleId = ele.data('circleid');
     var originalCircus = $('#' + circleId);
 
-    if (inst.debugOn) {
-      console.debug((new Date().getTime() - start) + '  addNewDoc 01 ');
-    }
+    // TODO: rename for clarity ?
+    // var subjectId = circleId; var objectId = aId;
 
     if (!isInverse) {
-
-      if (inst.debugOn) {
-
-        console.debug((new Date().getTime() - start) + '  addNewDoc 02 ');
+      // TODO: add explaination for early return
+      if (inst.refs.getObjectRefs(circleId).indexOf(aId) > -1) {
+        return;
       }
 
-      var connected = inst.storeIds['gen' + circleId];
-      if (!connected) {
-        connected = [aId];
-      } else {
-        if ($.inArray(aId, connected) == -1) {
-          connected.push(aId);
-        } else {
-          return;
-        }
-      }
-
-      if (inst.debugOn) {
-        console.debug((new Date().getTime() - start) + '  addNewDoc 03 ');
-      }
-
-      inst.storeIds['gen' + circleId] = connected;
-
-      connected = inst.storeIds['rev'+ aId];
-      if (!connected) {
-        connected = [circleId];
-      } else {
-        if ($.inArray(circleId, connected) == -1) {
-          connected.push(circleId);
-        }
-      }
-      if (inst.debugOn) {
-        console.debug((new Date().getTime() - start) + '  addNewDoc 04 ');
-      }
-      inst.storeIds['rev' + aId] = connected;
+      inst.refs.addObjectRef(circleId, aId);
+      inst.refs.addSubjectRef(aId, circleId);
     }
 
     var propertyName = ele.data('property');
@@ -485,6 +457,7 @@
 
   LodLive.prototype.removeDoc = function(obj, callback) {
     var inst = this;
+
     var isRoot = inst.context.find('.lodlive-node').length == 1;
     if (isRoot) {
         alert('Cannot Remove Only Box');
@@ -498,14 +471,21 @@
     inst.context.find('.lodlive-toolbox').remove(); // why remove and not hide?
 
     var id = obj.attr('id');
+
+    // get subjects where id is the object
+    var subjectIds = inst.refs.getSubjectRefs(id);
+
+    // get objects where id is the subject
+    var objectIds = inst.refs.getObjectRefs(id)
+
+    // clear canvas holding lines from obj
     inst.context.find('#line-' + id).clearCanvas();
 
-    var generatedRev = inst.storeIds['rev' + id];
-    if (generatedRev) {
-      for (var a = 0; a < generatedRev.length; a++) {
-        inst.context.find('#line-' + generatedRev[a]).clearCanvas();
-      }
-    }
+    // clear canvases holding lines to obj
+    subjectIds.forEach(function(subjectId) {
+      inst.context.find('#line-' + subjectId).clearCanvas();
+    });
+
     inst.docInfo();
 
     // Image rendering has been disabled; keeping for posterity ...
@@ -548,70 +528,29 @@
         found.removeClass('exploded');
       });
 
-      var generated = inst.storeIds['gen' + id];
-      var generatedRev = inst.storeIds['rev' + id];
-      var int, int2, generatedBy;
+      // remove references to id
+      subjectIds.forEach(function(subjectId) {
+        inst.refs.removeObjectRef(subjectId, id);
+      });
+      objectIds.forEach(function(objectId) {
+        inst.refs.removeSubjectRef(objectId, id);
+      });
 
-      if (generatedRev) {
+      // remove references from id
+      inst.refs.removeAsSubject(id);
+      inst.refs.removeAsObject(id);
 
-        for (int = 0; int < generatedRev.length; int++) {
+      // draw all lines for cleared canvases
+      subjectIds.forEach(function(subjectId) {
+        var objectIds = inst.refs.getObjectRefs(subjectId);
 
-          generatedBy = inst.storeIds['gen' + generatedRev[int]];
-
-          if (generatedBy) {
-
-            for (int2 = 0; int2 < generatedBy.length; int2++) {
-
-              if (generatedBy[int2] === id) {
-
-                generatedBy.splice(int2, 1);
-
-              }
-            }
-          }
-          // don't need to set it again since it modifies the same object
-          // inst.storeIds['gen' + generatedRev[int]] = generatedBy;
-        }
-      }
-      // really wish there were comments here, why these two loops?
-      if (generated) {
-
-        for (int = 0; int < generated.length; int++) {
-
-          generatedBy = inst.storeIds['rev' + generated[int]];
-
-          if (generatedBy) {
-            for (int2 = 0; int2 < generatedBy.length; int2++) {
-              if (generatedBy[int2] == id) {
-                generatedBy.splice(int2, 1);
-              }
-            }
-          }
-          // don't need to set it again since it modifies the same object
-          // inst.storeIds['rev' + generated[int] = generatedBy;
-        }
-      }
-
-      generatedRev = inst.storeIds['rev' +  id];
-      //TODO: three loops? look for a way to simplify
-      if (generatedRev) {
-
-        for (int = 0; int < generatedRev.length; int++) {
-
-          generated = inst.storeIds['gen' + generatedRev[int]];
-          if (generated) {
-
-            for (int2 = 0; int2 < generated.length; int2++) {
-
-              inst.drawaLine(inst.context.find('#' + generatedRev[int]), inst.context.find('#' + generated[int2]));
-
-            }
-          }
-        }
-      }
-      delete inst.storeIds['rev' + id];
-      delete inst.storeIds['gen' + id];
-
+        objectIds.forEach(function(objectId) {
+          inst.drawaLine(
+            inst.context.find('#' + subjectId),
+            inst.context.find('#' + objectId)
+          );
+        });
+      });
     });
 
     if (inst.debugOn) {
@@ -861,33 +800,35 @@
   };
 
   LodLive.prototype.drawAllLines = function(obj) {
+    var inst = this;
+    var id = obj.attr('id');
 
-    var inst = this, id = obj.attr('id'), a;
+    // get objects where id is the subject
+    var objectIds = inst.refs.getObjectRefs(id)
 
-    var generated = inst.storeIds['gen' + id];
-    var generatedRev = inst.storeIds['rev' + id];
-    // elimino la riga se giÃ  presente (in caso di
-    // spostamento di un
-    // box)
+    // get subjects where id is the object
+    var subjectIds = inst.refs.getSubjectRefs(id);
+
+    // remove line if exists
     inst.context.find('#line-' + id).clearCanvas();
-    if (generated) {
-      for (a = 0; a < generated.length; a++) {
-        inst.drawaLine(obj, inst.context.find('#' + generated[a]));
-      }
-    }
 
-    if (generatedRev) {
-      for (a = 0; a < generatedRev.length; a++) {
-        generated = inst.storeIds['gen' + generatedRev[a]];
-        $('#line-' + generatedRev[a]).clearCanvas();
-        if (generated) {
-          for (var a2 = 0; a2 < generated.length; a2++) {
-            inst.drawaLine(inst.context.find('#' + generatedRev[a]), inst.context.find('#' + generated[a2]));
-          }
-        }
-      }
-    }
+    objectIds.forEach(function(objectId) {
+      inst.drawaLine(
+        obj,
+        inst.context.find('#' + objectId)
+      );
+    });
 
+    subjectIds.forEach(function(subjectId) {
+      var nestedObjectIds = inst.refs.getObjectRefs(subjectId);
+
+      nestedObjectIds.forEach(function(objectId) {
+        inst.drawaLine(
+          inst.context.find('#' + subjectId),
+          inst.context.find('#' + objectId)
+        );
+      });
+    });
   };
 
   LodLive.prototype.drawaLine = function(from, to, propertyName) {
