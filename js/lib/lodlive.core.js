@@ -30,6 +30,8 @@
   }
 
   function enableDrag(instance) {
+    var canvases = [];
+    var nodes = [];
 
     // watch mouse move events on the container to move anything being dragged
     instance.container.on('mousemove', function(event) {
@@ -51,17 +53,15 @@
           instance.ll_isdragging = true;
           // just started the drag
 
-          // remove any lines connected to this node
-          // TODO: find a better way to handle lines
-          $('#line-' + divid).clearCanvas();
-
-          var subjectIds = instance.refs.getSubjectRefs(divid);
-
-          subjectIds.forEach(function(subjectId) {
-            $('#line-' + subjectId).clearCanvas();
-          });
+          canvases = instance.renderer.getRelatedCanvases(divid);
+          nodes = instance.renderer.getRelatedNodePairs(divid);
+          instance.renderer.clearLines(canvases);
         }
-        instance.ll_dragging.css({ left: cx + scrx - instance.ll_dragoffx, top: cy + scry - instance.ll_dragoffy });
+
+        instance.ll_dragging.css({
+          left: cx + scrx - instance.ll_dragoffx,
+          top: cy + scry - instance.ll_dragoffy
+        });
       } else if (instance.ll_panning) {
         instance.context.parent().scrollLeft( scrx + diffx);
         instance.context.parent().scrollTop( scry + diffy);
@@ -89,7 +89,7 @@
     function cancelDrag() {
         if (instance.ll_dragging) {
           // redraw the lines TODO: figure out a better way to handle lines
-          instance.drawAllLines(instance.ll_dragging);
+          instance.renderer.drawLines(nodes);
         }
         instance.ll_isdragging = false;
         instance.ll_dragging = false;
@@ -128,6 +128,13 @@
       this.msg = this.UI.nodeHover;
     }
 
+    // simple MD5 implementation to eliminate dependencies
+    // can still pass in MD5 (or some other algorithm) if desired
+    this.hashFunc = this.options.hashFunc || utils.hashFunc;
+
+    // TODO: move to renderer
+    this.boxTemplate =  this.options.boxTemplate || DEFAULT_BOX_TEMPLATE;
+
     var httpClientFactory = require('../../src/http-client.js');
 
     var httpClient = httpClientFactory.create(
@@ -149,30 +156,34 @@
 
     this.refs = refStoreFactory.create();
 
-    // container elements
-    this.container = container.css('position', 'relative');
-    this.context = jQuery('<div class="lodlive-graph-context"></div>').appendTo(container).wrap('<div class="lodlive-graph-container"></div>');
-    if (typeof container === 'string') {
-      container = jQuery(container);
-    }
-    if (!container.length) {
-      throw 'LodLive: no container found';
-    }
+    var rendererFactory = require('../../src/renderer.js');
+
+    this.renderer = rendererFactory.create(
+      this.options.arrows,
+      this.options.UI.tools,
+      this.options.UI.nodeIcons,
+      this.refs
+    );
+
+    this.renderer.init(container);
+    this.container = this.renderer.container;
+    this.context = this.renderer.context;
+
+    // TODO: move to renderer.init()
     enableDrag(this);
+
+    // temporary, need access from both components
+    this.renderer.hashFunc = this.hashFunc;
+    this.renderer.boxTemplate = this.boxTemplate
   }
 
   LodLive.prototype.init = function(firstUri) {
-    var instance = this;
-
     // instance data
     this.imagesMap = {};
     this.mapsMap = {};
     this.infoPanelMap = {};
     this.connection = {};
-    // simple MD5 implementation to eliminate dependencies, can still pass in MD5 (or some other algorithm) if desired
-    this.hashFunc = this.options.hashFunc || utils.hashFunc;
     this.innerPageMap = {};
-    this.boxTemplate =  this.options.boxTemplate || DEFAULT_BOX_TEMPLATE;
     this.ignoreBnodes = this.UI.ignoreBnodes;
 
     // TODO: look these up on the context object as data-lodlive-xxxx attributes
@@ -191,107 +202,16 @@
     this.doCollectImages = false;
     this.doDrawMap = false;
 
-    var firstBox = $(this.boxTemplate);
-    this.centerBox(firstBox);
-    firstBox.attr('id', this.hashFunc(firstUri));
-    firstBox.attr('rel', firstUri);
-    firstBox.css('zIndex',1);
-    this.context.append(firstBox);
-
     this.classMap = {
       // TODO: let CSS drive color
       counter : Math.floor(Math.random() * 13) + 1
     };
 
-    // carico il primo documento
+    var firstBox = this.renderer.firstBox(firstUri);
     this.openDoc(firstUri, firstBox);
 
-    this.msg('', 'init');
-  };
-
-  LodLive.prototype.msg = function(msg, action, type, endpoint, inverse) {
-    // area dei messaggi
-    var inst = this, msgPanel = inst.container.find('.lodlive-message-container'), msgs;
-    if (!msg) msg = '';
-    switch(action) {
-
-      case 'init':
-        if (!msgPanel.length) {
-          msgPanel = $('<div class="lodlive-message-container"></div>');
-          inst.container.append(msgPanel);
-        }
-        break;
-
-      default:
-        msgPanel.hide();
-    }
-    msgPanel.empty();
-    msg = msg.replace(/http:\/\/.+~~/g, '');
-    msg = msg.replace(/nodeID:\/\/.+~~/g, '');
-    msg = msg.replace(/_:\/\/.+~~/g, '');
-    msg = utils.breakLines(msg);
-    msg = msg.replace(/\|/g, '<br />');
-
-    msgs = msg.split(' \n ');
-
-    if (type === 'fullInfo') {
-      msgPanel.append('<div class="endpoint">' + endpoint + '</div>');
-      // why 2?
-      if (msgs.length === 2) {
-        msgPanel.append('<div class="from upperline">' + (msgs[0].length > 200 ? msgs[0].substring(0, 200) + '...' : msgs[0]) + '</div>');
-        msgPanel.append('<div class="from upperline">'+ msgs[1] + '</div>');
-      } else {
-        msgPanel.append('<div class="from upperline">' + msgs[0] + '</div>');
-      }
-    } else {
-      if (msgs.length === 2) {
-        msgPanel.append('<div class="from">' + msgs[0] + '</div>');
-        if (inverse) {
-          msgPanel.append('<div class="separ inverse sprite"></div>');
-        } else {
-          msgPanel.append('<div class="separ sprite"></div>');
-        }
-
-        msgPanel.append('<div class="from">' + msgs[1] + '</div>');
-      } else {
-        msgPanel.append('<div class="from">' + msgs[0] + '</div>');
-      }
-    }
-
-    msgPanel.show();
-
-  };
-
-  LodLive.prototype.centerBox = function(aBox) {
-    var inst = this, ch = inst.context.height(), cw = inst.context.width(), bw = aBox.width() || 65, bh = aBox.height() || 65, start;
-    if (inst.debugOn) {
-      start = new Date().getTime();
-    }
-
-    var top = (ch - 65) / 2 + (inst.context.scrollTop() || 0);
-    var left = (cw - 65) / 2 + (inst.context.scrollLeft() || 0);
-    var props = {
-      position : 'absolute',
-      left : left,
-      top : top,
-      opacity: 0
-    };
-
-    //console.log('centering top: %s, left: %s', top, left);
-
-    //FIXME: we don't want to assume we scroll the entire window here, since we could be just a portion of the screen or have multiples
-    inst.context.parent().scrollTop(ch / 2 - inst.context.parent().height() / 2 + 60);
-    inst.context.parent().scrollLeft(cw / 2 - inst.context.parent().width() / 2 + 60);
-    console.log(inst.context.parent().scrollTop());
-    //window.scrollBy(cw / 2 - jwin.width() / 2 + 25, ch / 2 - jwin.height() / 2 + 65);
-    aBox.css(props);
-
-      aBox.animate({ opacity: 1}, 1000);
-
-
-    if (inst.debugOn) {
-      console.debug((new Date().getTime() - start) + '  centerBox ');
-    }
+    // TODO: do this in renderer.init()?
+    this.renderer.msg('', 'init');
   };
 
   LodLive.prototype.autoExpand = function(obj) {
@@ -421,7 +341,7 @@
         } else {
           inst.openDoc(rel, newObj);
         }
-        inst.drawaLine(obj, newObj, propertyName);
+        inst.renderer.drawLine(obj, newObj, null, propertyName);
       } else {
         if (inst.debugOn) {
           console.debug((new Date().getTime() - start) + '  addNewDoc 09 ');
@@ -433,7 +353,7 @@
         if (inst.debugOn) {
           console.debug((new Date().getTime() - start) + '  addNewDoc 10 ');
         }
-        inst.drawaLine(obj, newObj, propertyName);
+        inst.renderer.drawLine(obj, newObj, null, propertyName);
       } else {
         if (inst.debugOn) {
           console.debug((new Date().getTime() - start) + '  addNewDoc 11 ');
@@ -467,21 +387,29 @@
 
     var id = obj.attr('id');
 
+    inst.renderer.clearLines(id);
+
     // get subjects where id is the object
     var subjectIds = inst.refs.getSubjectRefs(id);
 
     // get objects where id is the subject
     var objectIds = inst.refs.getObjectRefs(id)
 
-    // clear canvas holding lines from obj
-    inst.context.find('#line-' + id).clearCanvas();
-
-    // clear canvases holding lines to obj
+    // remove references to id
     subjectIds.forEach(function(subjectId) {
-      inst.context.find('#line-' + subjectId).clearCanvas();
+      inst.refs.removeObjectRef(subjectId, id);
+    });
+    objectIds.forEach(function(objectId) {
+      inst.refs.removeSubjectRef(objectId, id);
     });
 
-    inst.docInfo();
+    // get all pairs, excluding self
+    var pairs = inst.renderer.getRelatedNodePairs(id, true);
+    inst.renderer.drawLines(pairs);
+
+    // remove references from id
+    inst.refs.removeAsSubject(id);
+    inst.refs.removeAsObject(id);
 
     // Image rendering has been disabled; keeping for posterity ...
     // var cp = inst.context.find('.lodLiveControlPanel');
@@ -503,6 +431,8 @@
     //   }
     // }
 
+    inst.docInfo();
+
     obj.fadeOut('normal', null, function() {
       obj.remove();
       $.each(inst.innerPageMap, function(key, element) {
@@ -522,85 +452,10 @@
         found.show();
         found.removeClass('exploded');
       });
-
-      // remove references to id
-      subjectIds.forEach(function(subjectId) {
-        inst.refs.removeObjectRef(subjectId, id);
-      });
-      objectIds.forEach(function(objectId) {
-        inst.refs.removeSubjectRef(objectId, id);
-      });
-
-      // remove references from id
-      inst.refs.removeAsSubject(id);
-      inst.refs.removeAsObject(id);
-
-      // draw all lines for cleared canvases
-      subjectIds.forEach(function(subjectId) {
-        var objectIds = inst.refs.getObjectRefs(subjectId);
-
-        objectIds.forEach(function(objectId) {
-          inst.drawaLine(
-            inst.context.find('#' + subjectId),
-            inst.context.find('#' + objectId)
-          );
-        });
-      });
     });
 
     if (inst.debugOn) {
       console.debug((new Date().getTime() - start) + '  removeDoc ');
-    }
-  };
-
-  var _builtins = {
-    'expand': {
-      title: 'Expand all',
-      icon: 'fa fa-arrows-alt',
-      handler: function(obj, inst) {
-        var idx = 0;
-        var elements = obj.find('.relatedBox:visible');
-        var totalElements = elements.length;
-        var onTo = function() {
-          var elem= elements.eq(idx++);
-          if (elem.length) {
-            elem.click();
-          }
-          if (idx < totalElements) {
-            window.setTimeout(onTo, 120);
-          }
-        };
-        window.setTimeout(onTo, 120);
-      }
-    },
-    'info': {
-      title: 'More info',
-      icon: 'fa fa-info-circle',
-      handler: function(obj, inst) {
-        // TODO: ?
-      }
-    },
-    'rootNode': {
-      title: 'Make root node',
-      icon: 'fa fa-dot-circle-o',
-      handler: function(obj, instance) {
-        instance.context.empty();
-        instance.init(obj.attr('rel'));
-      }
-    },
-    'remove': {
-      title: 'Remove this node',
-      icon: 'fa fa-trash',
-      handler: function(obj, inst) {
-        inst.removeDoc(obj);
-      }
-    },
-    'openPage': {
-      title: 'Open in another page',
-      icon: 'fa fa-external-link',
-      handler: function(obj, inst) {
-        window.open(obj.attr('rel'));
-      }
     }
   };
 
@@ -623,10 +478,8 @@
         evt.stopPropagation();
       });
 
-      box.hover(function() {
-        inst.msg(box.data('title'), 'show', null, null, box.is('.inverse'));
-      }, function() {
-        inst.msg(null, 'hide');
+      inst.renderer.hover(box, function() {
+        inst.renderer.msg(box.data('title'), 'show', null, null, box.is('.inverse'));
       });
     });
 
@@ -654,10 +507,8 @@
         }
       });
 
-      box.hover(function() {
-        inst.msg(box.attr('data-title'), 'show', null, null, box.is('.inverse'));
-      }, function() {
-        inst.msg(null, 'hide');
+      inst.renderer.hover(box, function() {
+        inst.renderer.msg(box.attr('data-title'), 'show', null, null, box.is('.inverse'));
       });
     });
 
@@ -671,7 +522,7 @@
       } else {
         switch(rel) {
           case 'docInfo':  inst.docInfo(obj); break;
-          case 'tools': inst.generateTools(el, obj).fadeToggle('fast'); break;
+          case 'tools': inst.renderer.generateTools(el, obj, inst).fadeToggle('fast'); break;
         }
       }
     });
@@ -684,25 +535,6 @@
     if (inst.debugOn) {
       console.debug((new Date().getTime() - start) + '  addClick ');
     }
-  };
-
-  LodLive.prototype.generateTools = function(container, obj) {
-    var inst = this, tools = container.find('.lodlive-toolbox');
-    if (!tools.length) {
-      tools = $('<div class="lodlive-toolbox"></div>').hide();
-      jQuery.each(inst.UI.tools, function() {
-        var toolConfig = this, t;
-        if (toolConfig.builtin) {
-          toolConfig = _builtins[toolConfig.builtin];
-        }
-        if (!toolConfig) return;
-        t = jQuery('<div class="innerActionBox" title="' + utils.lang(toolConfig.title) + '"><span class="' + toolConfig.icon + '"></span></div>');
-        t.appendTo(tools).on('click', function() { toolConfig.handler.call($(this), obj, inst); });
-      });
-      var toolWrapper = $('<div class=\"lodlive-toolbox-wrapper\"></div>').append(tools);
-      container.append(toolWrapper);
-    }
-    return tools;
   };
 
   /**
@@ -741,123 +573,6 @@
         inst.formatDoc(docInfo, values, [], [], URI);
       }
     });
-  };
-
-  LodLive.prototype.processDraw = function(x1, y1, x2, y2, canvas, toId) {
-    var inst = this, start, lodLiveProfile = inst.options;
-
-    if (inst.debugOn) {
-      start = new Date().getTime();
-    }
-    // recupero il nome della proprieta'
-    var label = '';
-
-    var lineStyle = 'standardLine';
-    //FIXME:  don't use IDs
-    if (inst.context.find('#' + toId).length > 0) {
-
-      label = canvas.attr('data-propertyName-' + toId);
-
-      // TODO: literal regexp?
-      var labeArray = label.split('\|');
-
-      label = '\n';
-
-      for (var o = 0; o < labeArray.length; o++) {
-
-        if (lodLiveProfile.arrows[$.trim(labeArray[o])]) {
-          lineStyle = inst.options.arrows[$.trim(labeArray[o])] + 'Line';
-        }
-
-        var shortKey = utils.shortenKey(labeArray[o]);
-        var lastHash = shortKey.lastIndexOf('#');
-        var lastSlash = shortKey.lastIndexOf('/');
-
-        if (label.indexOf('\n' + shortKey + '\n') == -1) {
-          label += shortKey + '\n';
-        }
-      }
-    }
-    //if (lineStyle === 'standardLine') { it appears they all end up back here anyway
-    if (lineStyle !== 'isSameAsLine') {
-
-      inst.standardLine(label, x1, y1, x2, y2, canvas, toId);
-
-    } else {
-      //TODO: doesn't make sense to have these live in different files.  Should make line drawers an extensible interface
-      utils.customLines(inst.context, lineStyle, label, x1, y1, x2, y2, canvas, toId);
-    }
-
-    if (inst.debugOn) {
-      console.debug((new Date().getTime() - start) + '  processDraw ');
-    }
-
-  };
-
-  LodLive.prototype.drawAllLines = function(obj) {
-    var inst = this;
-    var id = obj.attr('id');
-
-    // get objects where id is the subject
-    var objectIds = inst.refs.getObjectRefs(id)
-
-    // get subjects where id is the object
-    var subjectIds = inst.refs.getSubjectRefs(id);
-
-    // remove line if exists
-    inst.context.find('#line-' + id).clearCanvas();
-
-    objectIds.forEach(function(objectId) {
-      inst.drawaLine(
-        obj,
-        inst.context.find('#' + objectId)
-      );
-    });
-
-    subjectIds.forEach(function(subjectId) {
-      var nestedObjectIds = inst.refs.getObjectRefs(subjectId);
-
-      nestedObjectIds.forEach(function(objectId) {
-        inst.drawaLine(
-          inst.context.find('#' + subjectId),
-          inst.context.find('#' + objectId)
-        );
-      });
-    });
-  };
-
-  LodLive.prototype.drawaLine = function(from, to, propertyName) {
-    var inst = this, start;
-    if (inst.debugOn) {
-      start = new Date().getTime();
-    }
-
-    var pos1 = from.position();
-    var pos2 = to.position();
-    var aCanvas = $('#line-' + from.attr('id'));
-    // console.debug(new Date().getTime()+'moving - '+(new Date())+" -
-    // #line-" +
-    // from.attr("id") + "-" + to.attr("id"))
-    if (aCanvas.length == 1) {
-      if (propertyName) {
-        aCanvas.attr('data-propertyName-' + to.attr('id'), propertyName);
-      }
-      inst.processDraw(pos1.left + from.width() / 2, pos1.top + from.height() / 2, pos2.left + to.width() / 2, pos2.top + to.height() / 2, aCanvas, to.attr('id'));
-    } else {
-      aCanvas = $('<canvas data-propertyName-' + to.attr('id') + '="' + propertyName + '" height="' + inst.context.height() + '" width="' + inst.context.width() + '" id="line-' + from.attr('id') + '"></canvas>');
-      inst.context.append(aCanvas);
-      aCanvas.css({
-        'position' : 'absolute',
-        'zIndex' : '0',
-        'top' : 0,
-        'left' : 0
-      });
-      inst.processDraw(pos1.left + from.width() / 2, pos1.top + from.height() / 2, pos2.left + to.width() / 2, pos2.top + to.height() / 2, aCanvas, to.attr('id'));
-    }
-
-    if (inst.debugOn) {
-      console.debug((new Date().getTime() - start) + '  drawaLine ');
-    }
   };
 
   LodLive.prototype.formatDoc = function(destBox, values, uris, bnodes, URI) {
@@ -976,14 +691,7 @@
     if (types.length > 0) {
       var jSection = $('<div class="section"><label data-title="http://www.w3.org/1999/02/22-rdf-syntax-ns#type">type</label><div></div></div>');
 
-      jSection.find('label').each(function() {
-        var lbl = $(this);
-        lbl.hover(function() {
-          inst.msg(lbl.attr('data-title'), 'show');
-        }, function() {
-          inst.msg(null, 'hide');
-        });
-      });
+      inst.renderer.hover( jSection.find('label') );
 
       for (var int = 0; int < types.length; int++) {
         var shortKey = utils.shortenKey(types[int]);
@@ -1005,13 +713,7 @@
     if (webLinkResult) {
       //TODO: delegate hover
       var jWebLinkResult = $(webLinkResult);
-      jWebLinkResult.find('a').each(function() {
-        $(this).hover(function() {
-          inst.msg($(this).attr('data-title'), 'show');
-        }, function() {
-          inst.msg(null, 'hide');
-        });
-      });
+      inst.renderer.hover( jWebLinkResult.find('a') );
       jContents.append(jWebLinkResult);
     }
 
@@ -1028,13 +730,7 @@
               var shortKey = label;
               try {
                 var jSection = $('<div class="section"><label data-title="' + akey + '">' + shortKey + '</label><div>' + unescape(value[akey]) + '</div></div>');
-                jSection.find('label').each(function() {
-                  $(this).hover(function() {
-                    inst.msg($(this).attr('data-title'), 'show');
-                  }, function() {
-                    inst.msg(null, 'hide');
-                  });
-                });
+                inst.renderer.hover( jSection.find('label') );
                 jContents.append(jSection);
               } catch (e) {
                 // /console.debug(value[akey] + " --- " + shortKey);
@@ -1061,13 +757,7 @@
           try {
 
             var jSection = $('<div class="section"><label data-title="' + akey + '">' + shortKey + '</label><div>' + unescape(value[akey]) + '</div></div>');
-            jSection.find('label').each(function() {
-              $(this).hover(function() {
-                inst.msg($(this).attr('data-title'), 'show');
-              }, function() {
-                inst.msg(null, 'hide');
-              });
-            });
+            inst.renderer.hover( jSection.find('label') );
             jContents.append(jSection);
           } catch (e) { // what are we catching here?
             // /console.debug(value[akey] + " --- " + shortKey);
@@ -1083,13 +773,7 @@
           var shortKey = utils.shortenKey(akey);
 
           var jBnode = $('<div class="section"><label data-title="' + akey + '">' + shortKey + '</label><span class="bnode"></span></div><div class="separ sprite"></div>');
-          jBnode.find('label').each(function() {
-            $(this).hover(function() {
-              inst.msg($(this).attr('data-title'), 'show');
-            }, function() {
-              inst.msg(null, 'hide');
-            });
-          });
+          inst.renderer.hover( jBnode.find('label') );
           inst.resolveBnodes(unescape(value[akey]), URI, jBnode, jContents);
 
         }
@@ -1098,13 +782,7 @@
 
     if (contents.length == 0 && bnodes.length == 0) {
       var jSection = $('<div class="section"><label data-title="' + utils.lang('resourceMissingDoc') + '"></label><div>' + utils.lang('resourceMissingDoc') + '</div></div><div class="separ sprite"></div>');
-      jSection.find('label').each(function() {
-        $(this).hover(function() {
-          inst.msg($(this).attr('data-title'), 'show');
-        }, function() {
-          inst.msg(null, 'hide');
-        });
-      });
+      inst.renderer.hover( jSection.find('label') );
       jContents.append(jSection);
     }
 
@@ -1163,11 +841,12 @@
 
     inst.sparqlClient.bnode(val, {
       beforeSend : function() {
-        destBox.find('span[class=bnode]').html('<img src="img/ajax-loader-black.gif"/>');
-
+        // destBox.find('span[class=bnode]').html('<img src="img/ajax-loader-black.gif"/>');
+        return inst.renderer.loading( destBox.find('span[class=bnode]') );
       },
       success : function(json) {
-        destBox.find('span[class=bnode]').html('');
+        // s/b unnecessary
+        // destBox.find('span[class=bnode]').html('');
         json = json['results']['bindings'];
         $.each(json, function(key, value) {
           var shortKey = utils.shortenKey(value.property.value);
@@ -1175,13 +854,7 @@
 
           } else if (value.object.type == 'bnode') {
             var jBnode = $('<span><label data-title="' + value.property.value + '"> / ' + shortKey + '</label><span class="bnode"></span></span>');
-            jBnode.find('label').each(function() {
-              $(this).hover(function() {
-                inst.msg($(this).attr('data-title'), 'show');
-              }, function() {
-                inst.msg(null, 'hide');
-              });
-            });
+            inst.renderer.hover( jBnode.find('label' ) );
             destBox.find('span[class=bnode]').attr('class', '').append(jBnode);
             inst.resolveBnodes(value.object.value, URI, destBox, jContents);
           } else {
@@ -1202,8 +875,8 @@
         });
       },
       error : function(e, b, v) {
-        destBox.find('span').html('');
-
+        // s/b unnecessary
+        // destBox.find('span[class=bnode]').html('');
       }
     });
 
@@ -1450,15 +1123,13 @@
       }
     }
     destBox.append(jResult);
+
     var resourceTitle = jResult.text();
     jResult.data('tooltip', resourceTitle);
 
-    destBox.hover(function() {
-        var msgTitle = jResult.text();
-        console.log('destbox hover title', msgTitle);
-      inst.msg(msgTitle, 'show', 'fullInfo', containerBox.attr('data-endpoint'));
-    }, function() {
-      inst.msg(null, 'hide');
+    inst.renderer.hover(destBox, function() {
+      console.log('destbox hover title', resourceTitle);
+      inst.renderer.msg(resourceTitle, 'show', 'fullInfo', containerBox.attr('data-endpoint'));
     });
 
     // calcolo le uri e le url dei documenti correlati
@@ -1848,27 +1519,10 @@
       llpages.parent().fadeOut('fast', null, function() {
         $(this).parent().children('.' + llpages.attr('data-page')).fadeIn('fast');
       });
-    }); {
-      // append the tools
-      jQuery.each(inst.UI.nodeIcons, function(index) {
-        var opts = this, obj;
-        if (opts.builtin) {
-          obj = jQuery(_builtinTools[opts.builtin] || '<span class="no such builtin"></span>');
-        } else {  // construct custom action box
-          var obj = $('<div class="actionBox custom"></div>').data('action-handler', opts.handler);
-          $('<span></span>').addClass(opts.icon).attr('title',opts.title).appendTo(obj);
-        }
-        obj.appendTo(anchorBox);
-      });
-    }
-    if (inst.debugOn) {
-      console.debug((new Date().getTime() - start) + '  format ');
-    }
-  };
+    });
 
-  var _builtinTools = {
-    'docInfo': '<div class="actionBox docInfo" rel="docInfo"><span class="fa fa-list"></span></div>',
-    'tools': '<div class="actionBox tools" rel="tools"><span class="fa fa-cog"></span></div>'
+    // append the tools
+    inst.renderer.generateNodeIcons(anchorBox);
   };
 
   LodLive.prototype.openDoc = function(anUri, destBox, fromInverse) {
@@ -1911,7 +1565,8 @@
 
       inst.sparqlClient.documentUri(anUri, {
         beforeSend : function() {
-          destBox.children('.box').html('<img style=\"margin-top:' + (destBox.children('.box').height() / 2 - 8) + 'px\" src="img/ajax-loader.gif"/>');
+          // destBox.children('.box').html('<img style=\"margin-top:' + (destBox.children('.box').height() / 2 - 8) + 'px\" src="img/ajax-loader.gif"/>');
+          return inst.renderer.loading(destBox.children('.box'))
         },
         success : function(info) {
           // reformat values for compatility
@@ -1953,14 +1608,18 @@
           if (inst.debugOn) {
             console.debug((new Date().getTime() - start) + '  openDoc eval uris & values');
           }
-          destBox.children('.box').html('');
+
+          // s/b unnecessary
+          // destBox.children('.box').html('');
+
           if (inst.doInverse) {
 
             // SPARQLquery = inst.composeQuery(anUri, 'inverse');
 
             inst.sparqlClient.inverse(anUri, {
               beforeSend : function() {
-                destBox.children('.box').html('<img style=\"margin-top:' + (destBox.children('.box').height() / 2 - 5) + 'px\" src="img/ajax-loader.gif"/>');
+                // destBox.children('.box').html('<img id="1234" style=\"margin-top:' + (destBox.children('.box').height() / 2 - 5) + 'px\" src="img/ajax-loader.gif"/>');
+                return inst.renderer.loading(destBox.children('.box'));
               },
               success : function(inverseInfo) {
                 var inverses = [];
@@ -2003,7 +1662,9 @@
                 }
 
                 var callback = function() {
-                  destBox.children('.box').html('');
+                  // s/b unnecessary
+                  // destBox.children('.box').html('');
+
                   inst.format(destBox.children('.box'), values, uris, inverses);
                   inst.addClick(destBox, fromInverse ? function() {
                     //TODO: dynamic selector across the entire doc here seems strange, what are the the possibilities?  Is it only a DOM element?
@@ -2026,7 +1687,9 @@
 
               },
               error : function(e, b, v) {
-                destBox.children('.box').html('');
+                // s/b unnecessary
+                // destBox.children('.box').html('');
+
                 inst.format(destBox.children('.box'), values, uris);
 
                 inst.addClick(destBox, fromInverse ? function() {
@@ -2054,28 +1717,13 @@
           }
         },
         error : function(e, b, v) {
-          inst.errorBox(destBox);
+          inst.renderer.errorBox(destBox);
         }
       });
 
     if (inst.debugOn) {
       console.debug((new Date().getTime() - start) + '  openDoc');
     }
-  };
-
-  LodLive.prototype.errorBox = function(destBox) {
-    var inst = this;
-
-    destBox.children('.box').addClass('errorBox');
-    destBox.children('.box').html('');
-    var jResult = $('<div class="boxTitle"><span>' + utils.lang('enpointNotAvailable') + '</span></div>');
-    destBox.children('.box').append(jResult);
-    destBox.children('.box').hover(function() {
-      inst.msg(utils.lang('enpointNotAvailableOrSLow'), 'show', 'fullInfo', destBox.attr('data-endpoint'));
-    }, function() {
-      inst.msg(null, 'hide');
-    });
-
   };
 
   LodLive.prototype.findInverseSameAs = function(anUri, inverse, callback) {
@@ -2114,78 +1762,7 @@
   };
 
   //TODO: these line drawing methods don't care about the instance, they should live somewhere else
-  LodLive.prototype.standardLine = function(label, x1, y1, x2, y2, canvas, toId) {
 
-    // eseguo i calcoli e scrivo la riga di connessione tra i cerchi
-    var lineangle = (Math.atan2(y2 - y1, x2 - x1) * 180 / Math.PI) + 180;
-    var x2bis = x1 - Math.sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1)) + 60;
-    //canvas.detectPixelRatio();
-    canvas.rotateCanvas({
-      rotate : lineangle,
-      x : x1,
-      y : y1
-    }).drawLine({
-      strokeStyle : '#fff',
-      strokeWidth : 1,
-      strokeCap : 'bevel',
-      x1 : x1 - 60,
-      y1 : y1,
-      x2 : x2bis,
-      y2 : y1
-    });
-
-    if (lineangle > 90 && lineangle < 270) {
-      canvas.rotateCanvas({
-        rotate : 180,
-        x : (x2bis + x1) / 2,
-        y : (y1 + y1) / 2
-      });
-    }
-    label = $.trim(label).replace(/\n/g, ', ');
-    canvas.drawText({// inserisco l'etichetta
-      fillStyle : '#606060',
-      strokeStyle : '#606060',
-      x : (x2bis + x1 + ((x1 + 60) > x2 ? -60 : +60)) / 2,
-      y : (y1 + y1 - ((x1 + 60) > x2 ? 18 : -18)) / 2,
-      text : label ,
-      align : 'center',
-      strokeWidth : 0.01,
-      fontSize : 11,
-      fontFamily : '"Open Sans",Verdana'
-    }).restoreCanvas().restoreCanvas();
-    //TODO:  why is this called twice?
-
-    // ed inserisco la freccia per determinarne il verso della
-    // relazione
-    lineangle = Math.atan2(y2 - y1, x2 - x1);
-    var angle = 0.79;
-    var h = Math.abs(8 / Math.cos(angle));
-    var fromx = x2 - 60 * Math.cos(lineangle);
-    var fromy = y2 - 60 * Math.sin(lineangle);
-    var angle1 = lineangle + Math.PI + angle;
-    var topx = (x2 + Math.cos(angle1) * h) - 60 * Math.cos(lineangle);
-    var topy = (y2 + Math.sin(angle1) * h) - 60 * Math.sin(lineangle);
-    var angle2 = lineangle + Math.PI - angle;
-    var botx = (x2 + Math.cos(angle2) * h) - 60 * Math.cos(lineangle);
-    var boty = (y2 + Math.sin(angle2) * h) - 60 * Math.sin(lineangle);
-
-    canvas.drawLine({
-      strokeStyle : '#fff',
-      strokeWidth : 1,
-      x1 : fromx,
-      y1 : fromy,
-      x2 : botx,
-      y2 : boty
-    });
-    canvas.drawLine({
-      strokeStyle : '#fff',
-      strokeWidth : 1,
-      x1 : fromx,
-      y1 : fromy,
-      x2 : topx,
-      y2 : topy
-    });
-  };
 
   // expose our Constructor if not already present
   if (!window.LodLive) {
