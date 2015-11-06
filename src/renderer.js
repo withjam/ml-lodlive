@@ -636,6 +636,8 @@ LodLiveRenderer.prototype.errorBox = function(destBox) {
 };
 
 LodLiveRenderer.prototype.init = function(container) {
+  var renderer = this;
+
   if (typeof container === 'string') {
     container = $(container);
   }
@@ -650,6 +652,21 @@ LodLiveRenderer.prototype.init = function(container) {
   var graphContainer = $('<div class="lodlive-graph-container"></div>');
 
   this.context.appendTo(this.container).wrap(graphContainer);
+
+  var draggable = require('./draggable.js');
+
+  draggable(this.container, this.context, '.lodlive-node', function(dragState) {
+    var id = dragState.target.attr('id');
+    var canvases = renderer.getRelatedCanvases(id);
+    var nodes = renderer.getRelatedNodePairs(id);
+
+    // TODO: re-render lines constantly
+    renderer.clearLines(canvases);
+
+    return function() {
+      renderer.drawLines(nodes);
+    };
+  });
 };
 
 var rendererFactory = {
