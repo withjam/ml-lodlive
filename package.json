@@ -7,7 +7,10 @@
     "test": "karma start"
   },
   "devDependencies": {
+    "browserify": "^11.1.0",
+    "browserify-istanbul": "^0.2.1",
     "chai": "^3.3.0",
+    "event-stream": "^3.3.2",
     "gulp": "^3.9.0",
     "gulp-add-src": "^0.2.0",
     "gulp-concat": "^2.4.3",
@@ -17,6 +20,7 @@
     "gulp-uglify": "^1.1.0",
     "jquery": "^2.1.4",
     "karma": "^0.13.10",
+    "karma-browserify": "^4.3.0",
     "karma-chai": "^0.1.0",
     "karma-coverage": "^0.5.2",
     "karma-fixture": "^0.2.5",
@@ -26,6 +30,8 @@
     "karma-sinon": "^1.0.4",
     "mocha": "^2.3.3",
     "phantomjs": "^1.9.18",
-    "sinon": "^1.17.1"
+    "sinon": "^1.17.1",
+    "vinyl-buffer": "^1.0.0",
+    "vinyl-source-stream": "^1.1.0"
   }
 }

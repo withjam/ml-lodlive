@@ -5,6 +5,10 @@ var rename = require('gulp-rename');
 var tar = require('gulp-tar');
 var gzip = require('gulp-gzip');
 var addsrc = require('gulp-add-src');
+var browserify = require('browserify');
+var buffer = require('vinyl-buffer');
+var eventStream = require('event-stream');
+var source = require('vinyl-source-stream');
 
 gulp.task('deps', function() {
   return gulp.src(['./js/deps/*.js', '!./js/deps/jquery-ui-1.9.2.min.js'])
@@ -13,7 +17,14 @@ gulp.task('deps', function() {
 });
 
 gulp.task('scripts', function() {
-  return gulp.src('./js/lib/*.js')
+  return eventStream.merge(
+      gulp.src('./js/lib/lodlive.utils.js'),
+
+      browserify({ entries: [ './js/lib/lodlive.core.js' ] })
+      .bundle()
+      .pipe(source('ml-lodlive-components.js'))
+      .pipe(buffer())
+    )
     .pipe(concat('ml-lodlive.js'))
     .pipe(gulp.dest('./dist/'))
     .pipe(uglify())

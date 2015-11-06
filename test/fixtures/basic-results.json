@@ -1,0 +1,5 @@
+{ "head": { "link": [], "vars": ["property", "object"] },
+  "results": { "distinct": false, "ordered": true, "bindings": [
+    { "property": { "type": "uri", "value": "http://dbpedia.org/ontology/alias" } , "object": { "type": "literal", "xml:lang": "en", "value": "Smith, Will" }},
+    { "property": { "type": "uri", "value": "http://dbpedia.org/ontology/birthPlace" }  , "object": { "type": "uri", "value": "http://dbpedia.org/resource/Pennsylvania" }},
+    { "property": { "type": "uri", "value": "http://purl.org/voc/vrank#hasRank" } , "object": { "type": "bnode", "value": "nodeID://b20469592" }} ] } }

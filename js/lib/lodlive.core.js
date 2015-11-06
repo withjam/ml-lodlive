@@ -135,6 +135,23 @@
       this.msg = this.UI.nodeHover;
     }
 
+    var httpClientFactory = require('../../src/http-client.js');
+
+    var httpClient = httpClientFactory.create(
+      this.options.connection['http:'].endpoint,
+      this.options.endpoints.all,
+      this.options.connection['http:'].accepts,
+      this.getAjaxDataType()
+    );
+
+    var sparqlClientFactory = require('../../src/sparql-client.js');
+
+    this.sparqlClient = sparqlClientFactory.create(
+      this.options.connection['http:'].sparql,
+      this.options.default.sparql,
+      httpClient
+    );
+
     // container elements
     this.container = container.css('position', 'relative');
     this.context = jQuery('<div class="lodlive-graph-context"></div>').appendTo(container).wrap('<div class="lodlive-graph-container"></div>');
@@ -194,116 +211,6 @@
     this.openDoc(firstUri, firstBox);
 
     this.msg('', 'init');
-  };
-
-  /**
-    * Composes a query somehow, more to come
-    * @param {string} resource a resource URI I think?
-    * @param {string} module not sure how this is used yet
-    * @param {string=} testURI optional testURI used instead of resource for something
-    * @returns {string} the url
-    */
-  LodLive.prototype.composeQuery = function(resource, module, testURI) {
-    var  url, res, endpoint, inst = this, lodLiveProfile = inst.options;
-
-    var start;
-    if (inst.debugOn) {
-      start = new Date().getTime();
-    }
-
-    jQuery.each( lodLiveProfile.connection, function(key, value) {
-
-      var keySplit = key.split(',');
-
-      for (var a = 0; a < keySplit.length; a++) {
-
-        // checking for some sort of key, but not sure what's in the connection keys at this time
-        if (( testURI ? testURI : resource).indexOf(keySplit[a]) === 0) {
-
-          res = LodLiveUtils.getSparqlConf(module, value, lodLiveProfile).replace(/\{URI\}/ig, resource.replace(/^.*~~/, ''));
-
-          if (value.proxy) {
-
-            url = value.proxy + '?endpoint=' + value.endpoint + '&' + (value.endpointType ? inst.options.endpoints[value.endpointType] : inst.options.endpoints.all ) + '&query=' + encodeURIComponent(res);
-
-          } else {
-
-            url = value.endpoint + '?' + (value.endpointType ? inst.options.endpoints[value.endpointType] : inst.options.endpoints.all) + '&query=' + encodeURIComponent(res);
-
-          }
-
-          endpoint = value.endpoint;
-
-          return false;
-        }
-      }
-
-    });
-
-    if (inst.debugOn) {
-
-      console.debug((new Date().getTime() - start) + '  composeQuery ');
-
-    }
-
-    if (!url) {
-
-      url = 'http://system/dummy?' + resource;
-
-    }
-
-    // counterintuitive for this to be part of a 'compose' function, but leaving it for now
-    if (endpoint && inst.showInfoConsole) {
-
-      inst.queryConsole('log', {
-        title : endpoint,
-        text : res,
-        id : url,
-        uriId : resource
-      });
-
-    }
-
-    return url;
-
-  };
-
-  LodLive.prototype.guessingEndpoint = function(uri, onSuccess, onFail) {
-    var base = uri.replace(/(^http:\/\/[^\/]+\/).+/, '$1'), inst = this;
-
-    // TODO: make this more configurable by the instance or profile flags
-    var guessedEndpoint = base + 'sparql?' + inst.options.endpoints.all + '&query=' + encodeURIComponent('select * where {?a ?b ?c} LIMIT 1');
-
-    $.ajax({
-      url : guessedEndpoint,
-      contentType: 'application/json',
-      accepts: inst.options.connection['http:'].accepts,
-      dataType: inst.getAjaxDataType(),
-      success : function(data) {
-
-        if (data && data.results && data.results.bindings[0]) {
-
-          // store this in our instance, not globally
-          inst.connections[base] = {
-            endpoint : base + 'sparql'
-          };
-
-          onSuccess();
-
-        } else {
-
-          onFail();
-        }
-      },
-
-      error : function() {
-        if (inst.debugOn) {
-          console.log('guessingEndpointError', arguments);
-        }
-        onFail();
-      }
-
-    });
   };
 
   LodLive.prototype.msg = function(msg, action, type, endpoint, inverse) {
@@ -864,157 +771,42 @@
     return tools;
   };
 
-  LodLive.prototype.parseRawResourceDoc = function(destBox, URI) {
-    var inst = this;
-    var start;
-    if (inst.debugOn) {
-      start = new Date().getTime();
-    }
-
-    var uris = [];
-    var bnodes = [];
-    var values = [];
-    var def = inst.options['default'];
-
-    if (def) {
-
-      // attivo lo sparql interno basato su sesame
-      var res = LodLiveUtils.getSparqlConf('document', def, inst.options).replace(/\{URI\}/ig, URI);
-      var url = def.endpoint + '?uri=' + encodeURIComponent(URI) + '&query=' + encodeURIComponent(res);
-
-      if (inst.showInfoConsole) {
-        inst.queryConsole('log', {
-          title : LodLiveUtils.lang('endpointNotConfiguredSoInternal'),
-          text : res,
-          uriId : URI
-        });
-      }
-
-      $.ajax({
-        url : url,
-        contentType: 'application/json',
-        accepts: inst.options.connection['http:'].accepts,
-        dataType: inst.getAjaxDataType(),
-        beforeSend : function() {
-          inst.context.append(destBox);
-          destBox.html('<img style=\"margin-left:' + (destBox.width() / 2) + 'px;margin-top:147px\" src="img/ajax-loader-gray.gif"/>');
-          destBox.css({
-            position : 'fixed',
-            right: 20,
-            top : 0
-          });
-          destBox.attr('data-top', destBox.position().top);
-        },
-
-        success : function(json) {
-          json = json.results && json.results.bindings;
-          $.each(json, function(key, value) {
-             //Fixed
-                var key = value[ 'property'][ 'value'];
-                var obj = {};
-                obj[key] = escape(value.object.value);
-                if (value.object.type === 'uri') {
-                    uris.push(obj);
-                } else if (value.object.type == 'bnode') {
-                    bnodes.push(obj);
-                } else {
-                    values.push(obj);
-                }
-          });
-
-          destBox.html('');
-          if (inst.debugOn) {
-            console.debug(URI + '   ');
-            console.debug(values);
-          }
-
-          inst.formatDoc(destBox, values, uris, bnodes, URI);
-        },
-        error : function(e, b, v) {
-          destBox.html('');
-          // not sure what this says, should it be a configurable message?
-          // RESOURCE NOT FOUND
-          values = [{
-            'http://system/msg' : 'risorsa non trovata: ' + destBox.attr('rel')
-          }];
-          inst.formatDoc(destBox, values, uris, bnodes, URI);
-        }
-      });
-    }
-    if (inst.debugOn) {
-      console.debug((new Date().getTime() - start) + '  parseRawResourceDoc ');
-    }
-  };
-
   /**
     * Default function for showing info on a selected node.  Simply opens a panel that displays it's properties.  Calling it without an object will close it.
     * @param {Object=} obj a jquery wrapped DOM element that is a node, or null.  If null is passed then it will close any open doc info panel
    **/
   LodLive.prototype.docInfo = function(obj) {
-    var inst = this, URI, docInfo = inst.container.find('.lodlive-docinfo');
+    var inst = this;
+    var docInfo = inst.container.find('.lodlive-docinfo');
+    var URI;
 
     if (obj == null || ((URI = obj.attr('rel')) && docInfo.is('[rel="'+ URI + '"]'))) {
-      console.log('hiding');
+      console.log('hiding docInfo');
       docInfo.fadeOut('fast').removeAttr('rel');
       return;
     }
-
-    URI = obj.attr('rel');
 
     if (!docInfo.length) {
       docInfo = $('<div class="lodlive-docinfo" rel="' + URI + '"></div>');
       inst.container.append(docInfo);
     }
 
-    var URI = obj.attr('rel');
+    // duplicated code ...
+    // var URI = obj.attr('rel');
     docInfo.attr('rel', URI);
 
-    // predispongo il div contenente il documento
-
-    var SPARQLquery = inst.composeQuery(URI, 'document');
-    var uris = [];
-    var bnodes = [];
-    var values = [];
-    if (SPARQLquery.indexOf('http://system/dummy') === 0) {
-
-      inst.parseRawResourceDoc(docInfo, URI);
-
-    } else {
-
-      $.ajax({
-        url : SPARQLquery,
-        contentType: 'application/json',
-        accepts: inst.options.connection['http:'].accepts,
-        dataType: inst.getAjaxDataType(),
-        success : function(json) {
-          json = json.results && json.results.bindings;
-
-          $.each(json, function(key, value) {
-            var newVal = {};
-            newVal[value.property.value] = value.object.value;
-            if (value.object.type === 'uri') {
-              uris.push(newVal);
-            } else if (value.object.type == 'bnode') {
-              bnodes.push(newVal);
-            } else {
-              values.push(newVal);
-            }
-          });
-
-          docInfo.empty().fadeIn();
-          inst.formatDoc(docInfo, values, uris, bnodes, URI);
-        },
-        error : function(e, b, v) {
-          // TODO: where do we get destBox?
-          destBox.html('');
-          values = [{
-            'http://system/msg' : 'Could not find document: ' + destBox.attr('rel')
-          }];
-          inst.formatDoc(docInfo, values, uris, bnodes, URI);
-        }
-      });
-    }
-
+    inst.sparqlClient.document(URI, {
+      success : function(info) {
+        docInfo.empty().fadeIn();
+        inst.formatDoc(docInfo, info.values, info.uris, info.bnodes, URI);
+      },
+      error : function(e, b, v) {
+        var values = [{
+          'http://system/msg' : 'Could not find document: ' + URI
+        }];
+        inst.formatDoc(docInfo, values, [], [], URI);
+      }
+    });
   };
 
   LodLive.prototype.processDraw = function(x1, y1, x2, y2, canvas, toId) {
@@ -1433,13 +1225,7 @@
       start = new Date().getTime();
     }
 
-    var SPARQLquery = inst.composeQuery(val, 'bnode', URI);
-
-    $.ajax({
-      url : SPARQLquery,
-      contentType: 'application/json',
-      accepts: inst.options.connection['http:'].accepts,
-      dataType: inst.getAjaxDataType(),
+    inst.sparqlClient.bnode(val, {
       beforeSend : function() {
         destBox.find('span[class=bnode]').html('<img src="img/ajax-loader-black.gif"/>');
 
@@ -1704,14 +1490,12 @@
 
     }
     var dataEndpoint = containerBox.attr('data-endpoint') || '';
-    if ((values.length == 0 && uris.length == 0) || dataEndpoint.indexOf('http://system/dummy') == 0) {
-      if (containerBox.attr('data-endpoint').indexOf('http://system/dummy') != -1) {
-        containerBox.attr('data-endpoint', LodLiveUtils.lang('endpointNotConfigured'));
-      }
-      if (uris.length == 0 && values.length == 0) {
-        result = '<div class="boxTitle" data-tooltip="' + LodLiveUtils.lang('resourceMissing') + '"><a target="_blank" href="' + thisUri + '"><span class="spriteLegenda"></span>' + thisUri + '</a>';
-      }
+
+    // TODO: early return?
+    if (uris.length == 0 && values.length == 0) {
+      result = '<div class="boxTitle" data-tooltip="' + LodLiveUtils.lang('resourceMissing') + '"><a target="_blank" href="' + thisUri + '"><span class="spriteLegenda"></span>' + thisUri + '</a>';
     }
+
     result += '</span></div>';
     var jResult = $(result);
     if (jResult.text() == '' && docType == 'bnode') {
@@ -2169,92 +1953,113 @@
     var values = [];
 
     if (inst.debugOn) console.log('composing query with anUri', anUri);
-    //TODO: composeQuery looks like a static function, look into it
-    var SPARQLquery = inst.composeQuery(anUri, 'documentUri');
 
-    if (inst.doStats) {
-      // TODO: what is methods?
-      methods.doStats(anUri);
-    }
+    // TODO: what is methods && what is doStats? neither exist ...
+    // if (inst.doStats) {
+    //   methods.doStats(anUri);
+    // }
 
-    if (SPARQLquery.indexOf('endpoint=') != -1) {
+    // NOTE: previously extracted endpoint from SPARQLquery
+    destBox.attr('data-endpoint', lodLiveProfile.connection['http:'].endpoint);
 
-      var endpoint = SPARQLquery.substring(SPARQLquery.indexOf('endpoint=') + 9);
-      endpoint = endpoint.substring(0, endpoint.indexOf('&'));
-      destBox.attr('data-endpoint', endpoint);
+    // TODO: figure out why this doesn't work ...
+    // destBox.data('endpoint', lodLiveProfile.connection['http:'].endpoint);
 
-    } else {
+    // var SPARQLquery = inst.composeQuery(anUri, 'documentUri');
 
-      destBox.attr('data-endpoint', SPARQLquery.substring(0, SPARQLquery.indexOf('?')));
+    // NOTE: previously fell back to inst.guessingEndpoint(anUri,
+    // (if SPARQLquery was http://system/dummy)
+    // callbacks:
+    //   success: inst.openDoc(anUri, destBox, fromInverse);
+    //   failure: inst.parseRawResource(destBox, anUri, fromInverse);
 
-    }
-    //TODO: is system/dummy just a flag that it should guess? If so, maybe just set a property on the query object called shouldGuess = true
-    if (SPARQLquery.indexOf('http://system/dummy') == 0) {
-
-      // guessing endpoint from URI
-      inst.guessingEndpoint(anUri, function() {
-
-        inst.openDoc(anUri, destBox, fromInverse);
-
-      }, function() {
-
-        inst.parseRawResource(destBox, anUri, fromInverse);
-
-      });
-
-    } else {
-
-      //TODO: remove jQuery jsonp dependency
-      $.ajax({
-        url : SPARQLquery,
-        contentType: 'application/json',
-        accepts: inst.options.connection['http:'].accepts,
-        dataType: inst.getAjaxDataType(),
+      inst.sparqlClient.documentUri(anUri, {
         beforeSend : function() {
           destBox.children('.box').html('<img style=\"margin-top:' + (destBox.children('.box').height() / 2 - 8) + 'px\" src="img/ajax-loader.gif"/>');
         },
-        success : function(json) {
-          // console.log('sparql success', json);
-          json = json.results && json.results.bindings;
-          var conta = 0;
-          $.each(json, function(key, value) {
-            var newVal = {}, newUri = {};
-            conta++;
-            if (value.object.type === 'uri' || value.object.type === 'bnode') {
-              if (value.object.value != anUri && (value.object.type !== 'bnode' || !inst.ignoreBnodes)) {
-                newUri[value.property.value] = (value.object.type === 'bnode') ? escape(anUri + '~~' + value.object.value) : escape(value.object.value);
-                uris.push(newUri);
-              }
-            } else {
-              newVal[value.property.value] = escape(value.object.value);
-              values.push(newVal);
-            }
+        success : function(info) {
+          // reformat values for compatility
 
+          // escape values
+          info.values = info.values.map(function(value) {
+            var keys = Object.keys(value)
+            keys.forEach(function(key) {
+              value[key] = escape(value[key])
+            })
+            return value
           });
+
+          // TODO: filter info.uris where object value === anURI (??)
+
+          // escape URIs
+          info.uris = info.uris.map(function(value) {
+            var keys = Object.keys(value)
+            keys.forEach(function(key) {
+              value[key] = escape(value[key])
+            })
+            return value
+          });
+
+          // parse bnodes, escape and add to URIs
+
+          // TODO: refactor `format()` and remove this
+          info.bnodes.forEach(function(bnode) {
+            var keys = Object.keys(bnode)
+            var value = {};
+            keys.forEach(function(key) {
+              value[key] = escape(anUri + '~~' + bnode[key])
+            })
+            info.uris.push(value);
+          })
+
+          delete info.bnodes;
 
           if (inst.debugOn) {
             console.debug((new Date().getTime() - start) + '  openDoc eval uris & values');
           }
           destBox.children('.box').html('');
           if (inst.doInverse) {
-            SPARQLquery = inst.composeQuery(anUri, 'inverse');
 
-            var inverses = [];
-            $.ajax({
-              url : SPARQLquery,
-              contentType: 'application/json',
-              accepts: inst.options.connection['http:'].accepts,
-              dataType: inst.getAjaxDataType(),
+            // SPARQLquery = inst.composeQuery(anUri, 'inverse');
+
+            inst.sparqlClient.inverse(anUri, {
               beforeSend : function() {
                 destBox.children('.box').html('<img style=\"margin-top:' + (destBox.children('.box').height() / 2 - 5) + 'px\" src="img/ajax-loader.gif"/>');
               },
-              success : function(json) {
-                json = json['results']['bindings'];
-                var conta = 0;
-                $.each(json, function(key, value) {
-                  conta++;
-                  //TODO: replace evals
-                  eval('inverses.push({\'' + value['property']['value'] + '\':\'' + (value.object.type == 'bnode' ? anUri + '~~' : '') + escape(value.object.value) + '\'})');
+              success : function(inverseInfo) {
+                var inverses = [];
+
+                // escape values
+                inverseInfo.values = inverseInfo.values.map(function(value) {
+                  var keys = Object.keys(value)
+                  keys.forEach(function(key) {
+                    value[key] = escape(value[key])
+                  })
+                  return value
+                });
+
+                // escape URIs
+                inverseInfo.uris = inverseInfo.uris.map(function(value) {
+                  var keys = Object.keys(value)
+                  keys.forEach(function(key) {
+                    value[key] = escape(value[key])
+                  })
+                  return value
+                });
+
+                inverses = inverseInfo.uris.concat(inverseInfo.values);
+
+                // parse bnodes, escape and add to URIs
+
+                // parse bnodes and add to URIs
+                // TODO: refactor `format()` and remove this
+                inverseInfo.bnodes.forEach(function(bnode) {
+                  var keys = Object.keys(bnode);
+                  var value = {};
+                  keys.forEach(function(key) {
+                    value[key] = anUri + '~~' + bnode[key];
+                  });
+                  inverses.push(value);
                 });
 
                 if (inst.debugOn) {
@@ -2278,9 +2083,7 @@
                 };
 
                 if (inst.doAutoSameas) {
-                  var counter = 0;
-                  var tot = Object.keys(lodLiveProfile).length;
-                  inst.findInverseSameAs(anUri, counter, inverses, callback, tot);
+                  inst.findInverseSameAs(anUri, inverses, callback);
                 } else {
                   callback();
                 }
@@ -2302,7 +2105,7 @@
               }
             });
           } else {
-            inst.format(destBox.children('.box'), values, uris);
+            inst.format(destBox.children('.box'), info.values, info.uris);
             inst.addClick(destBox, fromInverse ? function() {
               try {
                 $(fromInverse).click();
@@ -2319,120 +2122,8 @@
         }
       });
 
-    }
     if (inst.debugOn) {
       console.debug((new Date().getTime() - start) + '  openDoc');
-    }
-  };
-
-  LodLive.prototype.parseRawResource = function(destBox, resource, fromInverse) {
-
-    var inst = this, values = [], uris = [], lodLiveProfile = inst.options;
-    var start;
-    if (inst.debugOn) {
-      start = new Date().getTime();
-    }
-
-    if (lodLiveProfile['default']) {
-      // attivo lo sparql interno basato su sesame
-      var res = LodLiveUtils.getSparqlConf('documentUri', lodLiveProfile['default'], lodLiveProfile).replace(/\{URI\}/ig, resource);
-      var url = lodLiveProfile['default'].endpoint + '?uri=' + encodeURIComponent(resource) + '&query=' + encodeURIComponent(res);
-      if (inst.showInfoConsole) {
-        inst.queryConsole('log', {
-          title : LodLiveUtils.lang('endpointNotConfiguredSoInternal'),
-          text : res,
-          uriId : resource
-        });
-      }
-      $.ajax({
-        url : url,
-        contentType: 'application/json',
-        accepts: inst.options.connection['http:'].accepts,
-        dataType: inst.getAjaxDataType(),
-        beforeSend : function() {
-          destBox.children('.box').html('<img style=\"margin-top:' + (destBox.children('.box').height() / 2 - 8) + 'px\" src="img/ajax-loader.gif"/>');
-        },
-        success : function(json) {
-          json = json['results']['bindings'];
-          var conta = 0;
-          $.each(json, function(key, value) {
-            conta++;
-            //TODO: replace eval
-            if (value.object.type == 'uri') {
-              if (value.object.value != resource) {
-                eval('uris.push({\'' + value['property']['value'] + '\':\'' + escape(value.object.value) + '\'})');
-              }
-            } else {
-              eval('values.push({\'' + value['property']['value'] + '\':\'' + escape(value.object.value) + '\'})');
-            }
-          });
-
-          if (inst.debugOn) {
-            console.debug((new Date().getTime() - start) + '  openDoc eval uris & values');
-          }
-
-          var inverses = [];
-          //FIXME:  here is a callback function, debug to see if it can simply wait for returns because I haven't noticed anything async in the chain
-          var callback = function() {
-            destBox.children('.box').html('');
-            inst.format(destBox.children('.box'), values, uris, inverses);
-            inst.addClick(destBox, fromInverse ? function() {
-              try {
-                $(fromInverse).click();
-              } catch (e) {
-              }
-            } : null);
-
-            if (inst.doAutoExpand) {
-              inst.autoExpand(destBox);
-            }
-          };
-          if (inst.doAutoSameas) {
-            var counter = 0;
-            var tot = Object.keys(lodLiveProfile.connection).length;
-            inst.findInverseSameAs(resource, counter, inverses, callback, tot);
-          } else {
-            callback();
-          }
-
-        },
-        error : function(e, j, k) {
-          // console.debug(e);console.debug(j);
-          destBox.children('.box').html('');
-          var inverses = [];
-          if (fromInverse) {
-            eval('uris.push({\'' + fromInverse.replace(/div\[data-property="([^"]*)"\].*/, '$1') + '\':\'' + fromInverse.replace(/.*\[rel="([^"]*)"\].*/, '$1') + '\'})');
-          }
-          inst.format(destBox.children('.box'), values, uris, inverses);
-          inst.addClick(destBox, fromInverse ? function() {
-            try {
-              $(fromInverse).click();
-            } catch (e) {
-            }
-          } : null);
-          if (inst.doAutoExpand) {
-            inst.autoExpand(destBox);
-          }
-        }
-      });
-
-    } else {
-
-      destBox.children('.box').html('');
-      var inverses = [];
-      if (fromInverse) {
-        eval('uris.push({\'' + fromInverse.replace(/div\[data-property="([^"]*)"\].*/, '$1') + '\':\'' + fromInverse.replace(/.*\[rel="([^"]*)"\].*/, '$1') + '\'})');
-      }
-      inst.format(destBox.children('.box'), values, uris, inverses);
-      inst.addClick(destBox, fromInverse ? function() {
-        try {
-          $(fromInverse).click();
-        } catch (e) {
-        }
-      } : null);
-      if (inst.doAutoExpand) {
-        inst.autoExpand(destBox);
-      }
     }
   };
 
@@ -2451,86 +2142,36 @@
 
   };
 
-  LodLive.prototype.findInverseSameAs = function(anUri, counter, inverse, callback, tot) {
-    var inst = this, lodLiveProfile = inst.options;
+  LodLive.prototype.findInverseSameAs = function(anUri, inverse, callback) {
+    var inst = this;
+
+    // TODO: why two options? (useForInverseSameAs and doAutoSameas)
+    if (!inst.options.connection['http:'].useForInverseSameAs) return;
 
     var start;
     if (inst.debugOn) {
       start = new Date().getTime();
     }
-    var innerCounter = 0;
-    $.each(lodLiveProfile.connection, function(key, value) {
-      // what is the intent of matching the counter to the argument?  Are we trying to simulate numerical index of object properties when order is not guaranteed? Why not by name?
-      if (innerCounter === counter) {
-        var skip = false;
-        var keySplit = key.split(',');
-        if (!value.useForInverseSameAs) {
-          skip = true;
-        } else {
-          for (var a = 0; a < keySplit.length; a++) {
-            // salto i sameas interni allo stesso endpoint
-            if (anUri.indexOf(keySplit[a]) != -1) {
-              skip = true;
-            }
-          }
-        }
-        if (skip) {
-          counter++;
-          if (counter < tot) {
-            inst.findInverseSameAs(anUri, counter, inverse, callback, tot);
-          } else {
-            callback();
-          }
-          return false;
-        }
 
-        var SPARQLquery = value.endpoint + '?' + (value.endpointType ? lodLiveProfile.endpoints[value.endpointType] : lodLiveProfile.endpoints.all) + '&query=' + escape(LodLiveUtils.getSparqlConf('inverseSameAs', value, lodLiveProfile).replace(/\{URI\}/g, anUri));
-        if (value.proxy) {
-          SPARQLquery = value.proxy + '?endpoint=' + value.endpoint + '&' + (value.endpointType ? lodLiveProfile.endpoints[value.endpointType] : lodLiveProfile.endpoints.all) + '&query=' + escape(LodLiveUtils.getSparqlConf('inverseSameAs', value, lodLiveProfile).replace(/\{URI\}/g, anUri));
-        }
+    inst.sparqlClient.inverseSameAs(anUri, {
+      success : function(json) {
+        json = json.results.bindings;
 
-        $.ajax({
-          url : SPARQLquery,
-          timeout : 3000,
-          contentType: 'application/json',
-          accepts: inst.options.connection['http:'].accepts,
-          dataType: inst.getAjaxDataType(),
-          success : function(json) {
-            json = json['results']['bindings'];
-            var conta = 0;
-            $.each(json, function(key, value) {
-              conta++;
-              if (value.property && value.property.value) {
-                eval('inverse.splice(1,0,{\'' + value.property.value + '\':\'' + escape(value.object.value) + '\'})');
-              } else {
-                eval('inverse.splice(1,0,{\'' + 'http://www.w3.org/2002/07/owl#sameAs' + '\':\'' + escape(value.object.value) + '\'})');
-              }
-            });
-
-            counter++;
-            //TODO:  why callbacks and not just return?
-            if (counter < tot) {
-              inst.findInverseSameAs(anUri, counter, inverse, callback, tot);
-            } else {
-              callback();
-            }
-          },
-
-          error : function(e, b, v) {
-            counter++;
-            if (counter < tot) {
-              inst.findInverseSameAs(anUri, counter, inverse, callback, tot);
-            } else {
-              callback();
-            }
-          }
+        $.each(json, function(key, value) {
+          var newObj = {};
+          var key = value.property && value.property.value || 'http://www.w3.org/2002/07/owl#sameAs';
+          newObj[key] = escape(value.object.value);
+          // TODO: why the 2nd array element?
+          inverse.splice(1, 0, newObj);
         });
-        if (inst.debugOn) {
-          console.debug((new Date().getTime() - start) + '  findInverseSameAs ' + value.endpoint);
-        }
+
+        callback();
+      },
+      error : function(e, b, v) {
+        callback();
       }
-      innerCounter++;
     });
+
     if (inst.debugOn) {
       console.debug((new Date().getTime() - start) + '  findInverseSameAs');
     }
