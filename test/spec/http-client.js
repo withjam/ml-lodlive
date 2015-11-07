@@ -23,7 +23,7 @@ describe('httpClient', function () {
 
     httpClient({ query: 'QUERY' }, {})
 
-    expect(ajax.calledOnce).to.be.true
+    expect(ajax).to.have.been.calledOnce
 
     var args = ajax.args[0][0]
     expect(args.url).to.equal('endpoint?param=value&query=QUERY')
@@ -50,19 +50,19 @@ describe('httpClient', function () {
 
     httpClient({ query: 'QUERY' }, callbacks)
 
-    expect(ajax.calledOnce).to.be.true
+    expect(ajax).to.have.been.calledOnce
 
     var args = ajax.args[0][0]
 
     args.beforeSend()
-    expect(callbacks.beforeSend.calledOnce).to.be.true
+    expect(callbacks.beforeSend).to.have.been.calledOnce
 
     args.success()
-    expect(afterSend.calledOnce).to.be.true
-    expect(callbacks.success.calledOnce).to.be.true
+    expect(afterSend).to.have.been.calledOnce
+    expect(callbacks.success).to.have.been.calledOnce
 
     args.error()
-    expect(afterSend.calledTwice).to.be.true
-    expect(callbacks.error.calledOnce).to.be.true
+    expect(afterSend).to.have.been.calledTwice
+    expect(callbacks.error).to.have.been.calledOnce
   })
 })

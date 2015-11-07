@@ -37,8 +37,8 @@ describe('lodlive', function () {
     ExampleProfile.endpoints.jsonp = false;
     jQuery('#graph').lodlive({ profile: ExampleProfile, firstUri: firstUri });
 
-    expect(firstBox.calledOnce).to.be.true;
-    expect(openDoc.calledOnce).to.be.true;
+    expect(firstBox).to.have.been.calledOnce;
+    expect(openDoc).to.have.been.calledOnce;
 
     expect(this.requests.length).to.equal(1);
     expect(this.requests[0].url).to.match(/^http:\/\/dbpedia.org\/sparql/);
@@ -66,8 +66,8 @@ describe('lodlive', function () {
     // ExampleProfile.debugOn = true;
     jQuery('#graph').lodlive({ profile: ExampleProfile, firstUri: firstUri });
 
-    expect(firstBox.calledOnce).to.be.true;
-    expect(openDoc.calledOnce).to.be.true;
+    expect(firstBox).to.have.been.calledOnce;
+    expect(openDoc).to.have.been.calledOnce;
 
     expect(this.requests.length).to.equal(1);
 
@@ -77,7 +77,7 @@ describe('lodlive', function () {
       JSON.stringify(this.fixtures.willSmith)
     );
 
-    expect(format.calledOnce).to.be.true;
+    expect(format).to.have.been.calledOnce;
 
     expect($('#graph .box').length).to.equal(1);
     expect($('#graph .lodlive-node .groupedRelatedBox').length).to.equal(6);
@@ -85,8 +85,8 @@ describe('lodlive', function () {
 
     $('#graph .lodlive-node .relatedBox').first().trigger('click');
 
-    expect(addNewDoc.calledOnce).to.be.true;
-    expect(openDoc.calledTwice).to.be.true;
+    expect(addNewDoc).to.have.been.calledOnce;
+    expect(openDoc).to.have.been.calledTwice;
 
     expect(this.requests.length).to.equal(2);
 
@@ -104,7 +104,7 @@ describe('lodlive', function () {
       JSON.stringify(this.fixtures.willSmith)
     );
 
-    expect(formatDoc.calledOnce).to.be.true;
+    expect(formatDoc).to.have.been.calledOnce;
 
     expect($('.lodlive-docinfo').length).to.equal(1);
     expect($('.lodlive-docinfo .section').length).to.equal(15);
