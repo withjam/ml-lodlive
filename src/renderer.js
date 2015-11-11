@@ -238,6 +238,279 @@ LodLiveRenderer.prototype.reDrawLines = function(target) {
 };
 
 /**
+ * Renders doc-info missing message
+ *
+ * @returns {Object} a jQuery node
+ */
+LodLiveRenderer.prototype.docInfoMissing = function() {
+  var renderer = this;
+
+  var sectionNode = $('<div class="section"></div>');
+  var textNode = $('<div></div>').text(utils.lang('resourceMissingDoc'));
+
+  // TODO: no text, nothing to show, nothing to hover ...
+  var labelNode = $('<label></label>')
+  .attr('data-title',  utils.lang('resourceMissingDoc'));
+
+  renderer.hover(labelNode);
+
+  sectionNode.append(labelNode).append(textNode);
+
+  return sectionNode;
+};
+
+/**
+ * Renders doc-info types
+ *
+ * @param {Array<String>} types
+ * @returns {Object} a jQuery node
+ */
+LodLiveRenderer.prototype.docInfoTypes = function(types) {
+  var renderer = this;
+
+  if (!types.length) return null;
+
+  // TODO: get types from profile
+  var labelNode = $('<label data-title="http://www.w3.org/1999/02/22-rdf-syntax-ns#type">type</label>');
+
+  renderer.hover(labelNode);
+
+  var wrapperNode = $('<div></div>');
+
+  types.forEach(function(type) {
+    var typeNode = $('<span></span>')
+    .attr('title', type)
+    // space required to allow wrapping
+    // TODO: create an <ul/> ?
+    .text(utils.shortenKey(type) + ' ');
+
+    wrapperNode.append(typeNode);
+  });
+
+  var sectionNode = $('<div class="section"></div>')
+  .append(labelNode)
+  .append(wrapperNode);
+
+  return sectionNode;
+};
+
+/**
+ * Renders doc-info images
+ *
+ * @param {Array<String>} images
+ * @returns {Object} a jQuery node
+ */
+LodLiveRenderer.prototype.docInfoImages = function(images) {
+  if (!images.length) return null;
+
+  var sectionNode = $('<div class="section" style="height:80px"></div>');
+
+  images.forEach(function(imgObj) {
+    var key = Object.keys(imgObj)[0];
+    var value = imgObj[key];
+
+    var linkNode = $('<a></a>').attr('href', unescape(value));
+    var imgNode = $('<img/>').attr('src', unescape(value));
+
+    linkNode.append(imgNode);
+    sectionNode.append(linkNode);
+
+    imgNode.load(function() {
+      var width = imgNode.width();
+      var height = imgNode.height();
+
+      if (width > height) {
+        imgNode.height(height * 80 / width);
+        imgNode.width(80);
+      } else {
+        imgNode.width(width * 80 / height);
+        imgNode.height(80);
+      }
+    });
+
+    imgNode.error(function() {
+      imgNode.attr('title', utils.lang('noImage') + ' \n' + imgNode.attr('src'));
+      // TODO: use a font-awesome icon instead?
+      // imgNode.attr('src', 'img/immagine-vuota-' + $.jStorage.get('selectedLanguage') + '.png');
+    });
+
+    // TODO: find a replacement for this missing dependency
+    // sectionNode.fancybox({
+    //   'transitionIn' : 'elastic',
+    //   'transitionOut' : 'elastic',
+    //   'speedIn' : 400,
+    //   'type' : 'image',
+    //   'speedOut' : 200,
+    //   'hideOnContentClick' : true,
+    //   'showCloseButton' : false,
+    //   'overlayShow' : false
+    // });
+  });
+
+  return sectionNode;
+};
+
+/**
+ * Renders doc-info links
+ *
+ * @param {Array<String>} images
+ * @returns {Object} a jQuery node
+ */
+LodLiveRenderer.prototype.docInfoLinks = function(links) {
+  var renderer = this;
+
+  if (!links.length) return null;
+
+  var sectionNode = $('<div class="section"></div>');
+  // TODO: move styles to external sheet
+  var wrapperNode = $('<ul style="padding:0;margin:0;display:block;overflow:hidden;tex-overflow:ellipses"></ul>');
+
+  links.forEach(function(linkObj) {
+    var key = Object.keys(linkObj)[0];
+    var value = linkObj[key];
+
+    var listItemNode = $('<li></li>');
+    var linkNode = $('<a class="relatedLink" target="_blank"></a>')
+    .attr('data-title', key + ' \n ' + unescape(value))
+    .attr('href', unescape(value))
+    .text(unescape(value));
+
+    // TODO: delegate hover
+    renderer.hover(linkNode);
+
+    listItemNode.append(linkNode);
+    wrapperNode.append(listItemNode);
+  });
+
+  sectionNode.append(wrapperNode);
+
+  return sectionNode;
+};
+
+/**
+ * Renders doc-info values
+ *
+ * @param {Array<String>} values
+ * @returns {Object} a jQuery node
+ */
+LodLiveRenderer.prototype.docInfoValues = function(values) {
+  var renderer = this;
+
+  if (!values.length) return null;
+
+  var wrapperNode = $('<div></div>');
+
+  values.forEach(function(valueObj) {
+    var key = Object.keys(valueObj)[0];
+    var value = valueObj[key];
+
+    // TODO: lookup replacements from properties mapper?
+    var shortKey = utils.shortenKey(key);
+
+    var sectionNode = $('<div class="section"></div>');
+    var labelNode = $('<label></label>')
+    .attr('data-title', key)
+    .text(shortKey);
+
+    renderer.hover(labelNode);
+
+    var textNode = $('<div></div>').text(value);
+
+    sectionNode.append(labelNode).append(textNode);
+
+    wrapperNode.append(sectionNode);
+  });
+
+  return wrapperNode;
+};
+
+/**
+ * Renders doc-info bnode placeholders
+ *
+ * @param {Array<String>} bnodes
+ * @returns {Array<Object>} an array of jQuery nodes
+ */
+LodLiveRenderer.prototype.docInfoBnodes = function(bnodes) {
+  var renderer = this;
+
+  return bnodes.map(function(bnodeObj) {
+    var key = Object.keys(bnodeObj)[0];
+    var value = bnodeObj[key];
+    var shortKey = utils.shortenKey(key);
+
+    var bnodeNode = $('<div class="section"></div>');
+    var labelNode = $('<label></label>')
+    .attr('data-title', key)
+    .text(shortKey);
+
+    renderer.hover(labelNode);
+
+    var spanNode = $('<span class="bnode"></span>')
+
+    bnodeNode.append(labelNode).append(spanNode);
+
+    return {
+      value: value,
+      spanNode: spanNode,
+      bnodeNode: bnodeNode
+    };
+  });
+};
+
+/**
+ * Renders doc-info bnode values
+ *
+ * @param {Array<String>} values
+ * @param {Object} spanNode - a jQuery node (placeholder for value)
+ * @returns {Object} a jQuery node
+ */
+LodLiveRenderer.prototype.docInfoBnodeValues = function(values, spanNode) {
+  spanNode.attr('class', '')
+
+  values.forEach(function(valueObj) {
+    var key = Object.keys(valueObj)[0]
+    var value = valueObj[key];
+    var shortKey = utils.shortenKey(key);
+
+    var labelNode = $('<em></em>')
+    .attr('title', key)
+    .text(shortKey);
+
+    var textNode = $('<span></span>').text(': ' + value);
+
+    var valueNode = $('<div></div>').append(labelNode).append(textNode);
+
+    spanNode.append(valueNode);
+  });
+};
+
+/**
+ * Renders doc-info bnode nested placeholders
+ *
+ * @param {String} key
+ * @param {Object} spanNode - a jQuery node (placeholder for value)
+ * @returns {Object} a jQuery node
+ */
+LodLiveRenderer.prototype.docInfoNestedBnodes = function(key, spanNode) {
+  var renderer = this;
+
+  var wrapperNode = $('<span></span>');
+  var labelNode = $('<label></label')
+  .attr('data-title', key)
+  .text(utils.shortenKey(key))
+
+  renderer.hover(labelNode);
+
+  var bnodeNode = $('<span class="bnode"></span>')
+
+  wrapperNode.append(labelNode).append(bnodeNode);
+
+  spanNode.attr('class', '').append(wrapperNode);
+
+  return bnodeNode;
+};
+
+/**
  * Gets all canvases containing lines related to `id`
  *
  * @param {String} id - the id of a subject or object node
