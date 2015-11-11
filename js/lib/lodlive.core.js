@@ -85,6 +85,7 @@
       this.options.arrows,
       this.options.UI.tools,
       this.options.UI.nodeIcons,
+      this.options.UI.relationships,
       this.refs
     );
 
@@ -94,7 +95,7 @@
 
     // temporary, need access from both components
     this.renderer.hashFunc = this.hashFunc;
-    this.renderer.boxTemplate = this.boxTemplate
+    this.renderer.boxTemplate = this.boxTemplate;
   }
 
   LodLive.prototype.init = function(firstUri) {
@@ -198,7 +199,7 @@
                          2 + (pos % 2) :
                          5 / 2;
 
-      var chordsListExpand = inst.circleChords(
+      var chordsListExpand = utils.circleChords(
         originalCircle.width() * radiusFactor,
         parts,
         originalCircle.position().left + originalCircle.width() / 2,
@@ -514,40 +515,6 @@
         // destBox.find('span[class=bnode]').html('');
       }
     });
-  };
-
-  //TODO: this doesn't need to be on the prototype since it's a stateless utility function - are the metrics necessary?
-  LodLive.prototype.circleChords = function(radius, steps, centerX, centerY, breakAt, onlyElement) {
-    var inst = this;
-    var start;
-    if (inst.debugOn) {
-      start = new Date().getTime();
-    }
-    var values = [];
-    var i = 0;
-    if (onlyElement) {
-      // ottimizzo i cicli evitando di calcolare elementi che non
-      // servono
-      i = onlyElement;
-      var radian = (2 * Math.PI) * (i / steps);
-      values.push([centerX + radius * Math.cos(radian), centerY + radius * Math.sin(radian)]);
-    } else {
-      for (; i < steps; i++) {
-        // calcolo le coodinate lungo il cerchio del box per
-        // posizionare
-        // strumenti ed altre risorse
-        var radian = (2 * Math.PI) * (i / steps);
-        values.push([centerX + radius * Math.cos(radian), centerY + radius * Math.sin(radian)]);
-      }
-    }
-    if (inst.debugOn) {
-      console.debug((new Date().getTime() - start) + '  circleChords ');
-    }
-    return values;
-  };
-
-  LodLive.prototype.getRelationshipCSS = function(uri) {
-    return this.UI.relationships && this.UI.relationships.hasOwnProperty(uri) ? this.UI.relationships[uri] : {};
   };
 
   LodLive.prototype.getJsonValue = function(map, key, defaultValue) {
@@ -889,175 +856,12 @@
     // 2, destBox.position().top + destBox.height() / 2, totRelated +
     // 4);
 
-    var chordsList = inst.circleChords(75, 24, destBox.position().left + 65, destBox.position().top + 65);
-    var chordsListGrouped = inst.circleChords(95, 36, destBox.position().left + 65, destBox.position().top + 65);
+    var chordsList = utils.circleChords(75, 24, destBox.position().left + 65, destBox.position().top + 65);
+    var chordsListGrouped = utils.circleChords(95, 36, destBox.position().left + 65, destBox.position().top + 65);
 
-    // iterates over connectedDocs and invertedDocs, creating DOM nodes and calculating CSS positioning
-    function createPropertyBoxes(inputArray, inputGroup, isInverse) {
-      var counter = 1;
-      var inserted = {};
-      var innerCounter = 1;
-      var objectList = [];
-      var innerObjectList = [];
-
-      inputArray.forEach(function(value, i) {
-        // TODO: refactor; modular arithmetic for CSS positioning
-        // counter appears to equal the count of groupedProperties mod 14 plus 1 or 2
-        if (counter === 15) {
-          counter = 1;
-        }
-
-        // TODO: ensure only one key?
-        var key = Object.keys(value)[0];
-        var obj = null;
-
-        if (inputGroup[key] && inputGroup[key].length > 1) {
-          if (!inserted[key]) {
-            innerCounter = 1;
-            inserted[key] = true;
-
-            var objBox = createPropertyGroup(key, inputGroup[key], counter, isInverse);
-            objectList.push(objBox);
-            counter++;
-          }
-
-          // TODO: magic number; why 25?
-          if (innerCounter < 25) {
-            obj = createGroupedRelatedBox(key, value[key], innerCounter, isInverse);
-          }
-
-          innerCounter++;
-        } else {
-          obj = createRelatedBox(key, value[key], counter, isInverse);
-          counter++;
-        }
-
-        // TODO: when will object be null? innerCounter >= 25?
-        if (obj) {
-          addRelatedBoxProperties(obj, key, containerBox, isInverse);
-
-          if (obj.hasClass('aGrouped')) {
-            innerObjectList.push(obj);
-          } else {
-            objectList.push(obj);
-          }
-        }
-      });
-
-      return {
-        objectList: objectList,
-        innerObjectList: innerObjectList
-      }
-    }
-
-    // create a node to represent a group of related properties (star-circle)
-    function createPropertyGroup(key, groupValue, counter, isInverse) {
-      var objBox = $('<div></div>')
-
-      .addClass('groupedRelatedBox')
-      .attr('rel', inst.hashFunc(key))
-      .attr('data-property', key)
-      .attr('data-title', key + ' \n ' + (groupValue.length) + ' ' + utils.lang('connectedResources'))
-      .css(inst.getRelationshipCSS(key))
-      .css({
-        'top':  (chordsList[counter][1] - 8) + 'px',
-        'left': (chordsList[counter][0] - 8) + 'px'
-      });
-
-      if (isInverse) {
-        objBox.addClass('inverse');
-        objBox.attr('rel', inst.hashFunc(key) + '-i');
-      }
-
-      var keyArray = key.split(' ');
-
-      if (unescape(groupValue[0]).indexOf('~~') > -1) {
-        objBox.addClass('isBnode');
-      } else {
-        for (var i = 0; i < keyArray.length; i++) {
-          if (lodLiveProfile.arrows[keyArray[i]]) {
-            objBox.addClass(lodLiveProfile.arrows[keyArray[i]]);
-          }
-        }
-      }
-
-      return objBox;
-    }
-
-    // create a node to represent a property in a group of related properties
-    function createGroupedRelatedBox(key, keyedValue, innerCounter, isInverse) {
-      var rel;
-
-      // TODO: this seems inlikely... the bnode marker isn't ever at the beginning of keyedValue
-      // is the condition a typo?
-      if (isInverse) {
-        rel = unescape(keyedValue.indexOf('~~') === 0 ? thisUri + keyedValue : keyedValue);
-      } else {
-        rel = unescape(keyedValue)
-      }
-
-      var obj = $('<div></div>')
-      .addClass('aGrouped relatedBox ' + inst.hashFunc(unescape(keyedValue)).toString())
-      .attr('rel', rel)
-      .attr('data-title', key + ' \n ' + unescape(keyedValue))
-      .attr('data-circlePos', innerCounter)
-      .attr('data-circleParts', 36)
-      .css({
-        display: 'none',
-        position: 'absolute',
-        top: (chordsListGrouped[innerCounter][1] - 8) + 'px',
-        left: (chordsListGrouped[innerCounter][0] - 8) + 'px'
-      });
-
-      if (isInverse) {
-        obj.addClass('inverse ' + inst.hashFunc(key) + '-i');
-      } else {
-        obj.addClass(inst.hashFunc(key).toString());
-      }
-
-      return obj;
-    }
-
-    // create a node to represent a related property
-    function createRelatedBox(key, keyedValue, counter, isInverse) {
-      var obj = $('<div></div>')
-      .addClass('relatedBox ' + inst.hashFunc(unescape(keyedValue)).toString())
-      .attr('rel', unescape(keyedValue))
-      .attr('data-title', key + ' \n ' + unescape(keyedValue))
-      .attr('data-circlePos', counter)
-      .attr('data-circleParts', 24)
-      .css({
-        top: (chordsList[counter][1] - 8) + 'px',
-        left: (chordsList[counter][0] - 8) + 'px'
-      });
-
-      if (isInverse) {
-        obj.addClass('inverse');
-      }
-
-      return obj;
-    }
-
-    function addRelatedBoxProperties(obj, key, containerBox, isInverse) {
-      obj.attr('data-circleid', containerBox.attr('id'))
-      .attr('data-property', key)
-      .css(inst.getRelationshipCSS(key));
-
-      // se si tratta di un  Bnode applico una classe diversa
-      var keyArray = key.split(' ');
-      if (obj.attr('rel').indexOf('~~') > -1) {
-        obj.addClass('isBnode');
-      } else {
-        for (var i = 0; i < keyArray.length; i++) {
-          if (lodLiveProfile.arrows[keyArray[i]]) {
-            obj.addClass(lodLiveProfile.arrows[keyArray[i]]);
-          }
-        }
-      }
-    }
-
-    var connectedNodes = createPropertyBoxes(connectedDocs, propertyGroup, false);
-    var invertedNodes = createPropertyBoxes(invertedDocs, propertyGroupInverted, true);
+    // iterate over connectedDocs and invertedDocs, creating DOM nodes and calculating CSS positioning
+    var connectedNodes = inst.renderer.createPropertyBoxes(connectedDocs, propertyGroup, containerBox, chordsList, chordsListGrouped, false);
+    var invertedNodes = inst.renderer.createPropertyBoxes(invertedDocs, propertyGroupInverted, containerBox, chordsList, chordsListGrouped, true);
 
     // aggiungo al box i link ai documenti correlati
     var objectList = connectedNodes.objectList.concat(invertedNodes.objectList);

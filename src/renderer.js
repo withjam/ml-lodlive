@@ -66,10 +66,11 @@ var _builtins = {
   }
 };
 
-function LodLiveRenderer(arrows, tools, nodeIcons, refs) {
+function LodLiveRenderer(arrows, tools, nodeIcons, relationships, refs) {
   this.arrows = arrows;
   this.tools = tools;
   this.nodeIcons = nodeIcons;
+  this.relationships = relationships;
   this.refs = refs;
 }
 
@@ -540,6 +541,161 @@ LodLiveRenderer.prototype.addBoxTitle = function(title, thisUri, destBox, contai
   renderer.hover(destBox, function() {
     renderer.msg(title, 'show', 'fullInfo', containerBox.attr('data-endpoint'));
   });
+};
+
+/**
+ * iterates over predicates/object relationships, creating DOM nodes and calculating CSS positioning
+ */
+LodLiveRenderer.prototype.createPropertyBoxes = function createPropertyBoxes(inputArray, inputGroup, containerBox, chordsList, chordsListGrouped, isInverse) {
+  var renderer = this;
+  var counter = 1;
+  var inserted = {};
+  var innerCounter = 1;
+  var objectList = [];
+  var innerObjectList = [];
+
+  inputArray.forEach(function(value, i) {
+    // TODO: refactor; modular arithmetic for CSS positioning
+    // counter appears to equal the count of groupedProperties mod 14 plus 1 or 2
+    if (counter === 15) {
+      counter = 1;
+    }
+
+    // TODO: ensure only one key?
+    var key = Object.keys(value)[0];
+    var obj = null;
+
+    if (inputGroup[key] && inputGroup[key].length > 1) {
+      if (!inserted[key]) {
+        innerCounter = 1;
+        inserted[key] = true;
+
+        var objBox = renderer.createPropertyGroup(key, inputGroup[key], chordsList, counter, isInverse);
+        objectList.push(objBox);
+        counter++;
+      }
+
+      // TODO: magic number; why 25?
+      if (innerCounter < 25) {
+        obj = renderer.createGroupedRelatedBox(key, value[key], containerBox, chordsListGrouped, innerCounter, isInverse);
+        innerObjectList.push(obj);
+      }
+
+      innerCounter++;
+    } else {
+      obj = renderer.createRelatedBox(key, value[key], containerBox, chordsList, counter, isInverse);
+      objectList.push(obj);
+      counter++;
+    }
+  });
+
+  return {
+    objectList: objectList,
+    innerObjectList: innerObjectList
+  }
+};
+
+LodLiveRenderer.prototype.getRelationshipCSS = function(uri) {
+  return this.relationships && this.relationships[uri] || {};
+};
+
+/**
+ * create a node to represent a group of related properties (star-circle)
+ */
+LodLiveRenderer.prototype.createPropertyGroup = function createPropertyGroup(predicates, groupValue, chordsList, counter, isInverse) {
+  var renderer = this;
+  var box = $('<div></div>')
+  .addClass('groupedRelatedBox')
+  .attr('rel', renderer.hashFunc(predicates).toString())
+  .attr('data-property', predicates)
+  .attr('data-title', predicates + ' \n ' + (groupValue.length) + ' ' + utils.lang('connectedResources'))
+  .css(renderer.getRelationshipCSS(predicates))
+  .css({
+    'top':  (chordsList[counter][1] - 8) + 'px',
+    'left': (chordsList[counter][0] - 8) + 'px'
+  });
+
+  if (isInverse) {
+    box.addClass('inverse');
+    box.attr('rel', renderer.hashFunc(predicates).toString() + '-i');
+  }
+
+  if (unescape(groupValue[0]).indexOf('~~') > -1) {
+    box.addClass('isBnode');
+  } else {
+    predicates.split(' ').forEach(function(predicate) {
+      if (renderer.arrows[predicate]) {
+        box.addClass(renderer.arrows[predicate]);
+      }
+    });
+  }
+
+  return box;
+};
+
+/**
+ * create a node to represent a property in a group of related properties
+ */
+LodLiveRenderer.prototype.createGroupedRelatedBox = function createGroupedRelatedBox(predicates, object, containerBox, chordsListGrouped, innerCounter, isInverse) {
+  var box = this._createRelatedBox(predicates, object, containerBox, isInverse)
+  // this class is probably unnecessary now...
+  .addClass('aGrouped')
+  .attr('data-circlePos', innerCounter)
+  .attr('data-circleParts', 36)
+  .css({
+    display: 'none',
+    position: 'absolute',
+    top: (chordsListGrouped[innerCounter][1] - 8) + 'px',
+    left: (chordsListGrouped[innerCounter][0] - 8) + 'px'
+  });
+
+  if (isInverse) {
+    box.addClass(this.hashFunc(predicates).toString() + '-i');
+  } else {
+    box.addClass(this.hashFunc(predicates).toString());
+  }
+
+  return box;
+};
+
+/**
+ * create a node to represent a related property
+ */
+LodLiveRenderer.prototype.createRelatedBox = function createRelatedBox(predicates, object, containerBox, chordsList, counter, isInverse) {
+  return this._createRelatedBox(predicates, object, containerBox, isInverse)
+  .attr('data-circlePos', counter)
+  .attr('data-circleParts', 24)
+  .css({
+    top: (chordsList[counter][1] - 8) + 'px',
+    left: (chordsList[counter][0] - 8) + 'px'
+  });
+};
+
+LodLiveRenderer.prototype._createRelatedBox = function _createRelatedBox(predicates, object, containerBox, isInverse) {
+  var renderer = this;
+  var box = $('<div></div>')
+  .addClass('relatedBox ' + renderer.hashFunc(unescape(object)).toString())
+  .attr('rel', unescape(object))
+  .attr('data-title', predicates + ' \n ' + unescape(object))
+  .attr('data-circleid', containerBox.attr('id'))
+  .attr('data-property', predicates)
+  .css(renderer.getRelationshipCSS(predicates));
+
+  if (isInverse) {
+    box.addClass('inverse');
+  }
+
+  if (unescape(object).indexOf('~~') > -1) {
+    box.addClass('isBnode');
+  } else {
+    predicates.split(' ').forEach(function(predicate) {
+      if (renderer.arrows[predicate]) {
+        box.addClass(renderer.arrows[predicate]);
+      }
+    });
+  }
+
+  return box;
 };
 
 /**
@@ -1060,8 +1216,8 @@ LodLiveRenderer.prototype.init = function(container) {
 };
 
 var rendererFactory = {
-  create: function(arrows, tools, nodeIcons, refs) {
-    return new LodLiveRenderer(arrows, tools, nodeIcons, refs);
+  create: function(arrows, tools, nodeIcons, relationships, refs) {
+    return new LodLiveRenderer(arrows, tools, nodeIcons, relationships, refs);
   }
 };
 

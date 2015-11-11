@@ -46,6 +46,27 @@ LodLiveUtils.shortenKey = function(str) {
   return lastSlash > lastHash ? str.substring(lastSlash + 1) : str.substring(lastHash + 1);
 };
 
+LodLiveUtils.circleChords = function(radius, steps, centerX, centerY, breakAt, onlyElement) {
+  var values = [];
+  var i = 0;
+  if (onlyElement) {
+    // ottimizzo i cicli evitando di calcolare elementi che non
+    // servono
+    i = onlyElement;
+    var radian = (2 * Math.PI) * (i / steps);
+    values.push([centerX + radius * Math.cos(radian), centerY + radius * Math.sin(radian)]);
+  } else {
+    for (; i < steps; i++) {
+      // calcolo le coodinate lungo il cerchio del box per
+      // posizionare
+      // strumenti ed altre risorse
+      var radian = (2 * Math.PI) * (i / steps);
+      values.push([centerX + radius * Math.cos(radian), centerY + radius * Math.sin(radian)]);
+    }
+  }
+  return values;
+};
+
 module.exports = LodLiveUtils;
 
 if (!window.LodLiveUtils) {
