@@ -310,8 +310,8 @@ LodLiveRenderer.prototype.docInfoImages = function(images) {
     var key = Object.keys(imgObj)[0];
     var value = imgObj[key];
 
-    var linkNode = $('<a></a>').attr('href', unescape(value));
-    var imgNode = $('<img/>').attr('src', unescape(value));
+    var linkNode = $('<a></a>').attr('href', value);
+    var imgNode = $('<img/>').attr('src', value);
 
     linkNode.append(imgNode);
     sectionNode.append(linkNode);
@@ -372,9 +372,9 @@ LodLiveRenderer.prototype.docInfoLinks = function(links) {
 
     var listItemNode = $('<li></li>');
     var linkNode = $('<a class="relatedLink" target="_blank"></a>')
-    .attr('data-title', key + ' \n ' + unescape(value))
-    .attr('href', unescape(value))
-    .text(unescape(value));
+    .attr('data-title', key + ' \n ' + value)
+    .attr('href', value)
+    .text(value);
 
     // TODO: delegate hover
     renderer.hover(linkNode);
@@ -620,7 +620,7 @@ LodLiveRenderer.prototype.createPropertyGroup = function createPropertyGroup(pre
     box.attr('rel', renderer.hashFunc(predicates).toString() + '-i');
   }
 
-  if (unescape(groupValue[0]).indexOf('~~') > -1) {
+  if (groupValue[0].indexOf('~~') > -1) {
     box.addClass('isBnode');
   } else {
     predicates.split(' ').forEach(function(predicate) {
@@ -674,9 +674,9 @@ LodLiveRenderer.prototype.createRelatedBox = function createRelatedBox(predicate
 LodLiveRenderer.prototype._createRelatedBox = function _createRelatedBox(predicates, object, containerBox, isInverse) {
   var renderer = this;
   var box = $('<div></div>')
-  .addClass('relatedBox ' + renderer.hashFunc(unescape(object)).toString())
-  .attr('rel', unescape(object))
-  .attr('data-title', predicates + ' \n ' + unescape(object))
+  .addClass('relatedBox ' + renderer.hashFunc(object).toString())
+  .attr('rel', object)
+  .attr('data-title', predicates + ' \n ' + object)
   .attr('data-circleid', containerBox.attr('id'))
   .attr('data-property', predicates)
   .css(renderer.getRelationshipCSS(predicates));
@@ -685,7 +685,7 @@ LodLiveRenderer.prototype._createRelatedBox = function _createRelatedBox(predica
     box.addClass('inverse');
   }
 
-  if (unescape(object).indexOf('~~') > -1) {
+  if (object.indexOf('~~') > -1) {
     box.addClass('isBnode');
   } else {
     predicates.split(' ').forEach(function(predicate) {

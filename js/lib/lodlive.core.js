@@ -450,7 +450,7 @@
           connectedWeblinks.push(newVal);
         }
       } else {
-        types.push(unescape(value));
+        types.push(value);
       }
     });
 
@@ -467,7 +467,7 @@
 
     renderedBnodes.forEach(function(obj) {
       destBox.append(obj.bnodeNode);
-      inst.resolveBnodes(unescape(obj.value), URI, obj.spanNode, destBox);
+      inst.resolveBnodes(obj.value, URI, obj.spanNode, destBox);
     });
   };
 
@@ -499,7 +499,7 @@
 
           var nestedBnodeNode = inst.renderer.docInfoNestedBnodes(key, spanNode);
 
-          inst.resolveBnodes(unescape(value), URI, nestedBnodeNode, destBox);
+          inst.resolveBnodes(value, URI, nestedBnodeNode, destBox);
         });
 
         // // TODO: slimScroll is no long included, and seems to be unnecessary
@@ -527,7 +527,7 @@
     $.each(map, function(skey, value) {
       for (var akey in value) {
         if (akey == key) {
-          returnVal.push(unescape(value[akey]));
+          returnVal.push(value[akey]);
         }
       }
     });
@@ -684,11 +684,11 @@
       var titleValues;
 
       if (title.indexOf('http') !== 0) {
-        titlePieces.push($.trim(unescape(title)));
+        titlePieces.push($.trim(title));
       } else {
         titleValues = inst.getJsonValue(values, title, title.indexOf('http') === 0 ? '' : title);
         titleValues.forEach(function(titleValue) {
-          titlePieces.push(unescape(titleValue));
+          titlePieces.push(titleValue);
         });
       }
     });
@@ -912,39 +912,19 @@
       success : function(info) {
         // reformat values for compatility
 
-        // escape values
-        info.values = info.values.map(function(value) {
-          var keys = Object.keys(value)
-          keys.forEach(function(key) {
-            value[key] = escape(value[key])
-          })
-          return value
-        });
-
-        // TODO: filter info.uris where object value === anURI (??)
-
-        // escape URIs
-        info.uris = info.uris.map(function(value) {
-          var keys = Object.keys(value)
-          keys.forEach(function(key) {
-            value[key] = escape(value[key])
-          })
-          return value
-        });
-
-        // parse bnodes, escape and add to URIs
-
         // TODO: refactor `format()` and remove this
         info.bnodes.forEach(function(bnode) {
           var keys = Object.keys(bnode)
           var value = {};
           keys.forEach(function(key) {
-            value[key] = escape(anUri + '~~' + bnode[key])
+            value[key] = anUri + '~~' + bnode[key];
           })
           info.uris.push(value);
         })
 
         delete info.bnodes;
+
+        // TODO: filter info.uris where object value === anURI (??)
 
         // s/b unnecessary
         // destBox.children('.box').html('');
@@ -959,27 +939,8 @@
             return inst.renderer.loading(destBox.children('.box'));
           },
           success : function(inverseInfo) {
-            // escape values
-            inverseInfo.values = inverseInfo.values.map(function(value) {
-              var keys = Object.keys(value)
-              keys.forEach(function(key) {
-                value[key] = escape(value[key])
-              })
-              return value
-            });
-
-            // escape URIs
-            inverseInfo.uris = inverseInfo.uris.map(function(value) {
-              var keys = Object.keys(value)
-              keys.forEach(function(key) {
-                value[key] = escape(value[key])
-              })
-              return value
-            });
-
+            // TODO: skip values?
             inverses = inverseInfo.uris.concat(inverseInfo.values);
-
-            // parse bnodes, escape and add to URIs
 
             // parse bnodes and add to URIs
             // TODO: refactor `format()` and remove this
@@ -1032,7 +993,7 @@
         $.each(json, function(key, value) {
           var newObj = {};
           var key = value.property && value.property.value || 'http://www.w3.org/2002/07/owl#sameAs';
-          newObj[key] = escape(value.object.value);
+          newObj[key] = value.object.value;
           // TODO: why the 2nd array element?
           inverse.splice(1, 0, newObj);
         });
