@@ -16,6 +16,7 @@ module.exports = function(config) {
     // list of files / patterns to load in the browser
     files: [
       'node_modules/jquery/dist/jquery.js',
+      'node_modules/sinon-chai/lib/sinon-chai.js',
       'src/*.js',
       'js/deps/*.js',
       'js/lib/*.js',

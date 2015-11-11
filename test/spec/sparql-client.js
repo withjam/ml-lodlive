@@ -25,7 +25,7 @@ describe('sparqlClient', function () {
     var sparqlClient = sparqlClientFactory.create(profile, {}, httpStub)
 
     sparqlClient.document('', {})
-    expect(httpStub.calledOnce).to.be.true
+    expect(httpStub).to.have.been.calledOnce
     expect(httpStub.args[0][0].query).to.equal('QUERY')
   })
 
@@ -37,13 +37,13 @@ describe('sparqlClient', function () {
 
     sparqlClient.document('', { error: errorStub })
 
-    expect(httpStub.calledOnce).to.be.true
+    expect(httpStub).to.have.been.calledOnce
     expect(httpStub.args[0][0].query).to.equal('QUERY')
 
     var success = httpStub.args[0][1].success
     success({ results: { data: {} } })
 
-    expect(errorStub.calledOnce).to.be.true
+    expect(errorStub).to.have.been.calledOnce
     expect(errorStub.args[0][0]).to.match(/malformed results/)
   })
 
@@ -55,13 +55,13 @@ describe('sparqlClient', function () {
 
     sparqlClient.document('', { success: successStub })
 
-    expect(httpStub.calledOnce).to.be.true
+    expect(httpStub).to.have.been.calledOnce
     expect(httpStub.args[0][0].query).to.equal('QUERY')
 
     var success = httpStub.args[0][1].success
     success(this.fixtures.basicResults)
 
-    expect(successStub.calledOnce).to.be.true
+    expect(successStub).to.have.been.calledOnce
     var args = successStub.args[0][0];
 
     expect(args.uris.length).to.equal(1)
@@ -77,13 +77,13 @@ describe('sparqlClient', function () {
 
     sparqlClient.documentUri('', { error: errorStub })
 
-    expect(httpStub.calledOnce).to.be.true
+    expect(httpStub).to.have.been.calledOnce
     expect(httpStub.args[0][0].query).to.equal('QUERY')
 
     var success = httpStub.args[0][1].success
     success({ results: { data: {} } })
 
-    expect(errorStub.calledOnce).to.be.true
+    expect(errorStub).to.have.been.calledOnce
     expect(errorStub.args[0][0]).to.match(/malformed results/)
   })
 
@@ -95,13 +95,13 @@ describe('sparqlClient', function () {
 
     sparqlClient.documentUri('', { success: successStub })
 
-    expect(httpStub.calledOnce).to.be.true
+    expect(httpStub).to.have.been.calledOnce
     expect(httpStub.args[0][0].query).to.equal('QUERY')
 
     var success = httpStub.args[0][1].success
     success(this.fixtures.basicResults)
 
-    expect(successStub.calledOnce).to.be.true
+    expect(successStub).to.have.been.calledOnce
     var args = successStub.args[0][0];
 
     expect(args.uris.length).to.equal(1)
@@ -117,13 +117,13 @@ describe('sparqlClient', function () {
 
     sparqlClient.inverse('', { error: errorStub })
 
-    expect(httpStub.calledOnce).to.be.true
+    expect(httpStub).to.have.been.calledOnce
     expect(httpStub.args[0][0].query).to.equal('QUERY')
 
     var success = httpStub.args[0][1].success
     success({ results: { data: {} } })
 
-    expect(errorStub.calledOnce).to.be.true
+    expect(errorStub).to.have.been.calledOnce
     expect(errorStub.args[0][0]).to.match(/malformed results/)
   })
 
@@ -135,13 +135,13 @@ describe('sparqlClient', function () {
 
     sparqlClient.inverse('', { success: successStub })
 
-    expect(httpStub.calledOnce).to.be.true
+    expect(httpStub).to.have.been.calledOnce
     expect(httpStub.args[0][0].query).to.equal('QUERY')
 
     var success = httpStub.args[0][1].success
     success(this.fixtures.basicResults)
 
-    expect(successStub.calledOnce).to.be.true
+    expect(successStub).to.have.been.calledOnce
     var args = successStub.args[0][0];
 
     expect(args.uris.length).to.equal(1)
@@ -155,7 +155,7 @@ describe('sparqlClient', function () {
     var sparqlClient = sparqlClientFactory.create(profile, {}, httpStub)
 
     sparqlClient.inverseSameAs('', {})
-    expect(httpStub.calledOnce).to.be.true
+    expect(httpStub).to.have.been.calledOnce
     expect(httpStub.args[0][0].query).to.equal('QUERY')
   })
 
@@ -165,7 +165,7 @@ describe('sparqlClient', function () {
     var sparqlClient = sparqlClientFactory.create({}, defaultProfile, httpStub)
 
     sparqlClient.bnode('', {})
-    expect(httpStub.calledOnce).to.be.true
+    expect(httpStub).to.have.been.calledOnce
     expect(httpStub.args[0][0].query).to.equal('QUERY')
   })
 
@@ -175,7 +175,7 @@ describe('sparqlClient', function () {
     var sparqlClient = sparqlClientFactory.create(profile, {}, httpStub)
 
     sparqlClient.inverse('test', {})
-    expect(httpStub.calledOnce).to.be.true
+    expect(httpStub).to.have.been.calledOnce
     expect(httpStub.args[0][0].query).to.equal('QUERY test')
   })
 })
