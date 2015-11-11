@@ -103,20 +103,23 @@
     this.mapsMap = {};
     this.infoPanelMap = {};
     this.connection = {};
-    this.innerPageMap = {};
     this.ignoreBnodes = this.UI.ignoreBnodes;
 
     // TODO: look these up on the context object as data-lodlive-xxxx attributes
     // store settings on the instance
-    /* TODO: set these by default on the instance via the options - consider putting them under 'flags' or some other property
-    $.jStorage.set('relationsLimit', 25);
-    $.jStorage.set('doStats', $.jStorage.get('doStats', true));
-    $.jStorage.set('doInverse', $.jStorage.get('doAutoExpand', true));
-    $.jStorage.set('doAutoExpand', $.jStorage.get('doAutoExpand', true));
-    $.jStorage.set('doAutoSameas', $.jStorage.get('doAutoSameas', true));
-    $.jStorage.set('doCollectImages', $.jStorage.get('doCollectImages', true));
-    $.jStorage.set('doDrawMap', $.jStorage.get('doDrawMap', true));
-    */
+    // TODO: set these by default on the instance via the options -
+    // consider putting them under 'flags' or some other property
+
+    // TODO: where appropriate, replace magic number 25
+    // this.relationsLimit = 25;
+
+    // TODO: this method is missing; implement it, or remove flag
+    // this.doStats = false
+
+    // TODO: retrieve these from the profile
+    this.doInverse = true;
+    this.doAutoExpand = true;
+    this.doAutoSameas = true;
 
     // explicitly disabled, for now
     this.doCollectImages = false;
@@ -134,80 +137,31 @@
     this.renderer.msg('', 'init');
   };
 
-  LodLive.prototype.autoExpand = function(obj) {
-    var inst = this, start, box;
-    if (inst.debugOn) {
-      start = new Date().getTime();
-    }
+  LodLive.prototype.autoExpand = function() {
+    var inst = this;
 
-    $.each(inst.innerPageMap, function(key, element) {
-
-      var closed = element.children('.relatedBox:not([class*=exploded])');
-
-      if (closed.length) {
-
-        if (!element.parent().length) {
-          inst.context.append(element);
-        }
-
-        closed.each(function() {
-          // TODO: where do we find moreInfoOnThis? (lol)
-          box = $(moreInfoOnThis);
-          var aId = box.attr('relmd5');
-
-          //FIXME: not sure I want IDs here but leaving for now
-          var newObj = inst.context.children('#' + aId);
-
-          if (newObj.length > 0) {
-            box.click();
-          }
-        });
-
-        inst.context.children('.innerPage').detach();
-
-      }
-    });
-
-    //FIXME: this does the same thing as the function above, consolidate
-    inst.context.find('.relatedBox:not([class*=exploded])').each(function() {
+    inst.context.find('.relatedBox:not([class*=exploded])')
+    .each(function() {
       var box = $(this);
       var aId = box.attr('relmd5');
-      var newObj = context.children('#' + aId);
-      if (newObj.length > 0) {
+
+      // if a subject box exists
+      if (inst.context.children('#' + aId).length) {
         box.click();
       }
     });
-
-
-    if (inst.debugOn) {
-      console.debug((new Date().getTime() - start) + '  autoExpand ');
-    }
-
   };
 
-  LodLive.prototype.addNewDoc = function(obj, ele, callback) {
-    var inst = this, start;
-    if (inst.debugOn) {
-      start = new Date().getTime();
-    }
-
-    var aId = ele.attr('relmd5');
-    var newObj = inst.context.find('#' + aId);
-    var isInverse = ele.is('.inverse');
+  LodLive.prototype.addNewDoc = function(originalCircle, ele) {
+    var inst = this;
     var exist = true;
-    ele = $(ele);
+    var fromInverse = null;
 
-    // verifico se esistono box rappresentativi dello stesso documento
-    // nella pagina
-    if (!newObj.length) {
-
-      newObj = $(inst.boxTemplate);
-      exist = false;
-
-    }
-
+    var rel = ele.attr('rel');
+    var aId = ele.attr('relmd5');
     var circleId = ele.data('circleid');
-    var originalCircus = $('#' + circleId);
+    var propertyName = ele.data('property');
+    var isInverse = ele.is('.inverse');
 
     // TODO: rename for clarity ?
     // var subjectId = circleId; var objectId = aId;
@@ -222,26 +176,39 @@
       inst.refs.addSubjectRef(aId, circleId);
     }
 
-    var propertyName = ele.data('property');
-    var rel = ele.attr('rel');
-    newObj.attr('id', aId);
-    newObj.attr('rel', rel);
+    var newObj = inst.context.find('#' + aId);
 
-    var fromInverse = isInverse ? 'div[data-property="' + propertyName + '"][rel="' + rel + '"]' : null;
-    if (inst.debugOn) {
-      console.debug((new Date().getTime() - start) + '  addNewDoc 05 ');
+    // verifico se esistono box rappresentativi dello stesso documento
+    // nella pagina
+    if (!newObj.length) {
+      exist = false;
+      newObj = $(inst.boxTemplate)
+      .attr('id', aId)
+      .attr('rel', rel);
     }
+
     // nascondo l'oggetto del click e carico la risorsa successiva
     ele.hide();
+
     if (!exist) {
-      if (inst.debugOn) {
-        console.debug((new Date().getTime() - start) + '  addNewDoc 06 ');
-      }
       var pos = parseInt(ele.attr('data-circlePos'), 10);
       var parts = parseInt(ele.attr('data-circleParts'), 10);
-      var chordsListExpand = inst.circleChords(parts > 10 ? (pos % 2 > 0 ? originalCircus.width() * 3 : originalCircus.width() * 2) : originalCircus.width() * 5 / 2, parts, originalCircus.position().left + obj.width() / 2, originalCircus.position().top + originalCircus.height() / 2, null, pos);
+
+      var radiusFactor = parts > 10 ?
+                         2 + (pos % 2) :
+                         5 / 2;
+
+      var chordsListExpand = inst.circleChords(
+        originalCircle.width() * radiusFactor,
+        parts,
+        originalCircle.position().left + originalCircle.width() / 2,
+        originalCircle.position().top + originalCircle.height() / 2,
+        null,
+        pos
+      );
+
       inst.context.append(newObj);
-      //FIXME: eliminate inline CSS where possible
+      // FIXME: eliminate inline CSS where possible
       newObj.css({
         left : (chordsListExpand[0][0] - newObj.height() / 2),
         top : (chordsListExpand[0][1] - newObj.width() / 2),
@@ -249,45 +216,16 @@
         zIndex : 99
       });
 
-      if (inst.debugOn) {
-        console.debug((new Date().getTime() - start) + '  addNewDoc 07 ');
+      if (isInverse) {
+        fromInverse = inst.context.find('div[data-property="' + propertyName + '"][rel="' + rel + '"]');
       }
-      if (!isInverse) {
-        if (inst.debugOn) {
-          console.debug((new Date().getTime() - start) + '  addNewDoc 08 ');
-        }
-        if (inst.doInverse) {
-          inst.openDoc(rel, newObj, fromInverse);
-        } else {
-          inst.openDoc(rel, newObj);
-        }
-        inst.renderer.drawLine(obj, newObj, null, propertyName);
-      } else {
-        if (inst.debugOn) {
-          console.debug((new Date().getTime() - start) + '  addNewDoc 09 ');
-        }
-        inst.openDoc(rel, newObj, fromInverse);
-      }
-    } else {
-      if (!isInverse) {
-        if (inst.debugOn) {
-          console.debug((new Date().getTime() - start) + '  addNewDoc 10 ');
-        }
-        inst.renderer.drawLine(obj, newObj, null, propertyName);
-      } else {
-        if (inst.debugOn) {
-          console.debug((new Date().getTime() - start) + '  addNewDoc 11 ');
-        }
-      }
+
+      inst.openDoc(rel, newObj, fromInverse);
     }
-    //TODO: why is there a callback if this is not asnyc?
-    if (callback) {
-      callback();
+
+    if (!isInverse) {
+      inst.renderer.drawLine(originalCircle, newObj, null, propertyName);
     }
-    if (inst.debugOn) {
-      console.debug((new Date().getTime() - start) + '  addNewDoc ');
-    }
-    return false;
   };
 
   LodLive.prototype.removeDoc = function(obj, callback) {
@@ -298,12 +236,9 @@
         alert('Cannot Remove Only Box');
         return;
     }
-    var start;
-    if (inst.debugOn) {
-      start = new Date().getTime();
-    }
 
-    inst.context.find('.lodlive-toolbox').remove(); // why remove and not hide?
+    // TODO: why remove and not hide?
+    inst.context.find('.lodlive-toolbox').remove();
 
     var id = obj.attr('id');
 
@@ -355,36 +290,18 @@
 
     obj.fadeOut('normal', null, function() {
       obj.remove();
-      $.each(inst.innerPageMap, function(key, element) {
-        if (element.children('.' + id).length) {
-          var keyEle = inst.context.find('#' + key);
-          keyEle.append(element);
-          var lastClick = keyEle.find('.lastClick').attr('rel');
-          if (!keyEle.children('.innerPage').children('.' + lastClick).length) {
-            //TODO: again, why detaching?
-            keyEle.children('.innerPage').detach();
-          }
-        }
-      });
 
+      // re-show predicate boxes that pointed to this object
       inst.context.find('div[relmd5=' + id + ']').each(function() {
         var found = $(this);
         found.show();
         found.removeClass('exploded');
       });
     });
-
-    if (inst.debugOn) {
-      console.debug((new Date().getTime() - start) + '  removeDoc ');
-    }
   };
 
   LodLive.prototype.addClick = function(obj, callback) {
     var inst = this;
-    var start;
-    if (inst.debugOn) {
-      start = new Date().getTime();
-    }
 
     // per ogni nuova risorsa collegata al documento corrente imposto le
     // azioni "onclick"
@@ -412,15 +329,12 @@
           box.removeClass('lastClick');
           obj.find('.' + box.attr('rel')).fadeOut('fast');
           box.fadeTo('fast', 1);
-          obj.children('.innerPage').detach();
+          obj.children('.innerPage').hide();
         } else {
           box.data('show', true);
-          obj.append(inst.innerPageMap[obj.attr('id')]);
+          obj.children('.innerPage').show();
           inst.docInfo();
           obj.find('.lastClick').removeClass('lastClick').click();
-          if (!obj.children('.innerPage').length) {
-            obj.append(inst.innerPageMap[obj.attr('id')]);
-          }
           box.addClass('lastClick');
           obj.find('.' + box.attr('rel') + ':not([class*=exploded])').fadeIn('fast');
           box.fadeTo('fast', 0.3);
@@ -432,8 +346,6 @@
       });
     });
 
-    inst.innerPageMap[obj.attr('id')] = obj.children('.innerPage');
-    obj.children('.innerPage').detach();
     // aggiungo le azioni dei tools
     obj.on('click', '.actionBox', function(evt) {
       var el = $(this), handler = el.data('action-handler'), rel = el.attr('rel');
@@ -446,15 +358,6 @@
         }
       }
     });
-
-    //FIXME: why do we need a callback if not async?
-    if (callback) {
-      callback();
-    }
-
-    if (inst.debugOn) {
-      console.debug((new Date().getTime() - start) + '  addClick ');
-    }
   };
 
   /**
@@ -1447,203 +1350,142 @@
 
   LodLive.prototype.openDoc = function(anUri, destBox, fromInverse) {
     var inst = this;
-    // assuming this based on other methods ...
     var lodLiveProfile = inst.options;
 
     if (!anUri) {
       $.error('LodLive: no uri for openDoc');
     }
 
-    var start;
-    if (inst.debugOn) {
-      start = new Date().getTime();
-    }
-
-    var uris = [];
-    var values = [];
-
-    if (inst.debugOn) console.log('composing query with anUri', anUri);
-
     // TODO: what is methods && what is doStats? neither exist ...
     // if (inst.doStats) {
     //   methods.doStats(anUri);
     // }
 
-    // NOTE: previously extracted endpoint from SPARQLquery
     destBox.attr('data-endpoint', lodLiveProfile.connection['http:'].endpoint);
 
-    // TODO: figure out why this doesn't work ...
-    // destBox.data('endpoint', lodLiveProfile.connection['http:'].endpoint);
+    var inverses = [];
 
-    // var SPARQLquery = inst.composeQuery(anUri, 'documentUri');
+    function callback(info) {
+      inst.format(destBox.children('.box'), info.values, info.uris, inverses);
+      inst.addClick(destBox);
 
-    // NOTE: previously fell back to inst.guessingEndpoint(anUri,
-    // (if SPARQLquery was http://system/dummy)
-    // callbacks:
-    //   success: inst.openDoc(anUri, destBox, fromInverse);
-    //   failure: inst.parseRawResource(destBox, anUri, fromInverse);
+      if (fromInverse && fromInverse.length) {
+        $(fromInverse).click();
+      }
 
-      inst.sparqlClient.documentUri(anUri, {
-        beforeSend : function() {
-          // destBox.children('.box').html('<img style=\"margin-top:' + (destBox.children('.box').height() / 2 - 8) + 'px\" src="img/ajax-loader.gif"/>');
-          return inst.renderer.loading(destBox.children('.box'))
-        },
-        success : function(info) {
-          // reformat values for compatility
+      if (inst.doAutoExpand) {
+        inst.autoExpand(destBox);
+      }
+    };
 
-          // escape values
-          info.values = info.values.map(function(value) {
-            var keys = Object.keys(value)
-            keys.forEach(function(key) {
-              value[key] = escape(value[key])
-            })
-            return value
-          });
+    inst.sparqlClient.documentUri(anUri, {
+      beforeSend : function() {
+        // destBox.children('.box').html('<img style=\"margin-top:' + (destBox.children('.box').height() / 2 - 8) + 'px\" src="img/ajax-loader.gif"/>');
+        return inst.renderer.loading(destBox.children('.box'))
+      },
+      success : function(info) {
+        // reformat values for compatility
 
-          // TODO: filter info.uris where object value === anURI (??)
-
-          // escape URIs
-          info.uris = info.uris.map(function(value) {
-            var keys = Object.keys(value)
-            keys.forEach(function(key) {
-              value[key] = escape(value[key])
-            })
-            return value
-          });
-
-          // parse bnodes, escape and add to URIs
-
-          // TODO: refactor `format()` and remove this
-          info.bnodes.forEach(function(bnode) {
-            var keys = Object.keys(bnode)
-            var value = {};
-            keys.forEach(function(key) {
-              value[key] = escape(anUri + '~~' + bnode[key])
-            })
-            info.uris.push(value);
+        // escape values
+        info.values = info.values.map(function(value) {
+          var keys = Object.keys(value)
+          keys.forEach(function(key) {
+            value[key] = escape(value[key])
           })
+          return value
+        });
 
-          delete info.bnodes;
+        // TODO: filter info.uris where object value === anURI (??)
 
-          if (inst.debugOn) {
-            console.debug((new Date().getTime() - start) + '  openDoc eval uris & values');
-          }
+        // escape URIs
+        info.uris = info.uris.map(function(value) {
+          var keys = Object.keys(value)
+          keys.forEach(function(key) {
+            value[key] = escape(value[key])
+          })
+          return value
+        });
 
-          // s/b unnecessary
-          // destBox.children('.box').html('');
+        // parse bnodes, escape and add to URIs
 
-          if (inst.doInverse) {
+        // TODO: refactor `format()` and remove this
+        info.bnodes.forEach(function(bnode) {
+          var keys = Object.keys(bnode)
+          var value = {};
+          keys.forEach(function(key) {
+            value[key] = escape(anUri + '~~' + bnode[key])
+          })
+          info.uris.push(value);
+        })
 
-            // SPARQLquery = inst.composeQuery(anUri, 'inverse');
+        delete info.bnodes;
 
-            inst.sparqlClient.inverse(anUri, {
-              beforeSend : function() {
-                // destBox.children('.box').html('<img id="1234" style=\"margin-top:' + (destBox.children('.box').height() / 2 - 5) + 'px\" src="img/ajax-loader.gif"/>');
-                return inst.renderer.loading(destBox.children('.box'));
-              },
-              success : function(inverseInfo) {
-                var inverses = [];
+        // s/b unnecessary
+        // destBox.children('.box').html('');
 
-                // escape values
-                inverseInfo.values = inverseInfo.values.map(function(value) {
-                  var keys = Object.keys(value)
-                  keys.forEach(function(key) {
-                    value[key] = escape(value[key])
-                  })
-                  return value
-                });
-
-                // escape URIs
-                inverseInfo.uris = inverseInfo.uris.map(function(value) {
-                  var keys = Object.keys(value)
-                  keys.forEach(function(key) {
-                    value[key] = escape(value[key])
-                  })
-                  return value
-                });
-
-                inverses = inverseInfo.uris.concat(inverseInfo.values);
-
-                // parse bnodes, escape and add to URIs
-
-                // parse bnodes and add to URIs
-                // TODO: refactor `format()` and remove this
-                inverseInfo.bnodes.forEach(function(bnode) {
-                  var keys = Object.keys(bnode);
-                  var value = {};
-                  keys.forEach(function(key) {
-                    value[key] = anUri + '~~' + bnode[key];
-                  });
-                  inverses.push(value);
-                });
-
-                if (inst.debugOn) {
-                  console.debug((new Date().getTime() - start) + '  openDoc inverse eval uris ');
-                }
-
-                var callback = function() {
-                  // s/b unnecessary
-                  // destBox.children('.box').html('');
-
-                  inst.format(destBox.children('.box'), values, uris, inverses);
-                  inst.addClick(destBox, fromInverse ? function() {
-                    //TODO: dynamic selector across the entire doc here seems strange, what are the the possibilities?  Is it only a DOM element?
-                    try {
-                      //TODO: find out if we only pass jquery objects in as fromInverse, no need to wrap it again
-                      $(fromInverse).click();
-                    } catch (e) {
-                    }
-                  } : null);
-                  if (inst.doAutoExpand) {
-                    inst.autoExpand(destBox);
-                  }
-                };
-
-                if (inst.doAutoSameas) {
-                  inst.findInverseSameAs(anUri, inverses, callback);
-                } else {
-                  callback();
-                }
-
-              },
-              error : function(e, b, v) {
-                // s/b unnecessary
-                // destBox.children('.box').html('');
-
-                inst.format(destBox.children('.box'), values, uris);
-
-                inst.addClick(destBox, fromInverse ? function() {
-                  try {
-                    $(fromInverse).click();
-                  } catch (e) {
-                  }
-                } : null);
-                if (inst.doAutoExpand) {
-                  inst.autoExpand(destBox);
-                }
-              }
-            });
-          } else {
-            inst.format(destBox.children('.box'), info.values, info.uris);
-            inst.addClick(destBox, fromInverse ? function() {
-              try {
-                $(fromInverse).click();
-              } catch (e) {
-              }
-            } : null);
-            if (inst.doAutoExpand) {
-              inst.autoExpand(destBox);
-            }
-          }
-        },
-        error : function(e, b, v) {
-          inst.renderer.errorBox(destBox);
+        if (!inst.doInverse) {
+          return callback(info);
         }
-      });
 
-    if (inst.debugOn) {
-      console.debug((new Date().getTime() - start) + '  openDoc');
-    }
+        inst.sparqlClient.inverse(anUri, {
+          beforeSend : function() {
+            // destBox.children('.box').html('<img id="1234" style=\"margin-top:' + (destBox.children('.box').height() / 2 - 5) + 'px\" src="img/ajax-loader.gif"/>');
+            return inst.renderer.loading(destBox.children('.box'));
+          },
+          success : function(inverseInfo) {
+            // escape values
+            inverseInfo.values = inverseInfo.values.map(function(value) {
+              var keys = Object.keys(value)
+              keys.forEach(function(key) {
+                value[key] = escape(value[key])
+              })
+              return value
+            });
+
+            // escape URIs
+            inverseInfo.uris = inverseInfo.uris.map(function(value) {
+              var keys = Object.keys(value)
+              keys.forEach(function(key) {
+                value[key] = escape(value[key])
+              })
+              return value
+            });
+
+            inverses = inverseInfo.uris.concat(inverseInfo.values);
+
+            // parse bnodes, escape and add to URIs
+
+            // parse bnodes and add to URIs
+            // TODO: refactor `format()` and remove this
+            inverseInfo.bnodes.forEach(function(bnode) {
+              var keys = Object.keys(bnode);
+              var value = {};
+              keys.forEach(function(key) {
+                value[key] = anUri + '~~' + bnode[key];
+              });
+              inverses.push(value);
+            });
+
+            if (inst.doAutoSameas) {
+              inst.findInverseSameAs(anUri, inverses, function() {
+                callback(info);
+              });
+            } else {
+              callback(info);
+            }
+          },
+          error : function(e, b, v) {
+            // s/b unnecessary
+            // destBox.children('.box').html('');
+
+            callback(info);
+          }
+        });
+      },
+      error : function(e, b, v) {
+        inst.renderer.errorBox(destBox);
+      }
+    });
   };
 
   LodLive.prototype.findInverseSameAs = function(anUri, inverse, callback) {

@@ -65,6 +65,7 @@ describe('lodlive', function () {
     ExampleProfile.endpoints.jsonp = false;
     // ExampleProfile.debugOn = true;
     jQuery('#graph').lodlive({ profile: ExampleProfile, firstUri: firstUri });
+    jQuery('#graph').data('lodlive-instance').doInverse = false;
 
     expect(firstBox.calledOnce).to.be.true;
     expect(openDoc.calledOnce).to.be.true;
@@ -81,7 +82,7 @@ describe('lodlive', function () {
 
     expect($('#graph .box').length).to.equal(1);
     expect($('#graph .lodlive-node .groupedRelatedBox').length).to.equal(6);
-    expect($('#graph .lodlive-node .relatedBox').length).to.equal(8);
+    expect($('#graph .lodlive-node .relatedBox').length).to.equal(84);
 
     $('#graph .lodlive-node .relatedBox').first().trigger('click');
 
