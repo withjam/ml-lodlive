@@ -1,52 +1,47 @@
 'use strict';
 
-var LodLiveUtils = {};
-
 var _translations = {};
 
-LodLiveUtils.getSparqlConf = function(what, where, lodLiveProfile) {
-  return where.sparql && where.sparql[what] ? where.sparql[what] : lodLiveProfile['default'].sparql[what];
-};
-
 /**
-  * Register a set of translations, for example ('en-us', { greeting: 'Hello' })
-**/
-LodLiveUtils.registerTranslation = function(langKey, data) {
+ * Register a set of translations, for example ('en-us', { greeting: 'Hello' })
+ */
+function registerTranslation(langKey, data) {
   _translations[langKey] = data;
-};
+}
 
-LodLiveUtils.setDefaultTranslation = function(langKey) {
+function setDefaultTranslation(langKey) {
   _translations['default'] = _translations[langKey] || _translations['default'];
-};
+}
 
-LodLiveUtils.lang = function(obj, langKey) {
+function lang(obj, langKey) {
   var lang = langKey ? _translations[langKey] || _translations['default'] : _translations['default'];
   return (lang && lang[obj]) || obj;
-};
+}
 
-LodLiveUtils.breakLines = function breakLines(msg) {
+// TODO: remove
+function breakLines(msg) {
   msg = msg.replace(/\//g, '/<span style="font-size:1px"> </span>');
   msg = msg.replace(/&/g, '&<span style="font-size:1px"> </span>');
   msg = msg.replace(/%/g, '%<span style="font-size:1px"> </span>');
   return msg;
-};
+}
 
-LodLiveUtils.hashFunc = function hashFunc(str) {
+function hashFunc(str) {
   if (!str) { return str; }
   for(var r=0, i=0; i<str.length; i++) {
     r = (r<<5) - r+str.charCodeAt(i);
     r &= r;
   }
   return r;
-};
+}
 
-LodLiveUtils.shortenKey = function(str) {
+function shortenKey(str) {
   str = jQuery.trim(str);
   var lastSlash = str.lastIndexOf('/'), lastHash = str.lastIndexOf('#');
   return lastSlash > lastHash ? str.substring(lastSlash + 1) : str.substring(lastHash + 1);
-};
+}
 
-LodLiveUtils.circleChords = function(radius, steps, centerX, centerY, breakAt, onlyElement) {
+function circleChords(radius, steps, centerX, centerY, breakAt, onlyElement) {
   var values = [];
   var i = 0;
   if (onlyElement) {
@@ -65,6 +60,16 @@ LodLiveUtils.circleChords = function(radius, steps, centerX, centerY, breakAt, o
     }
   }
   return values;
+}
+
+var LodLiveUtils = {
+  registerTranslation: registerTranslation,
+  setDefaultTranslation: setDefaultTranslation,
+  lang: lang,
+  breakLines: breakLines,
+  hashFunc: hashFunc,
+  shortenKey: shortenKey,
+  circleChords: circleChords
 };
 
 module.exports = LodLiveUtils;
