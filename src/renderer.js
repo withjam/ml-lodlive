@@ -66,10 +66,11 @@ var _builtins = {
   }
 };
 
-function LodLiveRenderer(arrows, tools, nodeIcons, refs) {
+function LodLiveRenderer(arrows, tools, nodeIcons, relationships, refs) {
   this.arrows = arrows;
   this.tools = tools;
   this.nodeIcons = nodeIcons;
+  this.relationships = relationships;
   this.refs = refs;
 }
 
@@ -309,8 +310,8 @@ LodLiveRenderer.prototype.docInfoImages = function(images) {
     var key = Object.keys(imgObj)[0];
     var value = imgObj[key];
 
-    var linkNode = $('<a></a>').attr('href', unescape(value));
-    var imgNode = $('<img/>').attr('src', unescape(value));
+    var linkNode = $('<a></a>').attr('href', value);
+    var imgNode = $('<img/>').attr('src', value);
 
     linkNode.append(imgNode);
     sectionNode.append(linkNode);
@@ -371,9 +372,9 @@ LodLiveRenderer.prototype.docInfoLinks = function(links) {
 
     var listItemNode = $('<li></li>');
     var linkNode = $('<a class="relatedLink" target="_blank"></a>')
-    .attr('data-title', key + ' \n ' + unescape(value))
-    .attr('href', unescape(value))
-    .text(unescape(value));
+    .attr('data-title', key + ' \n ' + value)
+    .attr('href', value)
+    .text(value);
 
     // TODO: delegate hover
     renderer.hover(linkNode);
@@ -508,6 +509,261 @@ LodLiveRenderer.prototype.docInfoNestedBnodes = function(key, spanNode) {
   spanNode.attr('class', '').append(wrapperNode);
 
   return bnodeNode;
+};
+
+/**
+ * Add title to box
+ */
+LodLiveRenderer.prototype.addBoxTitle = function(title, thisUri, destBox, containerBox) {
+  var renderer = this;
+
+  var jResult = $('<div></div>')
+  .addClass('boxTitle');
+
+  // TODO: this is a hack; find some other way to catch this condition
+  if (title === utils.lang('resourceMissing')) {
+    jResult.append('<a target="_blank" href="' + thisUri + '">' + thisUri + '</a>')
+    // TODO: fa-external-link?
+    .append('<span class="spriteLegenda"></span>');
+  } else {
+    if (!title) {
+      title = utils.lang('noName');
+    }
+
+    var result = $('<span class="ellipsis_text"></span>');
+    result.text(title);
+    jResult.append(result);
+  }
+
+  jResult.attr('data-tooltip', title);
+  destBox.append(jResult);
+
+  renderer.hover(destBox, function() {
+    renderer.msg(title, 'show', 'fullInfo', containerBox.attr('data-endpoint'));
+  });
+};
+
+/**
+ * iterates over predicates/object relationships, creating DOM nodes and calculating CSS positioning
+ */
+LodLiveRenderer.prototype.createPropertyBoxes = function createPropertyBoxes(inputArray, inputGroup, containerBox, chordsList, chordsListGrouped, isInverse) {
+  var renderer = this;
+  var counter = 1;
+  var inserted = {};
+  var innerCounter = 1;
+  var objectList = [];
+  var innerObjectList = [];
+
+  inputArray.forEach(function(value, i) {
+    // TODO: refactor; modular arithmetic for CSS positioning
+    // counter appears to equal the count of groupedProperties mod 14 plus 1 or 2
+    if (counter === 15) {
+      counter = 1;
+    }
+
+    // TODO: ensure only one key?
+    var key = Object.keys(value)[0];
+    var obj = null;
+
+    if (inputGroup[key] && inputGroup[key].length > 1) {
+      if (!inserted[key]) {
+        innerCounter = 1;
+        inserted[key] = true;
+
+        var objBox = renderer.createPropertyGroup(key, inputGroup[key], chordsList, counter, isInverse);
+        objectList.push(objBox);
+        counter++;
+      }
+
+      // TODO: magic number; why 25?
+      if (innerCounter < 25) {
+        obj = renderer.createGroupedRelatedBox(key, value[key], containerBox, chordsListGrouped, innerCounter, isInverse);
+        innerObjectList.push(obj);
+      }
+
+      innerCounter++;
+    } else {
+      obj = renderer.createRelatedBox(key, value[key], containerBox, chordsList, counter, isInverse);
+      objectList.push(obj);
+      counter++;
+    }
+  });
+
+  return {
+    objectList: objectList,
+    innerObjectList: innerObjectList
+  }
+};
+
+LodLiveRenderer.prototype.getRelationshipCSS = function(uri) {
+  return this.relationships && this.relationships[uri] || {};
+};
+
+/**
+ * create a node to represent a group of related properties (star-circle)
+ */
+LodLiveRenderer.prototype.createPropertyGroup = function createPropertyGroup(predicates, groupValue, chordsList, counter, isInverse) {
+  var renderer = this;
+  var box = $('<div></div>')
+  .addClass('groupedRelatedBox')
+  .attr('rel', renderer.hashFunc(predicates).toString())
+  .attr('data-property', predicates)
+  .attr('data-title', predicates + ' \n ' + (groupValue.length) + ' ' + utils.lang('connectedResources'))
+  .css(renderer.getRelationshipCSS(predicates))
+  .css({
+    'top':  (chordsList[counter][1] - 8) + 'px',
+    'left': (chordsList[counter][0] - 8) + 'px'
+  });
+
+  if (isInverse) {
+    box.addClass('inverse');
+    box.attr('rel', renderer.hashFunc(predicates).toString() + '-i');
+  }
+
+  if (groupValue[0].indexOf('~~') > -1) {
+    box.addClass('isBnode');
+  } else {
+    predicates.split(' ').forEach(function(predicate) {
+      if (renderer.arrows[predicate]) {
+        box.addClass(renderer.arrows[predicate]);
+      }
+    });
+  }
+
+  return box;
+};
+
+/**
+ * create a node to represent a property in a group of related properties
+ */
+LodLiveRenderer.prototype.createGroupedRelatedBox = function createGroupedRelatedBox(predicates, object, containerBox, chordsListGrouped, innerCounter, isInverse) {
+  var box = this._createRelatedBox(predicates, object, containerBox, isInverse)
+  // this class is probably unnecessary now...
+  .addClass('aGrouped')
+  .attr('data-circlePos', innerCounter)
+  .attr('data-circleParts', 36)
+  .css({
+    display: 'none',
+    position: 'absolute',
+    top: (chordsListGrouped[innerCounter][1] - 8) + 'px',
+    left: (chordsListGrouped[innerCounter][0] - 8) + 'px'
+  });
+
+  if (isInverse) {
+    box.addClass(this.hashFunc(predicates).toString() + '-i');
+  } else {
+    box.addClass(this.hashFunc(predicates).toString());
+  }
+
+  return box;
+};
+
+/**
+ * create a node to represent a related property
+ */
+LodLiveRenderer.prototype.createRelatedBox = function createRelatedBox(predicates, object, containerBox, chordsList, counter, isInverse) {
+  return this._createRelatedBox(predicates, object, containerBox, isInverse)
+  .attr('data-circlePos', counter)
+  .attr('data-circleParts', 24)
+  .css({
+    top: (chordsList[counter][1] - 8) + 'px',
+    left: (chordsList[counter][0] - 8) + 'px'
+  });
+};
+
+LodLiveRenderer.prototype._createRelatedBox = function _createRelatedBox(predicates, object, containerBox, isInverse) {
+  var renderer = this;
+  var box = $('<div></div>')
+  .addClass('relatedBox ' + renderer.hashFunc(object).toString())
+  .attr('rel', object)
+  .attr('data-title', predicates + ' \n ' + object)
+  .attr('data-circleid', containerBox.attr('id'))
+  .attr('data-property', predicates)
+  .css(renderer.getRelationshipCSS(predicates));
+
+  if (isInverse) {
+    box.addClass('inverse');
+  }
+
+  if (object.indexOf('~~') > -1) {
+    box.addClass('isBnode');
+  } else {
+    predicates.split(' ').forEach(function(predicate) {
+      if (renderer.arrows[predicate]) {
+        box.addClass(renderer.arrows[predicate]);
+      }
+    });
+  }
+
+  return box;
+};
+
+/**
+ * Paginates related boxes in `objectList` and `innerObjectList`
+ */
+LodLiveRenderer.prototype.paginateRelatedBoxes = function(containerBox, objectList, innerObjectList, chordsList) {
+  var page = 0;
+  var prevChords = chordsList[0];
+  var nextChords = chordsList[15];
+  var totPages = objectList.length > 14 ? (objectList.length / 14 + (objectList.length % 14 > 0 ? 1 : 0)) : 1;
+
+  objectList.forEach(function(objectListItem, i) {
+    var aPage, prevPage, nextPage;
+
+    if (i % 14 === 0) {
+      page++;
+
+      aPage = $('<div></div>')
+      .addClass('page page' + page)
+      .attr('style', 'display:none');
+
+      if (page > 1 && totPages > 1) {
+        prevPage = $('<div></div>')
+        .addClass('llpages pagePrev')
+        // TODO: can the icon be rotated?
+        .addClass('fa fa-arrow-left')
+        .attr('data-page', 'page' + (page - 1))
+        .attr('style', 'top:' + (prevChords[1] - 8) + 'px;left:' + (prevChords[0] - 8) + 'px');
+
+        aPage.append(prevPage);
+      }
+
+      if (totPages > 1 && page < totPages - 1) {
+        nextPage = $('<div></div>')
+        .addClass('llpages pageNext')
+        // TODO: can the icon be rotated?
+        .addClass('fa fa-arrow-right')
+        .attr('data-page', 'page' + (page + 1))
+        .attr('style', 'top:' + (nextChords[1] - 8) + 'px;left:' + (nextChords[0] - 8) + 'px');
+
+        aPage.append(nextPage);
+      }
+
+      containerBox.append(aPage);
+    }
+
+    containerBox.children('.page' + page).append(objectListItem);
+  });
+
+  var innerPage = $('<div class="innerPage"></div>');
+
+  innerObjectList.forEach(function(innerObject) {
+    innerPage.append(innerObject);
+  });
+
+  if (innerObjectList.length > 0) {
+    containerBox.append(innerPage);
+  }
+
+  containerBox.children('.page').children('.llpages').click(function() {
+    var llpages = $(this);
+    containerBox.find('.lastClick').removeClass('lastClick').click();
+    llpages.parent().fadeOut('fast', null, function() {
+      $(this).parent().children('.' + llpages.attr('data-page')).fadeIn('fast');
+    });
+  });
+
+  containerBox.children('.page1').fadeIn('fast');
 };
 
 /**
@@ -960,8 +1216,8 @@ LodLiveRenderer.prototype.init = function(container) {
 };
 
 var rendererFactory = {
-  create: function(arrows, tools, nodeIcons, refs) {
-    return new LodLiveRenderer(arrows, tools, nodeIcons, refs);
+  create: function(arrows, tools, nodeIcons, relationships, refs) {
+    return new LodLiveRenderer(arrows, tools, nodeIcons, relationships, refs);
   }
 };
 

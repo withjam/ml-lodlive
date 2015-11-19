@@ -85,6 +85,7 @@
       this.options.arrows,
       this.options.UI.tools,
       this.options.UI.nodeIcons,
+      this.options.UI.relationships,
       this.refs
     );
 
@@ -94,7 +95,7 @@
 
     // temporary, need access from both components
     this.renderer.hashFunc = this.hashFunc;
-    this.renderer.boxTemplate = this.boxTemplate
+    this.renderer.boxTemplate = this.boxTemplate;
   }
 
   LodLive.prototype.init = function(firstUri) {
@@ -198,7 +199,7 @@
                          2 + (pos % 2) :
                          5 / 2;
 
-      var chordsListExpand = inst.circleChords(
+      var chordsListExpand = utils.circleChords(
         originalCircle.width() * radiusFactor,
         parts,
         originalCircle.position().left + originalCircle.width() / 2,
@@ -449,7 +450,7 @@
           connectedWeblinks.push(newVal);
         }
       } else {
-        types.push(unescape(value));
+        types.push(value);
       }
     });
 
@@ -466,7 +467,7 @@
 
     renderedBnodes.forEach(function(obj) {
       destBox.append(obj.bnodeNode);
-      inst.resolveBnodes(unescape(obj.value), URI, obj.spanNode, destBox);
+      inst.resolveBnodes(obj.value, URI, obj.spanNode, destBox);
     });
   };
 
@@ -498,7 +499,7 @@
 
           var nestedBnodeNode = inst.renderer.docInfoNestedBnodes(key, spanNode);
 
-          inst.resolveBnodes(unescape(value), URI, nestedBnodeNode, destBox);
+          inst.resolveBnodes(value, URI, nestedBnodeNode, destBox);
         });
 
         // // TODO: slimScroll is no long included, and seems to be unnecessary
@@ -516,40 +517,6 @@
     });
   };
 
-  //TODO: this doesn't need to be on the prototype since it's a stateless utility function - are the metrics necessary?
-  LodLive.prototype.circleChords = function(radius, steps, centerX, centerY, breakAt, onlyElement) {
-    var inst = this;
-    var start;
-    if (inst.debugOn) {
-      start = new Date().getTime();
-    }
-    var values = [];
-    var i = 0;
-    if (onlyElement) {
-      // ottimizzo i cicli evitando di calcolare elementi che non
-      // servono
-      i = onlyElement;
-      var radian = (2 * Math.PI) * (i / steps);
-      values.push([centerX + radius * Math.cos(radian), centerY + radius * Math.sin(radian)]);
-    } else {
-      for (; i < steps; i++) {
-        // calcolo le coodinate lungo il cerchio del box per
-        // posizionare
-        // strumenti ed altre risorse
-        var radian = (2 * Math.PI) * (i / steps);
-        values.push([centerX + radius * Math.cos(radian), centerY + radius * Math.sin(radian)]);
-      }
-    }
-    if (inst.debugOn) {
-      console.debug((new Date().getTime() - start) + '  circleChords ');
-    }
-    return values;
-  };
-
-  LodLive.prototype.getRelationshipCSS = function(uri) {
-    return this.UI.relationships && this.UI.relationships.hasOwnProperty(uri) ? this.UI.relationships[uri] : {};
-  };
-
   LodLive.prototype.getJsonValue = function(map, key, defaultValue) {
     var inst = this;
     var start;
@@ -560,7 +527,7 @@
     $.each(map, function(skey, value) {
       for (var akey in value) {
         if (akey == key) {
-          returnVal.push(unescape(value[akey]));
+          returnVal.push(value[akey]);
         }
       }
     });
@@ -711,56 +678,43 @@
     // gestisco l'inserimento di messaggi di sistema come errori o altro
     titles.push('http://system/msg');
 
-    // aggiungo al box il titolo
-    var result = '<div class="boxTitle"><span class="ellipsis_text">';
-    for (var a = 0; a < titles.length; a++) {
-      var resultArray = inst.getJsonValue(values, titles[a], titles[a].indexOf('http') == 0 ? '' : titles[a]);
-      if (titles[a].indexOf('http') != 0) {
-        if (result.indexOf($.trim(unescape(titles[a])) + ' \n') == -1) {
-          result += $.trim(unescape(titles[a])) + ' \n';
-        }
-      } else {
-        for (var af = 0; af < resultArray.length; af++) {
-          if (result.indexOf(unescape(resultArray[af]) + ' \n') == -1) {
-            result += unescape(resultArray[af]) + ' \n';
-          }
-        }
-      }
+    var titlePieces = [];
 
-    }
-    var dataEndpoint = containerBox.attr('data-endpoint') || '';
+    titles.forEach(function(title) {
+      var titleValues;
+
+      if (title.indexOf('http') !== 0) {
+        titlePieces.push($.trim(title));
+      } else {
+        titleValues = inst.getJsonValue(values, title, title.indexOf('http') === 0 ? '' : title);
+        titleValues.forEach(function(titleValue) {
+          titlePieces.push(titleValue);
+        });
+      }
+    });
+
+    var title = titlePieces
+    // deduplicate
+    .filter(function(value, index, self) {
+      return self.indexOf(value) === index;
+    })
+    .join('\n');
 
     // TODO: early return?
     if (uris.length == 0 && values.length == 0) {
-      result = '<div class="boxTitle" data-tooltip="' + utils.lang('resourceMissing') + '"><a target="_blank" href="' + thisUri + '"><span class="spriteLegenda"></span>' + thisUri + '</a>';
-    }
-
-    result += '</span></div>';
-    var jResult = $(result);
-    if (jResult.text() == '' && docType == 'bnode') {
-      jResult.text('[blank node]');
-    } else if (jResult.text() == '') {
-      var titleDef = '(Error)';
+      title = utils.lang('resourceMissing');
+    } else if (!title && docType === 'bnode') {
+      title = '[blank node]';
+    } else if (!title) {
+      title = '(Error)';
       try {
-          titleDef = inst.options.default.document.titleName[thisUri];
-      }catch(ex) {
-          titleDef = inst.options.default.document.titleProperties[thisUri];
-      }
-      if(titleDef){
-          jResult.text(titleDef);
-      } else {
-        jResult.text(utils.lang('noName'));
+        title = inst.options.default.document.titleName[thisUri];
+      } catch(ex) {
+        title = inst.options.default.document.titleProperties[thisUri];
       }
     }
-    destBox.append(jResult);
 
-    var resourceTitle = jResult.text();
-    jResult.data('tooltip', resourceTitle);
-
-    inst.renderer.hover(destBox, function() {
-      console.log('destbox hover title', resourceTitle);
-      inst.renderer.msg(resourceTitle, 'show', 'fullInfo', containerBox.attr('data-endpoint'));
-    });
+    inst.renderer.addBoxTitle(title, thisUri, destBox, containerBox);
 
     // calcolo le uri e le url dei documenti correlati
     var connectedDocs = [];
@@ -768,388 +722,153 @@
     var propertyGroup = {};
     var propertyGroupInverted = {};
 
-    var connectedImages = [];
-    var connectedLongs = [];
-    var connectedLats = [];
+    // Image rendering has been disabled; keeping for posterity ...
+    // var connectedImages = [];
 
-    var sameDocControl = [];
-    $.each(uris, function(key, value) {
-      for (var akey in value) {
+    // Map rendering has been disabled; keeping for posterity ...
+    // var connectedLongs = [];
+    // var connectedLats = [];
 
-        // escludo la definizione della classe, le proprieta'
-        // relative alle immagini ed ai link web
-        if (lodLiveProfile.uriSubstitutor) {
-          $.each(lodLiveProfile.uriSubstitutor, function(skey, svalue) {
-            value[akey] = value[akey].replace(svalue.findStr, svalue.replaceStr);
-          });
+    function groupByObject(inputArray, type) {
+      var tmpIRIs = {};
+      var outputArray = [];
+
+      inputArray.forEach(function(uriObj) {
+        // TODO: ensure only one key?
+        var property = Object.keys(uriObj)[0];
+        var object = uriObj[property];
+        var newObj = {};
+        var newKey, previousKey, previousIndex;
+
+        // Image rendering has been disabled; keeping for posterity ...
+        // if (type === 'uris' && images.indexOf(property) > -1) {
+        //   newObj[property] = escape(resourceTitle);
+        //   connectedImages.push(newObj);
+        //   return;
+        // }
+
+        // skip `weblinks` properties
+        if (type === 'uris' && weblinks.indexOf(property) > -1) return;
+
+        // TODO: checking for bnode of bnode?
+        if (type === 'inverses' && docType == 'bnode' && object.indexOf('~~') > -1) return;
+
+        // group by object
+        if (tmpIRIs.hasOwnProperty(object)) {
+          previousIndex = tmpIRIs[object];
+          previousKey = Object.keys(outputArray[ previousIndex ])[0]
+          newKey = previousKey + ' | ' + property;
+          newObj[ newKey ] = object;
+          outputArray[ previousIndex ] = newObj;
+        } else {
+          outputArray.push(uriObj);
+          tmpIRIs[object] = outputArray.length - 1;
         }
-        if ($.inArray(akey, images) > -1) {
-          //FIXME: replace eval
-          eval('connectedImages.push({\'' + value[akey] + '\':\'' + escape(resourceTitle) + '\'})');
+      });
 
-        } else if ($.inArray(akey, weblinks) == -1) {
+      return outputArray;
+    }
 
-          // controllo se trovo la stessa relazione in una
-          // proprieta' diversa
-          if ($.inArray(value[akey], sameDocControl) > -1) {
-
-            var aCounter = 0;
-            $.each(connectedDocs, function(key2, value2) {
-              for (var akey2 in value2) {
-                if (value2[akey2] == value[akey]) {
-                  eval('connectedDocs[' + aCounter + '] = {\'' + akey2 + ' | ' + akey + '\':\'' + value[akey] + '\'}');
-                }
-              }
-              aCounter++;
-            });
-
-          } else {
-            //FIXME: replace eval
-            eval('connectedDocs.push({\'' + akey + '\':\'' + value[akey] + '\'})');
-            sameDocControl.push(value[akey]);
-          }
-
-        }
-      }
-
-    });
-
+    connectedDocs = groupByObject(uris, 'uris');
     if (inverses) {
-      sameDocControl = [];
-      $.each(inverses, function(key, value) {
-        for (var akey in value) {
-          if (docType == 'bnode' && value[akey].indexOf('~~') != -1) {
-            continue;
-          }
-          if (lodLiveProfile.uriSubstitutor) {
-            $.each(lodLiveProfile.uriSubstitutor, function(skey, svalue) {
-              value[akey] = value[akey].replace(escape(svalue.findStr), escape(svalue.replaceStr));
-            });
-          }
-          // controllo se trovo la stessa relazione in una
-          // proprieta' diversa
-          if ($.inArray(value[akey], sameDocControl) > -1) {
-            var aCounter = 0;
-            $.each(invertedDocs, function(key2, value2) {
-              for (var akey2 in value2) {
-                if (value2[akey2] == value[akey]) {
-                  var theKey = akey2;
-                  if (akey2 != akey) {
-                    theKey = akey2 + ' | ' + akey;
-                  }
-                  eval('invertedDocs[' + aCounter + '] = {\'' + theKey + '\':\'' + value[akey] + '\'}');
-                  return false;
-                }
-              }
-              aCounter++;
-            });
-          } else {
-            eval('invertedDocs.push({\'' + akey + '\':\'' + value[akey] + '\'})');
-            sameDocControl.push(value[akey]);
-          }
+      invertedDocs = groupByObject(inverses, 'inverses');
+    }
 
+    function groupByPropertyKey(inputArray) {
+      var group = {};
+
+      // group URIs by property key
+      inputArray.forEach(function(uriObj) {
+        // TODO: ensure only one key?
+        var property = Object.keys(uriObj)[0];
+        var object = uriObj[property];
+
+        if (group.hasOwnProperty(property)) {
+          group[property].push(object);
+        } else {
+          group[property] = [object];
         }
       });
-    }
-    if (inst.doDrawMap) {
-      for (var a = 0; a < points.length; a++) {
-        var resultArray = inst.getJsonValue(values, points[a], points[a]);
-        for (var af = 0; af < resultArray.length; af++) {
-          if (resultArray[af].indexOf(' ') != -1) {
-            eval('connectedLongs.push(\'' + unescape(resultArray[af].split(' ')[1]) + '\')');
-            eval('connectedLats.push(\'' + unescape(resultArray[af].split(' ')[0]) + '\')');
-          } else if (resultArray[af].indexOf('-') != -1) {
-            eval('connectedLongs.push(\'' + unescape(resultArray[af].split('-')[1]) + '\')');
-            eval('connectedLats.push(\'' + unescape(resultArray[af].split('-')[0]) + '\')');
-          }
-        }
-      }
-      for (var a = 0; a < longs.length; a++) {
-        var resultArray = inst.getJsonValue(values, longs[a], longs[a]);
-        for (var af = 0; af < resultArray.length; af++) {
-          eval('connectedLongs.push(\'' + unescape(resultArray[af]) + '\')');
-        }
-      }
-      for (var a = 0; a < lats.length; a++) {
-        var resultArray = inst.getJsonValue(values, lats[a], lats[a]);
-        for (var af = 0; af < resultArray.length; af++) {
-          eval('connectedLats.push(\'' + unescape(resultArray[af]) + '\')');
-        }
-      }
 
-      if (connectedLongs.length > 0 && connectedLats.length > 0) {
-        var mapsMap = inst.mapsMap;
-        mapsMap[containerBox.attr('id')] = {
-          longs : connectedLongs[0],
-          lats : connectedLats[0],
-          title : thisUri + '\n' + escape(resourceTitle)
-        };
-        inst.updateMapPanel(inst.context.find('.lodlive-controlPanel'));
-      }
-    }
-    if (inst.doCollectImages) {
-      if (connectedImages.length > 0) {
-        var imagesMap = inst.imagesMap;
-        imagesMap[containerBox.attr('id')] = connectedImages;
-        inst.updateImagePanel(inst.context.find('.lodlive-controlPanel'));
-      }
-    }
-    var totRelated = connectedDocs.length + invertedDocs.length;
-
-    // se le proprieta' da mostrare sono troppe cerco di accorpare
-    // quelle uguali
-    if (totRelated > 16) {
-      $.each(connectedDocs, function(key, value) {
-        for (var akey in value) {
-          if (propertyGroup[akey]) {
-            var t = propertyGroup[akey];
-            t.push(value[akey]);
-            propertyGroup[akey] = t;
-          } else {
-            propertyGroup[akey] = [value[akey]];
-          }
-        }
-      });
-      $.each(invertedDocs, function(key, value) {
-        for (var akey in value) {
-          if (propertyGroupInverted[akey]) {
-            var t = propertyGroupInverted[akey];
-            t.push(value[akey]);
-            propertyGroupInverted[akey] = t;
-          } else {
-            propertyGroupInverted[akey] = [value[akey]];
-          }
-        }
-      });
-      totRelated = 0;
-      for (var prop in propertyGroup) {
-        if (propertyGroup.hasOwnProperty(prop)) {
-          totRelated++;
-        }
-      }
-      for (var prop in propertyGroupInverted) {
-        if (propertyGroupInverted.hasOwnProperty(prop)) {
-          totRelated++;
-        }
-      }
+      return group;
     }
 
-    // calcolo le parti in cui dividere il cerchio per posizionare i
-    // link
+    // group URIs by property key
+    propertyGroup = groupByPropertyKey(connectedDocs);
+    // group inverse URIs by property key
+    propertyGroupInverted = groupByPropertyKey(invertedDocs);
+
+    // Map rendering has been disabled; keeping for posterity ...
+    // if (inst.doDrawMap) {
+    //   for (var a = 0; a < points.length; a++) {
+    //     var resultArray = inst.getJsonValue(values, points[a], points[a]);
+    //     for (var af = 0; af < resultArray.length; af++) {
+    //       if (resultArray[af].indexOf(' ') != -1) {
+    //         eval('connectedLongs.push(\'' + unescape(resultArray[af].split(' ')[1]) + '\')');
+    //         eval('connectedLats.push(\'' + unescape(resultArray[af].split(' ')[0]) + '\')');
+    //       } else if (resultArray[af].indexOf('-') != -1) {
+    //         eval('connectedLongs.push(\'' + unescape(resultArray[af].split('-')[1]) + '\')');
+    //         eval('connectedLats.push(\'' + unescape(resultArray[af].split('-')[0]) + '\')');
+    //       }
+    //     }
+    //   }
+    //   for (var a = 0; a < longs.length; a++) {
+    //     var resultArray = inst.getJsonValue(values, longs[a], longs[a]);
+    //     for (var af = 0; af < resultArray.length; af++) {
+    //       eval('connectedLongs.push(\'' + unescape(resultArray[af]) + '\')');
+    //     }
+    //   }
+    //   for (var a = 0; a < lats.length; a++) {
+    //     var resultArray = inst.getJsonValue(values, lats[a], lats[a]);
+    //     for (var af = 0; af < resultArray.length; af++) {
+    //       eval('connectedLats.push(\'' + unescape(resultArray[af]) + '\')');
+    //     }
+    //   }
+
+    //   if (connectedLongs.length > 0 && connectedLats.length > 0) {
+    //     var mapsMap = inst.mapsMap;
+    //     mapsMap[containerBox.attr('id')] = {
+    //       longs : connectedLongs[0],
+    //       lats : connectedLats[0],
+    //       title : thisUri + '\n' + escape(resourceTitle)
+    //     };
+    //     inst.updateMapPanel(inst.context.find('.lodlive-controlPanel'));
+    //   }
+    // }
+
+    // Image rendering has been disabled; keeping for posterity ...
+    // if (inst.doCollectImages) {
+    //   if (connectedImages.length > 0) {
+    //     var imagesMap = inst.imagesMap;
+    //     imagesMap[containerBox.attr('id')] = connectedImages;
+    //     inst.updateImagePanel(inst.context.find('.lodlive-controlPanel'));
+    //   }
+    // }
+
+    // No longer used; keeping for posterity ...
+    // totRelated = Object.keys(propertyGroup).length +
+    //              Object.keys(propertyGroupInverted).length;
+
+    // calcolo le parti in cui dividere il cerchio per posizionare i link
     // var chordsList = this.lodlive('circleChords',
     // destBox.width() / 2 + 12, ((totRelated > 1 ? totRelated - 1 :
     // totRelated) * 2) + 4, destBox.position().left + destBox.width() /
     // 2, destBox.position().top + destBox.height() / 2, totRelated +
     // 4);
-    //
-    var chordsList = inst.circleChords(75, 24, destBox.position().left + 65, destBox.position().top + 65);
-    var chordsListGrouped = inst.circleChords(95, 36, destBox.position().left + 65, destBox.position().top + 65);
+
+    var chordsList = utils.circleChords(75, 24, destBox.position().left + 65, destBox.position().top + 65);
+    var chordsListGrouped = utils.circleChords(95, 36, destBox.position().left + 65, destBox.position().top + 65);
+
+    // iterate over connectedDocs and invertedDocs, creating DOM nodes and calculating CSS positioning
+    var connectedNodes = inst.renderer.createPropertyBoxes(connectedDocs, propertyGroup, containerBox, chordsList, chordsListGrouped, false);
+    var invertedNodes = inst.renderer.createPropertyBoxes(invertedDocs, propertyGroupInverted, containerBox, chordsList, chordsListGrouped, true);
+
     // aggiungo al box i link ai documenti correlati
-    var a = 1;
-    var inserted = {};
-    var counter = 0;
-    var innerCounter = 1;
+    var objectList = connectedNodes.objectList.concat(invertedNodes.objectList);
+    var innerObjectList = connectedNodes.innerObjectList.concat(invertedNodes.innerObjectList);
 
-    var objectList = [];
-    var innerObjectList = [];
-    $.each(connectedDocs, function(key, value) {
-      if (counter == 16) {
-        counter = 0;
-      }
-      if (a == 1) {
-      } else if (a == 15) {
-        a = 1;
-      }
-      for (var akey in value) {
-        var obj = null;
-        if (propertyGroup[akey] && propertyGroup[akey].length > 1) {
-          if (!inserted[akey]) {
-            innerCounter = 1;
-            inserted[akey] = true;
-            var objBox = $('<div class="groupedRelatedBox" rel="' + inst.hashFunc(akey) + '" data-property="' + akey + '"  data-title="' + akey + ' \n ' + (propertyGroup[akey].length) + ' ' + utils.lang('connectedResources') + '" ></div>');
-            objBox.css(inst.getRelationshipCSS(akey));
-            // containerBox.append(objBox);
-            var akeyArray = akey.split(' ');
-            if (unescape(propertyGroup[akey][0]).indexOf('~~') != -1) {
-              objBox.addClass('isBnode');
-            } else {
-              for (var i = 0; i < akeyArray.length; i++) {
-                if (lodLiveProfile.arrows[akeyArray[i]]) {
-                  objBox.addClass(lodLiveProfile.arrows[akeyArray[i]]);
-                }
-              }
-            }
-            objBox.css({
-              'top':  (chordsList[a][1] - 8) + 'px',
-              'left': (chordsList[a][0] - 8) + 'px'
-            });
-            objectList.push(objBox);
-
-            a++;
-            counter++;
-          }
-
-          if (innerCounter < 25) {
-            obj = $('<div class="aGrouped relatedBox ' + inst.hashFunc(akey) + ' ' + inst.hashFunc(unescape(value[akey])) + '" rel="' + unescape(value[akey]) + '"  data-title="' + akey + ' \n ' + unescape(value[akey]) + '" ></div>');
-            // containerBox.append(obj);
-            obj.attr('style', 'display:none;position:absolute;top:' + (chordsListGrouped[innerCounter][1] - 8) + 'px;left:' + (chordsListGrouped[innerCounter][0] - 8) + 'px');
-            obj.attr('data-circlePos', innerCounter);
-            obj.attr('data-circleParts', 36);
-            obj.attr('data-circleid', containerBox.attr('id'));
-          }
-
-          innerCounter++;
-        } else {
-          obj = $('<div class="relatedBox ' + inst.hashFunc(unescape(value[akey])) + '" rel="' + unescape(value[akey]) + '"   data-title="' + akey + ' \n ' + unescape(value[akey]) + '" ></div>');
-          // containerBox.append(obj);
-          obj.attr('style', 'top:' + (chordsList[a][1] - 8) + 'px;left:' + (chordsList[a][0] - 8) + 'px');
-          obj.attr('data-circlePos', a);
-          obj.attr('data-circleParts', 24);
-          a++;
-          counter++;
-        }
-        if (obj) {
-          obj.attr('data-circleid', containerBox.attr('id'));
-          obj.attr('data-property', akey);
-          obj.css(inst.getRelationshipCSS(akey));
-          // se si tratta di un  Bnode applico una classe diversa
-          var akeyArray = akey.split(' ');
-          if (obj.attr('rel').indexOf('~~') != -1) {
-            obj.addClass('isBnode');
-          } else {
-            for (var i = 0; i < akeyArray.length; i++) {
-              if (lodLiveProfile.arrows[akeyArray[i]]) {
-                obj.addClass(lodLiveProfile.arrows[akeyArray[i]]);
-              }
-            }
-          }
-          if (obj.hasClass('aGrouped')) {
-            innerObjectList.push(obj);
-          } else {
-            objectList.push(obj);
-          }
-        }
-      }
-
-    });
-
-    inserted = {};
-    $.each(invertedDocs, function(key, value) {
-      if (counter == 16) {
-        counter = 0;
-      }
-      if (a == 1) {
-      } else if (a == 15) {
-        a = 1;
-      }
-      for (var akey in value) {
-        var obj = null;
-        if (propertyGroupInverted[akey] && propertyGroupInverted[akey].length > 1) {
-          if (!inserted[akey]) {
-            innerCounter = 1;
-            inserted[akey] = true;
-
-            var objBox = $('<div class="groupedRelatedBox inverse" rel="' + inst.hashFunc(akey) + '-i"   data-property="' + akey + '" data-title="' + akey + ' \n ' + (propertyGroupInverted[akey].length) + ' ' + utils.lang('connectedResources') + '" ></div>');
-            objBox.css(inst.getRelationshipCSS(akey));
-            // containerBox.append(objBox);
-            var akeyArray = akey.split(' ');
-            if (unescape(propertyGroupInverted[akey][0]).indexOf('~~') != -1) {
-              objBox.addClass('isBnode');
-            } else {
-              for (var i = 0; i < akeyArray.length; i++) {
-                if (lodLiveProfile.arrows[akeyArray[i]]) {
-                  objBox.addClass(lodLiveProfile.arrows[akeyArray[i]]);
-                }
-              }
-            }
-            objBox.css({
-              'top': + (chordsList[a][1] - 8) + 'px',
-              'left': + (chordsList[a][0] - 8) + 'px'
-            });
-
-            objectList.push(objBox);
-            a++;
-            counter++;
-          }
-
-          if (innerCounter < 25) {
-            var destUri = unescape(value[akey].indexOf('~~') == 0 ? thisUri + value[akey] : value[akey]);
-            obj = $('<div class="aGrouped relatedBox inverse ' + inst.hashFunc(akey) + '-i ' + inst.hashFunc(unescape(value[akey])) + ' " rel="' + destUri + '"  data-title="' + akey + ' \n ' + unescape(value[akey]) + '" ></div>');
-            // containerBox.append(obj);
-            obj.attr('style', 'display:none;position:absolute;top:' + (chordsListGrouped[innerCounter][1] - 8) + 'px;left:' + (chordsListGrouped[innerCounter][0] - 8) + 'px');
-            obj.attr('data-circlePos', innerCounter);
-            obj.attr('data-circleParts', 36);
-            obj.attr('data-circleId', containerBox.attr('id'));
-          }
-
-          innerCounter++;
-        } else {
-          obj = $('<div class="relatedBox inverse ' + inst.hashFunc(unescape(value[akey])) + '" rel="' + unescape(value[akey]) + '"   data-title="' + akey + ' \n ' + unescape(value[akey]) + '" ></div>');
-          // containerBox.append(obj);
-          obj.attr('style', 'top:' + (chordsList[a][1] - 8) + 'px;left:' + (chordsList[a][0] - 8) + 'px');
-          obj.attr('data-circlePos', a);
-          obj.attr('data-circleParts', 24);
-          a++;
-          counter++;
-        }
-        if (obj) {
-          obj.attr('data-circleId', containerBox.attr('id'));
-          obj.attr('data-property', akey);
-          obj.css(inst.getRelationshipCSS(akey));
-          // se si tratta di un sameas applico una classe diversa
-          var akeyArray = akey.split(' ');
-
-          if (obj.attr('rel').indexOf('~~') != -1) {
-            obj.addClass('isBnode');
-          } else {
-            for (var i = 0; i < akeyArray.length; i++) {
-              if (lodLiveProfile.arrows[akeyArray[i]]) {
-                obj.addClass(lodLiveProfile.arrows[akeyArray[i]]);
-              }
-            }
-          }
-
-          if (obj.hasClass('aGrouped')) {
-            innerObjectList.push(obj);
-          } else {
-            objectList.push(obj);
-          }
-        }
-      }
-
-    });
-    var page = 0;
-    var totPages = objectList.length > 14 ? (objectList.length / 14 + (objectList.length % 14 > 0 ? 1 : 0)) : 1;
-    for (var i = 0; i < objectList.length; i++) {
-      if (i % 14 == 0) {
-        page++;
-        var aPage = $('<div class="page page' + page + '" style="display:none"></div>');
-        if (page > 1 && totPages > 1) {
-          aPage.append('<div class="llpages pagePrev sprite" data-page="page' + (page - 1) + '" style="top:' + (chordsList[0][1] - 8) + 'px;left:' + (chordsList[0][0] - 8) + 'px"></div>');
-        }
-        if (totPages > 1 && page < totPages - 1) {
-          aPage.append('<div class="llpages pageNext sprite" data-page="page' + (page + 1) + '" style="top:' + (chordsList[15][1] - 8) + 'px;left:' + (chordsList[15][0] - 8) + 'px"></div>');
-        }
-        containerBox.append(aPage);
-      }
-      containerBox.children('.page' + page).append(objectList[i]);
-    }
-    page = 0;
-    totPages = innerObjectList.length / 24 + (innerObjectList.length % 24 > 0 ? 1 : 0);
-    if (innerObjectList.length > 0) {
-      containerBox.append('<div class="innerPage"></div>');
-      for (var i = 0; i < innerObjectList.length; i++) {
-        containerBox.children('.innerPage').append(innerObjectList[i]);
-      }
-    }
-    containerBox.children('.page1').fadeIn('fast');
-    containerBox.children('.page').children('.llpages').click(function() {
-      var llpages = $(this);
-      containerBox.find('.lastClick').removeClass('lastClick').click();
-      llpages.parent().fadeOut('fast', null, function() {
-        $(this).parent().children('.' + llpages.attr('data-page')).fadeIn('fast');
-      });
-    });
+    // paginate and display the related boxes
+    inst.renderer.paginateRelatedBoxes(containerBox, objectList, innerObjectList, chordsList);
 
     // append the tools
     inst.renderer.generateNodeIcons(anchorBox);
@@ -1193,39 +912,19 @@
       success : function(info) {
         // reformat values for compatility
 
-        // escape values
-        info.values = info.values.map(function(value) {
-          var keys = Object.keys(value)
-          keys.forEach(function(key) {
-            value[key] = escape(value[key])
-          })
-          return value
-        });
-
-        // TODO: filter info.uris where object value === anURI (??)
-
-        // escape URIs
-        info.uris = info.uris.map(function(value) {
-          var keys = Object.keys(value)
-          keys.forEach(function(key) {
-            value[key] = escape(value[key])
-          })
-          return value
-        });
-
-        // parse bnodes, escape and add to URIs
-
         // TODO: refactor `format()` and remove this
         info.bnodes.forEach(function(bnode) {
           var keys = Object.keys(bnode)
           var value = {};
           keys.forEach(function(key) {
-            value[key] = escape(anUri + '~~' + bnode[key])
+            value[key] = anUri + '~~' + bnode[key];
           })
           info.uris.push(value);
         })
 
         delete info.bnodes;
+
+        // TODO: filter info.uris where object value === anURI (??)
 
         // s/b unnecessary
         // destBox.children('.box').html('');
@@ -1240,27 +939,8 @@
             return inst.renderer.loading(destBox.children('.box'));
           },
           success : function(inverseInfo) {
-            // escape values
-            inverseInfo.values = inverseInfo.values.map(function(value) {
-              var keys = Object.keys(value)
-              keys.forEach(function(key) {
-                value[key] = escape(value[key])
-              })
-              return value
-            });
-
-            // escape URIs
-            inverseInfo.uris = inverseInfo.uris.map(function(value) {
-              var keys = Object.keys(value)
-              keys.forEach(function(key) {
-                value[key] = escape(value[key])
-              })
-              return value
-            });
-
+            // TODO: skip values?
             inverses = inverseInfo.uris.concat(inverseInfo.values);
-
-            // parse bnodes, escape and add to URIs
 
             // parse bnodes and add to URIs
             // TODO: refactor `format()` and remove this
@@ -1313,7 +993,7 @@
         $.each(json, function(key, value) {
           var newObj = {};
           var key = value.property && value.property.value || 'http://www.w3.org/2002/07/owl#sameAs';
-          newObj[key] = escape(value.object.value);
+          newObj[key] = value.object.value;
           // TODO: why the 2nd array element?
           inverse.splice(1, 0, newObj);
         });
