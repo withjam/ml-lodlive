@@ -4,18 +4,26 @@ var httpClientFactory = {
   /*
    * Create a new httpClient instance
    *
-   * @param {String} endpoint - the request endpoint URL
-   * @param {Object|String} defaultParams - the default URL params
-   * @param {String} accepts - accepts header mime-type (from profile)
-   * @param {String} dataType - `json` or `jsonp`
+   * @param {Object} connection - connection configuration
+   * @prop {String} connection.endpoint - the request endpoint URL
+   * @prop {Object|String} connection.defaultParams - the default URL params
+   * @prop {Object} connection.headers - request headers
+   * @prop {Boolean} jsonp - make a JSONP request instead of AJAX
    * @return {Function} an httpClient instance
    */
-  create: function(endpoint, defaultParams, accepts, dataType) {
+  create: function(connection) {
+    if (!connection.endpoint) {
+      throw new Error('missing required connection.endpoint for httpClient');
+    }
 
     function parseParams(params) {
-      // TODO if (typeof defaultParams === 'object') ...
-
-      return defaultParams + '&' + $.param(params)
+      if (!connection.defaultParams) {
+        return $.param(params)
+      } else if (typeof connection.defaultParams === 'object') {
+        return $.param($.extend({}, connection.defaultParams, params))
+      } else {
+        return connection.defaultParams + '&' + $.param(params)
+      }
     }
 
     /**
@@ -30,16 +38,14 @@ var httpClientFactory = {
      */
     return function httpClient(params, callbacks) {
 
-      var fullUrl = endpoint + '?' + parseParams(params);
-       var afterSend;
+      var fullUrl = connection.endpoint + '?' + parseParams(params);
+      var afterSend;
 
-       $.ajax({
+      $.ajax({
         url: fullUrl,
         contentType: 'application/json',
-        accepts: accepts,
-        dataType: dataType,
-        // ugly
-        // timeout: callbacks.timeout || null,
+        dataType: connection.jsonp ? 'jsonp': 'json',
+        headers: connection.headers || {},
         beforeSend: function() {
           if (callbacks.beforeSend) afterSend = callbacks.beforeSend();
         },

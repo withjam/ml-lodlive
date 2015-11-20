@@ -60,12 +60,23 @@
 
     var httpClientFactory = require('../../src/http-client.js');
 
-    var httpClient = httpClientFactory.create(
-      this.options.connection['http:'].endpoint,
-      this.options.endpoints.all,
-      this.options.connection['http:'].accepts,
-      this.getAjaxDataType()
-    );
+    var profile = this.options;
+
+    // for backwards compatibility with existing profiles
+    var connection;
+
+    if (profile.connection.endpoint) {
+      connection = profile.connection;
+    } else {
+      connection = {
+        endpoint: profile.connection['http:'].endpoint,
+        defaultParams: profile.endpoints.all,
+        headers: { Accept: profile.connection['http:'].accepts },
+        jsonp: profile.endpoints.jsonp
+      };
+    }
+
+    var httpClient = httpClientFactory.create(connection);
 
     var sparqlClientFactory = require('../../src/sparql-client.js');
 
@@ -409,11 +420,6 @@
       destBox.append(obj.bnodeNode);
       inst.resolveBnodes(obj.value, URI, obj.spanNode, destBox);
     });
-  };
-
-  LodLive.prototype.getAjaxDataType = function() {
-    // TODO: consider accepting URL as parameter and detect if it requires JSONP or not
-    return this.options.endpoints.jsonp ? 'jsonp' : 'json';
   };
 
   LodLive.prototype.resolveBnodes = function(val, URI, spanNode, destBox) {
