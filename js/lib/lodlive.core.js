@@ -82,7 +82,6 @@
 
     this.sparqlClient = sparqlClientFactory.create(
       this.options.connection['http:'].sparql,
-      this.options.default.sparql,
       httpClient
     );
 

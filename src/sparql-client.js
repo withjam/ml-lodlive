@@ -1,5 +1,13 @@
 'use strict'
 
+var defaultQueries = {
+  documentUri: 'SELECT DISTINCT * WHERE {<{URI}> ?property ?object} ORDER BY ?property',
+  document: 'SELECT DISTINCT * WHERE {<{URI}> ?property ?object}',
+  bnode: 'SELECT DISTINCT *  WHERE {<{URI}> ?property ?object}',
+  inverse: 'SELECT DISTINCT * WHERE {?object ?property <{URI}>.} LIMIT 100',
+  inverseSameAs: 'SELECT DISTINCT * WHERE {{?object <http://www.w3.org/2002/07/owl#sameAs> <{URI}> } UNION { ?object <http://www.w3.org/2004/02/skos/core#exactMatch> <{URI}>}}'
+};
+
 function parseResults(bindings) {
   var info = { uris: [], bnodes: [], values: [] };
 
@@ -19,10 +27,9 @@ function parseResults(bindings) {
 }
 
 // sparqlProfile = profile.connections['http:'].sparql
-// defaultSparqlProfile: passed in for now, but should be a static reference ...
-function SparqlClient(sparqlProfile, defaultSparqlProfile, httpClient) {
+function SparqlClient(sparqlProfile, httpClient) {
   if (!(this instanceof SparqlClient)) {
-    return new SparqlClient(sparqlProfile, defaultSparqlProfile, httpClient);
+    return new SparqlClient(sparqlProfile, httpClient);
   }
 
   this.httpClient = httpClient;
@@ -30,7 +37,7 @@ function SparqlClient(sparqlProfile, defaultSparqlProfile, httpClient) {
   this.getQueryTemplate = function(axis) {
     return sparqlProfile && sparqlProfile[axis] ?
            sparqlProfile[axis] :
-           defaultSparqlProfile[axis];
+           defaultQueries[axis];
   };
 }
 
@@ -121,9 +128,8 @@ SparqlClient.prototype.inverseSameAs = function inverseSameAs(iri, callbacks) {
 
 var sparqlClientFactory = {
   // sparqlProfile = profile.connections['http:'].sparql
-  // defaultSparqlProfile: passed in for now, but should be a static reference ...
-  create: function(sparqlProfile, defaultSparqlProfile, httpClient) {
-    return new SparqlClient(sparqlProfile, defaultSparqlProfile, httpClient);
+  create: function(sparqlProfile, httpClient) {
+    return new SparqlClient(sparqlProfile, httpClient);
   }
 };
 
