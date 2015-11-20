@@ -1,6 +1,7 @@
 'use strict'
 
 function enableDrag(container, context, draggableSelector, dragStart) {
+  var $window = $(window);
   var dragState = {};
   var dragStop = null;
 
@@ -27,8 +28,8 @@ function enableDrag(container, context, draggableSelector, dragStart) {
       }
 
       dragState.target.css({
-        left: cx + scrx - dragState.offsetX,
-        top: cy + scry - dragState.offsetY
+        left: cx + scrx - dragState.offsetX + $window.scrollLeft() - context.parent().offset().left,
+        top: cy + scry - dragState.offsetY + $window.scrollTop() - context.parent().offset().top
       });
     } else if (dragState.panning) {
       context.parent().scrollLeft(scrx + diffx);
