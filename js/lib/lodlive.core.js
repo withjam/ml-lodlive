@@ -58,8 +58,6 @@
     // TODO: move to renderer
     this.boxTemplate =  this.options.boxTemplate || DEFAULT_BOX_TEMPLATE;
 
-    var httpClientFactory = require('../../src/http-client.js');
-
     var profile = this.options;
 
     // for backwards compatibility with existing profiles
@@ -76,14 +74,15 @@
       };
     }
 
-    var httpClient = httpClientFactory.create(connection);
-
+    // TODO: pass partially applied sparqlClientFactory as constructor paramter
+    // (with an httpClientFactory already bound)
+    var httpClientFactory = require('../../src/http-client.js');
     var sparqlClientFactory = require('../../src/sparql-client.js');
 
-    this.sparqlClient = sparqlClientFactory.create(
-      this.options.connection['http:'].sparql,
-      httpClient
-    );
+    this.sparqlClient = sparqlClientFactory.create(httpClientFactory, {
+      connection: connection,
+      queries: profile.queries || profile.connection['http:'].sparql
+    });
 
     var refStoreFactory = require('../../src/ref-store.js');
 

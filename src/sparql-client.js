@@ -26,17 +26,16 @@ function parseResults(bindings) {
   return info;
 }
 
-// sparqlProfile = profile.connections['http:'].sparql
-function SparqlClient(sparqlProfile, httpClient) {
+function SparqlClient(httpClientFactory, options) {
   if (!(this instanceof SparqlClient)) {
-    return new SparqlClient(sparqlProfile, httpClient);
+    return new SparqlClient(httpClientFactory, options);
   }
 
-  this.httpClient = httpClient;
+  this.httpClient = httpClientFactory.create(options.connection);
 
   this.getQueryTemplate = function(axis) {
-    return sparqlProfile && sparqlProfile[axis] ?
-           sparqlProfile[axis] :
+    return options.queries && options.queries[axis] ?
+           options.queries[axis] :
            defaultQueries[axis];
   };
 }
@@ -127,9 +126,8 @@ SparqlClient.prototype.inverseSameAs = function inverseSameAs(iri, callbacks) {
 
 
 var sparqlClientFactory = {
-  // sparqlProfile = profile.connections['http:'].sparql
-  create: function(sparqlProfile, httpClient) {
-    return new SparqlClient(sparqlProfile, httpClient);
+  create: function(httpClientFactory, options) {
+    return new SparqlClient(httpClientFactory, options);
   }
 };
 
