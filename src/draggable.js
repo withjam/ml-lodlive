@@ -2,6 +2,7 @@
 
 function enableDrag(container, context, draggableSelector, dragStart) {
   var $window = $(window);
+  var parent = context.parent();
   var dragState = {};
   var dragStop = null;
 
@@ -9,13 +10,8 @@ function enableDrag(container, context, draggableSelector, dragStart) {
   container.on('mousemove', function(event) {
     var cx = event.clientX;
     var cy = event.clientY;
-    var scrx = context.parent().scrollLeft();
-    var scry = context.parent().scrollTop();
     var lastx = dragState.lastx;
     var lasty = dragState.lasty;
-    var diffx = lastx - cx;
-    var diffy = lasty - cy;
-
     dragState.lastx = cx;
     dragState.lasty = cy;
 
@@ -25,15 +21,23 @@ function enableDrag(container, context, draggableSelector, dragStart) {
         // just started the drag
         dragState.isDragging = true;
         dragStop = dragStart(dragState);
+
+        // cache positions that won't change while dragging
+        dragState.scrollX = parent.scrollLeft() + $window.scrollLeft() - parent.offset().left - dragState.offsetX;
+        dragState.scrollY = parent.scrollTop() + $window.scrollTop() - parent.offset().top - dragState.offsetY;
       }
 
-      dragState.target.css({
-        left: cx + scrx - dragState.offsetX + $window.scrollLeft() - context.parent().offset().left,
-        top: cy + scry - dragState.offsetY + $window.scrollTop() - context.parent().offset().top
+      requestAnimationFrame(function() {
+        dragState.target && dragState.target.css({
+          left: cx + dragState.scrollX,
+          top: cy + dragState.scrollY
+        });
       });
     } else if (dragState.panning) {
-      context.parent().scrollLeft(scrx + diffx);
-      context.parent().scrollTop(scry + diffy);
+      requestAnimationFrame(function() {
+        parent.scrollLeft(parent.scrollLeft() + lastx - cx);
+        parent.scrollTop(parent.scrollTop() + lasty - cy);
+      });
     }
   });
 
