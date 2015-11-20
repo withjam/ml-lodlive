@@ -1,6 +1,7 @@
 'use strict'
 
 var utils = require('./utils.js');
+var refStoreFactory = require('./ref-store.js');
 
 /**
  * Built-in "always on" tools
@@ -66,12 +67,18 @@ var _builtins = {
   }
 };
 
-function LodLiveRenderer(arrows, tools, nodeIcons, relationships, refs) {
-  this.arrows = arrows;
-  this.tools = tools;
-  this.nodeIcons = nodeIcons;
-  this.relationships = relationships;
-  this.refs = refs;
+function LodLiveRenderer(options) {
+  if (!(this instanceof LodLiveRenderer)) {
+    return new LodLiveRenderer(options);
+  }
+
+  this.refs = refStoreFactory.create();
+
+  this.hashFunc = options.hashFunc || utils.hashFunc;
+  this.arrows = options.arrows;
+  this.tools = options.tools;
+  this.nodeIcons = options.nodeIcons;
+  this.relationships = options.relationships;
 }
 
 /**
@@ -1284,8 +1291,8 @@ LodLiveRenderer.prototype.init = function(inst, container) {
 };
 
 var rendererFactory = {
-  create: function(arrows, tools, nodeIcons, relationships, refs) {
-    return new LodLiveRenderer(arrows, tools, nodeIcons, relationships, refs);
+  create: function(options) {
+    return new LodLiveRenderer(options);
   }
 };
 

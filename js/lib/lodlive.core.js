@@ -38,27 +38,13 @@
     * @param {object=} options optional hash of options
     */
   function LodLive(container,options) {
-    this.container = container;
-    this.options = options;
-    this.UI = options.UI || {};
+    var profile = this.options = options;
     this.debugOn = options.debugOn && window.console; // don't debug if there is no console
 
     // allow them to override the docInfo function
-    if (this.UI.docInfo) {
-      this.docInfo = this.UI.docInfo;
+    if (profile.UI.docInfo) {
+      this.docInfo = profile.UI.docInfo;
     }
-    if (this.UI.nodeHover) {
-      this.msg = this.UI.nodeHover;
-    }
-
-    // simple MD5 implementation to eliminate dependencies
-    // can still pass in MD5 (or some other algorithm) if desired
-    this.hashFunc = this.options.hashFunc || utils.hashFunc;
-
-    // TODO: move to renderer
-    this.boxTemplate =  this.options.boxTemplate || DEFAULT_BOX_TEMPLATE;
-
-    var profile = this.options;
 
     // for backwards compatibility with existing profiles
     var connection;
@@ -84,27 +70,41 @@
       queries: profile.queries || profile.connection['http:'].sparql
     });
 
-    var refStoreFactory = require('../../src/ref-store.js');
-
-    this.refs = refStoreFactory.create();
-
+    // TODO: pass factory as constructor parameter
     var rendererFactory = require('../../src/renderer.js');
 
-    this.renderer = rendererFactory.create(
-      this.options.arrows,
-      this.options.UI.tools,
-      this.options.UI.nodeIcons,
-      this.options.UI.relationships,
-      this.refs
-    );
+    // for backwards compatibility with existing profiles
+    var rendererProfile;
 
+    if (profile.UI.arrows) {
+      rendererProfile = profile.UI;
+    } else {
+      rendererProfile = {
+        arrows: profile.arrows,
+        tools: profile.UI.tools,
+        nodeIcons: profile.UI.nodeIcons,
+        relationships: profile.UI.relationships,
+        hashFunc: profile.hashFunc
+      };
+    }
+
+    this.renderer = rendererFactory.create(rendererProfile);
+    // temporary, need access from both components
+    this.refs = this.renderer.refs;
+    this.renderer.boxTemplate = this.boxTemplate = profile.boxTemplate || DEFAULT_BOX_TEMPLATE;
+
+    // allow override from profile
+    if (profile.UI.nodeHover) {
+      this.renderer.msg = profile.UI.nodeHover;
+    }
+
+    // TODO: should this be deferred till LodLive.init()?
+    // (constructor shouldn't mutate the DOM)
     this.renderer.init(this, container);
-    this.container = this.renderer.container;
-    this.context = this.renderer.context;
 
     // temporary, need access from both components
-    this.renderer.hashFunc = this.hashFunc;
-    this.renderer.boxTemplate = this.boxTemplate;
+    this.container = this.renderer.container;
+    this.context = this.renderer.context;
   }
 
   LodLive.prototype.init = function(firstUri) {
@@ -113,7 +113,9 @@
     this.mapsMap = {};
     this.infoPanelMap = {};
     this.connection = {};
-    this.ignoreBnodes = this.UI.ignoreBnodes;
+
+    // TODO: this option isn't respected anywhere
+    this.ignoreBnodes = this.options.UI.ignoreBnodes;
 
     // TODO: look these up on the context object as data-lodlive-xxxx attributes
     // store settings on the instance
