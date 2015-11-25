@@ -315,10 +315,6 @@
         inst.addNewDoc(obj, box);
         evt.stopPropagation();
       });
-
-      inst.renderer.hover(box, function() {
-        inst.renderer.msg(box.data('title'), 'show', null, null, box.is('.inverse'));
-      });
     });
 
     obj.find('.groupedRelatedBox').each(function() {
@@ -340,10 +336,6 @@
           obj.find('.' + box.attr('rel') + ':not([class*=exploded])').fadeIn('fast');
           box.fadeTo('fast', 0.3);
         }
-      });
-
-      inst.renderer.hover(box, function() {
-        inst.renderer.msg(box.attr('data-title'), 'show', null, null, box.is('.inverse'));
       });
     });
 

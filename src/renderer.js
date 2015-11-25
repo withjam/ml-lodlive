@@ -95,28 +95,6 @@ LodLiveRenderer.prototype.loading = function loading(target) {
 };
 
 /**
- * Configure hover interactions for `target`
- *
- * Defaults to `renderer.msg(target.attr('data-title'), 'show')`
- *
- * @param {Object} target - jQuery object containing one-or-more elements
- * parma {Function} [showFn] - function to invoke on hover
- */
-LodLiveRenderer.prototype.hover = function hover(target, showFn) {
-  var renderer = this;
-
-  target.each(function() {
-    var el = $(this);
-    el.hover(function() {
-      if (showFn) return showFn();
-      renderer.msg(el.attr('data-title'), 'show');
-    }, function() {
-      renderer.msg(null, 'hide');
-    });
-  });
-};
-
-/**
  * Creates (and centers) the first URI box
  */
 LodLiveRenderer.prototype.firstBox = function(firstUri) {
@@ -249,11 +227,9 @@ LodLiveRenderer.prototype.docInfoMissing = function() {
   var sectionNode = $('<div class="section"></div>');
   var textNode = $('<div></div>').text(utils.lang('resourceMissingDoc'));
 
-  // TODO: no text, nothing to show, nothing to hover ...
+  // TODO: no text, nothing to show
   var labelNode = $('<label></label>')
   .attr('data-title',  utils.lang('resourceMissingDoc'));
-
-  renderer.hover(labelNode);
 
   sectionNode.append(labelNode).append(textNode);
 
@@ -273,8 +249,6 @@ LodLiveRenderer.prototype.docInfoTypes = function(types) {
 
   // TODO: get types from profile
   var labelNode = $('<label data-title="http://www.w3.org/1999/02/22-rdf-syntax-ns#type">type</label>');
-
-  renderer.hover(labelNode);
 
   var wrapperNode = $('<div></div>');
 
@@ -376,9 +350,6 @@ LodLiveRenderer.prototype.docInfoLinks = function(links) {
     .attr('href', value)
     .text(value);
 
-    // TODO: delegate hover
-    renderer.hover(linkNode);
-
     listItemNode.append(linkNode);
     wrapperNode.append(listItemNode);
   });
@@ -413,8 +384,6 @@ LodLiveRenderer.prototype.docInfoValues = function(values) {
     .attr('data-title', key)
     .text(shortKey);
 
-    renderer.hover(labelNode);
-
     var textNode = $('<div></div>').text(value);
 
     sectionNode.append(labelNode).append(textNode);
@@ -443,8 +412,6 @@ LodLiveRenderer.prototype.docInfoBnodes = function(bnodes) {
     var labelNode = $('<label></label>')
     .attr('data-title', key)
     .text(shortKey);
-
-    renderer.hover(labelNode);
 
     var spanNode = $('<span class="bnode"></span>')
 
@@ -500,8 +467,6 @@ LodLiveRenderer.prototype.docInfoNestedBnodes = function(key, spanNode) {
   .attr('data-title', key)
   .text(utils.shortenKey(key))
 
-  renderer.hover(labelNode);
-
   var bnodeNode = $('<span class="bnode"></span>')
 
   wrapperNode.append(labelNode).append(bnodeNode);
@@ -537,10 +502,6 @@ LodLiveRenderer.prototype.addBoxTitle = function(title, thisUri, destBox, contai
 
   jResult.attr('data-tooltip', title);
   destBox.append(jResult);
-
-  renderer.hover(destBox, function() {
-    renderer.msg(title, 'show', 'fullInfo', containerBox.attr('data-endpoint'));
-  });
 };
 
 /**
@@ -1183,10 +1144,45 @@ LodLiveRenderer.prototype.errorBox = function(destBox) {
   destBox.children('.box').html('');
   var jResult = $('<div class="boxTitle"><span>' + utils.lang('endpointNotAvailable') + '</span></div>');
   destBox.children('.box').append(jResult);
-  destBox.children('.box').hover(function() {
-    renderer.msg(utils.lang('endpointNotAvailableOrSLow'), 'show', 'fullInfo', destBox.attr('data-endpoint'));
-  }, function() {
-    renderer.msg(null, 'hide');
+};
+
+/**
+ * Configure hover interactions
+ */
+LodLiveRenderer.prototype.initHover = function initHover() {
+  var renderer = this;
+
+  // docInfo labels
+  this.container.on('mouseenter mouseleave', '.lodlive-docinfo label, .lodlive-docinfo a', function(event) {
+    if (event.type === 'mouseleave') {
+      return renderer.msg(null, 'hide');
+    }
+
+    renderer.msg($(event.target).data('title'), 'show');
+  });
+
+  // nodes
+  this.container.on('mouseenter mouseleave', '.box', function(event) {
+    if (event.type === 'mouseleave') {
+      return renderer.msg(null, 'hide');
+    }
+
+    var target = $(event.target);
+    var title = target.is('.errorBox') ?
+                utils.lang('endpointNotAvailableOrSLow') :
+                target.children('.boxTitle').data('tooltip');
+
+    renderer.msg(title, 'show', 'fullInfo', target.parent('div').data('endpoint'));
+  });
+
+  // related nodes
+  this.container.on('mouseenter mouseleave', '.relatedBox, .groupedRelatedBox', function(event) {
+    if (event.type === 'mouseleave') {
+      return renderer.msg(null, 'hide');
+    }
+
+    var target = $(event.target);
+    renderer.msg(target.data('title'), 'show', null, null, target.is('.inverse'));
   });
 };
 
@@ -1213,6 +1209,8 @@ LodLiveRenderer.prototype.init = function(container) {
   draggable(this.container, this.context, '.lodlive-node', function(dragState) {
     return renderer.reDrawLines(dragState.target);
   });
+
+  this.initHover();
 };
 
 var rendererFactory = {
