@@ -301,45 +301,6 @@
     });
   };
 
-  LodLive.prototype.addClick = function(obj, callback) {
-    var inst = this;
-
-    // per ogni nuova risorsa collegata al documento corrente imposto le
-    // azioni "onclick"
-
-    obj.find('.relatedBox').each(function() {
-      var box = $(this);
-      box.attr('relmd5', inst.hashFunc(box.attr('rel')));
-      box.click(function(evt) {
-        box.addClass('exploded');
-        inst.addNewDoc(obj, box);
-        evt.stopPropagation();
-      });
-    });
-
-    obj.find('.groupedRelatedBox').each(function() {
-      var box = $(this);
-      box.click(function() {
-        if (box.data('show')) {
-          box.data('show', false);
-          inst.docInfo();
-          box.removeClass('lastClick');
-          obj.find('.' + box.attr('rel')).fadeOut('fast');
-          box.fadeTo('fast', 1);
-          obj.children('.innerPage').hide();
-        } else {
-          box.data('show', true);
-          obj.children('.innerPage').show();
-          inst.docInfo();
-          obj.find('.lastClick').removeClass('lastClick').click();
-          box.addClass('lastClick');
-          obj.find('.' + box.attr('rel') + ':not([class*=exploded])').fadeIn('fast');
-          box.fadeTo('fast', 0.3);
-        }
-      });
-    });
-  };
-
   /**
     * Default function for showing info on a selected node.  Simply opens a panel that displays it's properties.  Calling it without an object will close it.
     * @param {Object=} obj a jquery wrapped DOM element that is a node, or null.  If null is passed then it will close any open doc info panel
@@ -872,7 +833,6 @@
 
     function callback(info) {
       inst.format(destBox.children('.box'), info.values, info.uris, inverses);
-      inst.addClick(destBox);
 
       if (fromInverse && fromInverse.length) {
         $(fromInverse).click();

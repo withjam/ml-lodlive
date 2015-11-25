@@ -637,6 +637,7 @@ LodLiveRenderer.prototype._createRelatedBox = function _createRelatedBox(predica
   var box = $('<div></div>')
   .addClass('relatedBox ' + renderer.hashFunc(object).toString())
   .attr('rel', object)
+  .attr('relmd5', renderer.hashFunc(object).toString())
   .attr('data-title', predicates + ' \n ' + object)
   .attr('data-circleid', containerBox.attr('id'))
   .attr('data-property', predicates)
@@ -1205,6 +1206,39 @@ LodLiveRenderer.prototype.initClicks = function initClicks(inst) {
         renderer.generateTools(target, node, inst).fadeToggle('fast');
         break;
       // TODO: default error?
+    }
+  });
+
+  // related nodes
+  this.container.on('click', '.relatedBox', function(event) {
+    var target = $(event.target);
+    var node = target.closest('.lodlive-node');
+
+    target.addClass('exploded');
+    inst.addNewDoc(node, target);
+    // event.stopPropagation();
+  });
+
+  // related node groups
+  this.container.on('click', '.groupedRelatedBox', function(event) {
+    var target = $(event.target);
+    var node = target.closest('.lodlive-node');
+
+    if (target.data('show')) {
+      target.data('show', false);
+      inst.docInfo();
+      target.removeClass('lastClick');
+      node.find('.' + target.attr('rel')).fadeOut('fast');
+      target.fadeTo('fast', 1);
+      node.children('.innerPage').hide();
+    } else {
+      target.data('show', true);
+      node.children('.innerPage').show();
+      inst.docInfo();
+      node.find('.lastClick').removeClass('lastClick').click();
+      target.addClass('lastClick');
+      node.find('.' + target.attr('rel') + ':not([class*=exploded])').fadeIn('fast');
+      target.fadeTo('fast', 0.3);
     }
   });
 
