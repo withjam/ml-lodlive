@@ -716,14 +716,6 @@ LodLiveRenderer.prototype.paginateRelatedBoxes = function(containerBox, objectLi
     containerBox.append(innerPage);
   }
 
-  containerBox.children('.page').children('.llpages').click(function() {
-    var llpages = $(this);
-    containerBox.find('.lastClick').removeClass('lastClick').click();
-    llpages.parent().fadeOut('fast', null, function() {
-      $(this).parent().children('.' + llpages.attr('data-page')).fadeIn('fast');
-    });
-  });
-
   containerBox.children('.page1').fadeIn('fast');
 };
 
@@ -1186,6 +1178,23 @@ LodLiveRenderer.prototype.initHover = function initHover() {
   });
 };
 
+/**
+ * Configure click interactions
+ */
+LodLiveRenderer.prototype.initClicks = function initClicks() {
+  // pagination
+  this.container.on('click', '.llpages', function(event) {
+    var target = $(event.target);
+    var pageSelector = '.' + target.data('page');
+
+    target.siblings('.lastClick').removeClass('lastClick').click();
+
+    target.parent().fadeOut('fast', null, function() {
+      $(this).parent().children(pageSelector).fadeIn('fast');
+    });
+  });
+};
+
 LodLiveRenderer.prototype.init = function(container) {
   var renderer = this;
 
@@ -1211,6 +1220,7 @@ LodLiveRenderer.prototype.init = function(container) {
   });
 
   this.initHover();
+  this.initClicks();
 };
 
 var rendererFactory = {
