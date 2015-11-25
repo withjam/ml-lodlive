@@ -89,7 +89,7 @@
       this.refs
     );
 
-    this.renderer.init(container);
+    this.renderer.init(this, container);
     this.container = this.renderer.container;
     this.context = this.renderer.context;
 
@@ -337,19 +337,6 @@
           box.fadeTo('fast', 0.3);
         }
       });
-    });
-
-    // aggiungo le azioni dei tools
-    obj.on('click', '.actionBox', function(evt) {
-      var el = $(this), handler = el.data('action-handler'), rel = el.attr('rel');
-      if (handler) {
-        handler.call(el, obj, inst, evt);
-      } else {
-        switch(rel) {
-          case 'docInfo':  inst.docInfo(obj); break;
-          case 'tools': inst.renderer.generateTools(el, obj, inst).fadeToggle('fast'); break;
-        }
-      }
     });
   };
 

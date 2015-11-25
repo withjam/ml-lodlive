@@ -1180,8 +1180,34 @@ LodLiveRenderer.prototype.initHover = function initHover() {
 
 /**
  * Configure click interactions
+ *
+ * @param {LodLive} inst - instance of lodlive
  */
-LodLiveRenderer.prototype.initClicks = function initClicks() {
+LodLiveRenderer.prototype.initClicks = function initClicks(inst) {
+  var renderer = this;
+
+  // tools
+  this.container.on('click', '.actionBox', function(event) {
+    // TODO: why is this not always actionBox, but sometimes a descendant?
+    var target = $(event.target).closest('.actionBox');
+    var node = target.closest('.lodlive-node');
+    var handler = target.data('action-handler');
+
+    if (handler) {
+      return handler.call(target, node, inst, event);
+    }
+
+    switch(target.attr('rel')) {
+      case 'docInfo':
+        inst.docInfo(node);
+        break;
+      case 'tools':
+        renderer.generateTools(target, node, inst).fadeToggle('fast');
+        break;
+      // TODO: default error?
+    }
+  });
+
   // pagination
   this.container.on('click', '.llpages', function(event) {
     var target = $(event.target);
@@ -1195,7 +1221,7 @@ LodLiveRenderer.prototype.initClicks = function initClicks() {
   });
 };
 
-LodLiveRenderer.prototype.init = function(container) {
+LodLiveRenderer.prototype.init = function(inst, container) {
   var renderer = this;
 
   if (typeof container === 'string') {
@@ -1220,7 +1246,7 @@ LodLiveRenderer.prototype.init = function(container) {
   });
 
   this.initHover();
-  this.initClicks();
+  this.initClicks(inst);
 };
 
 var rendererFactory = {
