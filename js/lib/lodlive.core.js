@@ -979,7 +979,9 @@
     var inst = this;
 
     // TODO: why two options? (useForInverseSameAs and doAutoSameas)
-    if (!inst.options.connection['http:'].useForInverseSameAs) return;
+    if (!inst.options.connection['http:'].useForInverseSameAs) {
+      return setTimeout(function() { callback(); }, 0);
+    }
 
     var start;
     if (inst.debugOn) {
