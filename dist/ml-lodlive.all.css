@@ -8,7 +8,7 @@
   overflow: scroll;
   background-color: #c7c7c7;
   font-family: 'Open Sans', Verdana, sans-serif;
-  font-size: 10px; 
+  font-size: 10px;
   position: relative;
 }
 
@@ -33,7 +33,7 @@
   width: 0;
 }
 
-.lodlive-node .lodlive-node-label{ 
+.lodlive-node .lodlive-node-label {
   width: 126px;
   height: 126px;
   position: relative;
@@ -137,7 +137,26 @@
   border-radius: 0 8px 0 0;
 }
 
-
 .lodlive-node.pinned .lodlive-node-label { border: dashed 1px white; background-color: #9CF; }
 
+.lodlive-node .page .pageNext {
+  background-position: -1390px -412px;
+  cursor: pointer;
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  border: 0;
+  z-index: 101;
+  text-align: center;
+}
 
+.lodlive-node .page .pagePrev {
+  background-position: -1414px -410px;
+  cursor: pointer;
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  border: 0;
+  z-index: 101;
+  text-align: center;
+}
