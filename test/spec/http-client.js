@@ -11,15 +11,27 @@ describe('httpClient', function () {
     expect(window.httpClientFactory).not.to.be.undefined
   })
 
-  it('should create a client', function () {
-    var httpClient = httpClientFactory.create()
-    expect(httpClient).not.to.be.undefined
+  it('should throw an error if missing endpoint', function () {
+    var fn = function () { httpClientFactory.create({}) }
+    expect(fn).to.throw('missing required connection.endpoint for httpClient')
   })
 
-  it('should not require callbacks', function () {
+  it('should create a client', function () {
+    var httpClient = httpClientFactory.create({ endpoint: 'here' })
+    expect(httpClient).not.to.be.undefined
+
+    httpClient({}, {})
+  })
+
+  it('should use connection configuration', function () {
     var self = this
     var ajax = this.sandbox.stub($, 'ajax')
-    var httpClient = httpClientFactory.create('endpoint', 'param=value', 'accepts', 'json')
+    var connection = {
+      endpoint: 'endpoint',
+      defaultParams: 'param=value',
+      headers: { Accept: 'accepts' }
+    }
+    var httpClient = httpClientFactory.create(connection)
 
     httpClient({ query: 'QUERY' }, {})
 
@@ -28,7 +40,7 @@ describe('httpClient', function () {
     var args = ajax.args[0][0]
     expect(args.url).to.equal('endpoint?param=value&query=QUERY')
     expect(args.contentType).to.equal('application/json')
-    expect(args.accepts).to.equal('accepts')
+    expect(args.headers.Accept).to.equal('accepts')
     expect(args.dataType).to.equal('json')
 
     args.beforeSend()
@@ -45,14 +57,21 @@ describe('httpClient', function () {
       success: self.sandbox.stub(),
       error: self.sandbox.stub()
     }
+    var connection = {
+      endpoint: 'endpoint',
+      defaultParams: { param: 'value' },
+      jsonp: true
+    }
 
-    var httpClient = httpClientFactory.create('endpoint', 'param=value', 'accepts', 'json')
+    var httpClient = httpClientFactory.create(connection)
 
     httpClient({ query: 'QUERY' }, callbacks)
 
     expect(ajax).to.have.been.calledOnce
 
     var args = ajax.args[0][0]
+
+    expect(args.url).to.equal('endpoint?param=value&query=QUERY')
 
     args.beforeSend()
     expect(callbacks.beforeSend).to.have.been.calledOnce

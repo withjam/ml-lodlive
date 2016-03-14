@@ -1,123 +1,133 @@
 'use strict'
 
-var sparqlClientFactory = {
-  // sparqlProfile = profile.connections['http:'].sparql
-  // defaultSparqlProfile: passed in for now, but should be a static reference ...
-  create: function(sparqlProfile, defaultSparqlProfile, httpClient) {
+var defaultQueries = {
+  documentUri: 'SELECT DISTINCT * WHERE {<{URI}> ?property ?object} ORDER BY ?property',
+  document: 'SELECT DISTINCT * WHERE {<{URI}> ?property ?object}',
+  bnode: 'SELECT DISTINCT *  WHERE {<{URI}> ?property ?object}',
+  inverse: 'SELECT DISTINCT * WHERE {?object ?property <{URI}>.} LIMIT 100',
+  inverseSameAs: 'SELECT DISTINCT * WHERE {{?object <http://www.w3.org/2002/07/owl#sameAs> <{URI}> } UNION { ?object <http://www.w3.org/2004/02/skos/core#exactMatch> <{URI}>}}'
+};
 
-    function getQuery(axis, iri) {
-      var pattern = sparqlProfile && sparqlProfile[axis] ?
-                    sparqlProfile[axis] :
-                    defaultSparqlProfile[axis];
+function parseResults(bindings) {
+  var info = { uris: [], bnodes: [], values: [] };
 
-      // ~~ === bnode; TODO: remove
-      return pattern.replace(/\{URI\}/ig, iri.replace(/^.*~~/, ''));
+  $.each(bindings, function(key, value) {
+    var newVal = {};
+    newVal[value.property.value] = value.object.value;
+    if (value.object.type === 'uri') {
+      info.uris.push(newVal);
+    } else if (value.object.type === 'bnode') {
+      info.bnodes.push(newVal);
+    } else {
+      info.values.push(newVal);
     }
+  });
 
-    function parseResults(bindings) {
-      var info = { uris: [], bnodes: [], values: [] };
+  return info;
+}
 
-      $.each(bindings, function(key, value) {
-        var newVal = {};
-        newVal[value.property.value] = value.object.value;
-        if (value.object.type === 'uri') {
-          info.uris.push(newVal);
-        } else if (value.object.type === 'bnode') {
-          info.bnodes.push(newVal);
-        } else {
-          info.values.push(newVal);
-        }
-      });
+function SparqlClient(httpClientFactory, options) {
+  if (!(this instanceof SparqlClient)) {
+    return new SparqlClient(httpClientFactory, options);
+  }
 
-      return info;
-    }
+  this.httpClient = httpClientFactory.create(options.connection);
 
-    return {
-      document: function(iri, callbacks) {
-        var axis = 'document';
-        var params = { query: getQuery(axis, iri) };
+  this.getQueryTemplate = function(axis) {
+    return options.queries && options.queries[axis] ?
+           options.queries[axis] :
+           defaultQueries[axis];
+  };
+}
 
-        return httpClient(params, {
-          beforeSend: callbacks.beforeSend,
-          error: callbacks.error,
-          success : function(json) {
-            var info;
+SparqlClient.prototype.getQuery = function getQuery(axis, iri) {
+  return this.getQueryTemplate(axis)
+  .replace(/\{URI\}/ig, iri.replace(/^.*~~/, ''));
+};
 
-            if ( !(json && json.results && json.results.bindings) ) {
-              console.error(json);
-              return callbacks.error(new Error('malformed results'));
-            }
+SparqlClient.prototype.document = function document(iri, callbacks) {
+  var axis = 'document';
+  var query = this.getQuery(axis, iri);
 
-            info = parseResults(json.results.bindings);
-            callbacks.success(info);
-          }
-        });
-      },
-      bnode: function(iri, callbacks) {
-        var axis = 'bnode';
-        var params = { query: getQuery(axis, iri) };
-
-        return httpClient(params, {
-          beforeSend: callbacks.beforeSend,
-          error: callbacks.error,
-          success : function(json) {
-            var info;
-
-            if ( !(json && json.results && json.results.bindings) ) {
-              console.error(json);
-              return callbacks.error(new Error('malformed results'));
-            }
-
-            info = parseResults(json.results.bindings);
-            callbacks.success(info);
-          }
-        });
-      },
-      documentUri: function(iri, callbacks) {
-        var axis = 'documentUri';
-        var params = { query: getQuery(axis, iri) };
-
-        return httpClient(params, {
-          beforeSend: callbacks.beforeSend,
-          error: callbacks.error,
-          success : function(json) {
-            var info;
-
-            if ( !(json && json.results && json.results.bindings) ) {
-              console.error(json);
-              return callbacks.error(new Error('malformed results'));
-            }
-
-            info = parseResults(json.results.bindings);
-            callbacks.success(info);
-          }
-        });
-      },
-      inverse: function(iri, callbacks) {
-        var axis = 'inverse';
-        var params = { query: getQuery(axis, iri) };
-
-        return httpClient(params, {
-          beforeSend: callbacks.beforeSend,
-          error: callbacks.error,
-          success : function(json) {
-            var info;
-
-            if ( !(json && json.results && json.results.bindings) ) {
-              console.error(json);
-              return callbacks.error(new Error('malformed results'));
-            }
-
-            info = parseResults(json.results.bindings);
-            callbacks.success(info);
-          }
-        });
-      },
-      inverseSameAs: function(iri, callbacks) {
-        var axis = 'inverseSameAs';
-        return httpClient({ query: getQuery(axis, iri) }, callbacks);
+  return this.httpClient({ query: query }, {
+    beforeSend: callbacks.beforeSend,
+    error: callbacks.error,
+    success : function(json) {
+      if ( !(json && json.results && json.results.bindings) ) {
+        console.error(json);
+        return callbacks.error(new Error('malformed results'));
       }
-    };
+
+      callbacks.success( parseResults(json.results.bindings) );
+    }
+  });
+};
+
+SparqlClient.prototype.bnode = function bnode(iri, callbacks) {
+  var axis = 'bnode';
+  var query = this.getQuery(axis, iri);
+
+  return this.httpClient({ query: query }, {
+    beforeSend: callbacks.beforeSend,
+    error: callbacks.error,
+    success : function(json) {
+      if ( !(json && json.results && json.results.bindings) ) {
+        console.error(json);
+        return callbacks.error(new Error('malformed results'));
+      }
+
+      callbacks.success( parseResults(json.results.bindings) );
+    }
+  });
+};
+
+SparqlClient.prototype.documentUri = function documentUri(iri, callbacks) {
+  var axis = 'documentUri';
+  var query = this.getQuery(axis, iri);
+
+  return this.httpClient({ query: query }, {
+    beforeSend: callbacks.beforeSend,
+    error: callbacks.error,
+    success : function(json) {
+      if ( !(json && json.results && json.results.bindings) ) {
+        console.error(json);
+        return callbacks.error(new Error('malformed results'));
+      }
+
+      callbacks.success( parseResults(json.results.bindings) );
+    }
+  });
+};
+
+SparqlClient.prototype.inverse = function inverse(iri, callbacks) {
+  var axis = 'inverse';
+  var query = this.getQuery(axis, iri);
+
+  return this.httpClient({ query: query }, {
+    beforeSend: callbacks.beforeSend,
+    error: callbacks.error,
+    success : function(json) {
+      if ( !(json && json.results && json.results.bindings) ) {
+        console.error(json);
+        return callbacks.error(new Error('malformed results'));
+      }
+
+      callbacks.success( parseResults(json.results.bindings) );
+    }
+  });
+};
+
+SparqlClient.prototype.inverseSameAs = function inverseSameAs(iri, callbacks) {
+  var axis = 'inverseSameAs';
+  var query = this.getQuery(axis, iri);
+
+  return this.httpClient({ query: query }, callbacks);
+};
+
+
+var sparqlClientFactory = {
+  create: function(httpClientFactory, options) {
+    return new SparqlClient(httpClientFactory, options);
   }
 };
 

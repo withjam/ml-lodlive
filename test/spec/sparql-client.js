@@ -3,7 +3,12 @@ describe('sparqlClient', function () {
     this.sandbox = sinon.sandbox.create()
     this.fixtures = {
       basicResults: fixture.load('test/fixtures/basic-results.json')
-    };
+    }
+    this.makeFactory = function(stub) {
+      return {
+        create: function() { return stub }
+      }
+    }
   })
 
   afterEach(function () {
@@ -15,14 +20,14 @@ describe('sparqlClient', function () {
   })
 
   it('should create a client', function () {
-    var sparqlClient = sparqlClientFactory.create({}, {}, {})
+    var sparqlClient = sparqlClientFactory.create(this.makeFactory({}), {})
     expect(sparqlClient).not.to.be.undefined
   })
 
   it('should parse queries and make request', function () {
-    var profile = { document: 'QUERY' }
+    var profile = { queries: { document: 'QUERY' } }
     var httpStub = this.sandbox.stub()
-    var sparqlClient = sparqlClientFactory.create(profile, {}, httpStub)
+    var sparqlClient = sparqlClientFactory.create(this.makeFactory(httpStub), profile)
 
     sparqlClient.document('', {})
     expect(httpStub).to.have.been.calledOnce
@@ -30,10 +35,10 @@ describe('sparqlClient', function () {
   })
 
   it('should yield an error with invalid results (document)', function () {
-    var profile = { document: 'QUERY' }
+    var profile = { queries: { document: 'QUERY' } }
     var httpStub = this.sandbox.stub()
     var errorStub = this.sandbox.stub()
-    var sparqlClient = sparqlClientFactory.create(profile, {}, httpStub)
+    var sparqlClient = sparqlClientFactory.create(this.makeFactory(httpStub), profile)
 
     sparqlClient.document('', { error: errorStub })
 
@@ -48,10 +53,10 @@ describe('sparqlClient', function () {
   })
 
   it('should parse results (document)', function () {
-    var profile = { document: 'QUERY' }
+    var profile = { queries: { document: 'QUERY' } }
     var httpStub = this.sandbox.stub()
     var successStub = this.sandbox.stub()
-    var sparqlClient = sparqlClientFactory.create(profile, {}, httpStub)
+    var sparqlClient = sparqlClientFactory.create(this.makeFactory(httpStub), profile)
 
     sparqlClient.document('', { success: successStub })
 
@@ -70,10 +75,10 @@ describe('sparqlClient', function () {
   })
 
   it('should yield an error with invalid results (documentUri)', function () {
-    var profile = { documentUri: 'QUERY' }
+    var profile = { queries: { documentUri: 'QUERY' } }
     var httpStub = this.sandbox.stub()
     var errorStub = this.sandbox.stub()
-    var sparqlClient = sparqlClientFactory.create(profile, {}, httpStub)
+    var sparqlClient = sparqlClientFactory.create(this.makeFactory(httpStub), profile)
 
     sparqlClient.documentUri('', { error: errorStub })
 
@@ -88,10 +93,10 @@ describe('sparqlClient', function () {
   })
 
   it('should parse results (documentUri)', function () {
-    var profile = { documentUri: 'QUERY' }
+    var profile = { queries: { documentUri: 'QUERY' } }
     var httpStub = this.sandbox.stub()
     var successStub = this.sandbox.stub()
-    var sparqlClient = sparqlClientFactory.create(profile, {}, httpStub)
+    var sparqlClient = sparqlClientFactory.create(this.makeFactory(httpStub), profile)
 
     sparqlClient.documentUri('', { success: successStub })
 
@@ -110,10 +115,10 @@ describe('sparqlClient', function () {
   })
 
   it('should yield an error with invalid results (inverse)', function () {
-    var profile = { inverse: 'QUERY' }
+    var profile = { queries: { inverse: 'QUERY' } }
     var httpStub = this.sandbox.stub()
     var errorStub = this.sandbox.stub()
-    var sparqlClient = sparqlClientFactory.create(profile, {}, httpStub)
+    var sparqlClient = sparqlClientFactory.create(this.makeFactory(httpStub), profile)
 
     sparqlClient.inverse('', { error: errorStub })
 
@@ -128,10 +133,10 @@ describe('sparqlClient', function () {
   })
 
   it('should parse results (inverse)', function () {
-    var profile = { inverse: 'QUERY' }
+    var profile = { queries: { inverse: 'QUERY' } }
     var httpStub = this.sandbox.stub()
     var successStub = this.sandbox.stub()
-    var sparqlClient = sparqlClientFactory.create(profile, {}, httpStub)
+    var sparqlClient = sparqlClientFactory.create(this.makeFactory(httpStub), profile)
 
     sparqlClient.inverse('', { success: successStub })
 
@@ -150,9 +155,9 @@ describe('sparqlClient', function () {
   })
 
   it('should parse queries and make request (inverseSameAs)', function () {
-    var profile = { inverseSameAs: 'QUERY' }
+    var profile = { queries: { inverseSameAs: 'QUERY' } }
     var httpStub = this.sandbox.stub()
-    var sparqlClient = sparqlClientFactory.create(profile, {}, httpStub)
+    var sparqlClient = sparqlClientFactory.create(this.makeFactory(httpStub), profile)
 
     sparqlClient.inverseSameAs('', {})
     expect(httpStub).to.have.been.calledOnce
@@ -160,19 +165,18 @@ describe('sparqlClient', function () {
   })
 
   it('should fallback to default queries and make request', function () {
-    var defaultProfile = { bnode: 'QUERY' }
     var httpStub = this.sandbox.stub()
-    var sparqlClient = sparqlClientFactory.create({}, defaultProfile, httpStub)
+    var sparqlClient = sparqlClientFactory.create(this.makeFactory(httpStub), {})
 
     sparqlClient.bnode('', {})
     expect(httpStub).to.have.been.calledOnce
-    expect(httpStub.args[0][0].query).to.equal('QUERY')
+    expect(httpStub.args[0][0].query).to.equal('SELECT DISTINCT *  WHERE {<> ?property ?object}')
   })
 
   it('should substitute IRIs', function () {
-    var profile = { inverse: 'QUERY {URI}' }
+    var profile = { queries: { inverse: 'QUERY {URI}' } }
     var httpStub = this.sandbox.stub()
-    var sparqlClient = sparqlClientFactory.create(profile, {}, httpStub)
+    var sparqlClient = sparqlClientFactory.create(this.makeFactory(httpStub), profile)
 
     sparqlClient.inverse('test', {})
     expect(httpStub).to.have.been.calledOnce
