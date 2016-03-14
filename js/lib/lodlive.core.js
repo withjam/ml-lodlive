@@ -89,7 +89,7 @@
       this.refs
     );
 
-    this.renderer.init(container);
+    this.renderer.init(this, container);
     this.container = this.renderer.container;
     this.context = this.renderer.context;
 
@@ -298,66 +298,6 @@
         found.show();
         found.removeClass('exploded');
       });
-    });
-  };
-
-  LodLive.prototype.addClick = function(obj, callback) {
-    var inst = this;
-
-    // per ogni nuova risorsa collegata al documento corrente imposto le
-    // azioni "onclick"
-
-    obj.find('.relatedBox').each(function() {
-      var box = $(this);
-      box.attr('relmd5', inst.hashFunc(box.attr('rel')));
-      box.click(function(evt) {
-        box.addClass('exploded');
-        inst.addNewDoc(obj, box);
-        evt.stopPropagation();
-      });
-
-      inst.renderer.hover(box, function() {
-        inst.renderer.msg(box.data('title'), 'show', null, null, box.is('.inverse'));
-      });
-    });
-
-    obj.find('.groupedRelatedBox').each(function() {
-      var box = $(this);
-      box.click(function() {
-        if (box.data('show')) {
-          box.data('show', false);
-          inst.docInfo();
-          box.removeClass('lastClick');
-          obj.find('.' + box.attr('rel')).fadeOut('fast');
-          box.fadeTo('fast', 1);
-          obj.children('.innerPage').hide();
-        } else {
-          box.data('show', true);
-          obj.children('.innerPage').show();
-          inst.docInfo();
-          obj.find('.lastClick').removeClass('lastClick').click();
-          box.addClass('lastClick');
-          obj.find('.' + box.attr('rel') + ':not([class*=exploded])').fadeIn('fast');
-          box.fadeTo('fast', 0.3);
-        }
-      });
-
-      inst.renderer.hover(box, function() {
-        inst.renderer.msg(box.attr('data-title'), 'show', null, null, box.is('.inverse'));
-      });
-    });
-
-    // aggiungo le azioni dei tools
-    obj.on('click', '.actionBox', function(evt) {
-      var el = $(this), handler = el.data('action-handler'), rel = el.attr('rel');
-      if (handler) {
-        handler.call(el, obj, inst, evt);
-      } else {
-        switch(rel) {
-          case 'docInfo':  inst.docInfo(obj); break;
-          case 'tools': inst.renderer.generateTools(el, obj, inst).fadeToggle('fast'); break;
-        }
-      }
     });
   };
 
@@ -893,7 +833,6 @@
 
     function callback(info) {
       inst.format(destBox.children('.box'), info.values, info.uris, inverses);
-      inst.addClick(destBox);
 
       if (fromInverse && fromInverse.length) {
         $(fromInverse).click();
