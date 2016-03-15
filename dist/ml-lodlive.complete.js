@@ -39,64 +39,73 @@
     * @param {object=} options optional hash of options
     */
   function LodLive(container,options) {
-    this.container = container;
-    this.options = options;
-    this.UI = options.UI || {};
+    var profile = this.options = options;
     this.debugOn = options.debugOn && window.console; // don't debug if there is no console
 
     // allow them to override the docInfo function
-    if (this.UI.docInfo) {
-      this.docInfo = this.UI.docInfo;
-    }
-    if (this.UI.nodeHover) {
-      this.msg = this.UI.nodeHover;
+    if (profile.UI.docInfo) {
+      this.docInfo = profile.UI.docInfo;
     }
 
-    // simple MD5 implementation to eliminate dependencies
-    // can still pass in MD5 (or some other algorithm) if desired
-    this.hashFunc = this.options.hashFunc || utils.hashFunc;
+    // for backwards compatibility with existing profiles
+    var connection;
 
-    // TODO: move to renderer
-    this.boxTemplate =  this.options.boxTemplate || DEFAULT_BOX_TEMPLATE;
+    if (profile.connection.endpoint) {
+      connection = profile.connection;
+    } else {
+      connection = {
+        endpoint: profile.connection['http:'].endpoint,
+        defaultParams: profile.endpoints.all,
+        headers: { Accept: profile.connection['http:'].accepts },
+        jsonp: profile.endpoints.jsonp
+      };
+    }
 
+    // TODO: pass partially applied sparqlClientFactory as constructor paramter
+    // (with an httpClientFactory already bound)
     var httpClientFactory = require('../../src/http-client.js');
-
-    var httpClient = httpClientFactory.create(
-      this.options.connection['http:'].endpoint,
-      this.options.endpoints.all,
-      this.options.connection['http:'].accepts,
-      this.getAjaxDataType()
-    );
-
     var sparqlClientFactory = require('../../src/sparql-client.js');
 
-    this.sparqlClient = sparqlClientFactory.create(
-      this.options.connection['http:'].sparql,
-      this.options.default.sparql,
-      httpClient
-    );
+    this.sparqlClient = sparqlClientFactory.create(httpClientFactory, {
+      connection: connection,
+      queries: profile.queries || profile.connection['http:'].sparql
+    });
 
-    var refStoreFactory = require('../../src/ref-store.js');
-
-    this.refs = refStoreFactory.create();
-
+    // TODO: pass factory as constructor parameter
     var rendererFactory = require('../../src/renderer.js');
 
-    this.renderer = rendererFactory.create(
-      this.options.arrows,
-      this.options.UI.tools,
-      this.options.UI.nodeIcons,
-      this.options.UI.relationships,
-      this.refs
-    );
+    // for backwards compatibility with existing profiles
+    var rendererProfile;
 
-    this.renderer.init(container);
-    this.container = this.renderer.container;
-    this.context = this.renderer.context;
+    if (profile.UI.arrows) {
+      rendererProfile = profile.UI;
+    } else {
+      rendererProfile = {
+        arrows: profile.arrows,
+        tools: profile.UI.tools,
+        nodeIcons: profile.UI.nodeIcons,
+        relationships: profile.UI.relationships,
+        hashFunc: profile.hashFunc
+      };
+    }
+
+    this.renderer = rendererFactory.create(rendererProfile);
+    // temporary, need access from both components
+    this.refs = this.renderer.refs;
+    this.renderer.boxTemplate = this.boxTemplate = profile.boxTemplate || DEFAULT_BOX_TEMPLATE;
+
+    // allow override from profile
+    if (profile.UI.nodeHover) {
+      this.renderer.msg = profile.UI.nodeHover;
+    }
+
+    // TODO: should this be deferred till LodLive.init()?
+    // (constructor shouldn't mutate the DOM)
+    this.renderer.init(this, container);
 
     // temporary, need access from both components
-    this.renderer.hashFunc = this.hashFunc;
-    this.renderer.boxTemplate = this.boxTemplate;
+    this.container = this.renderer.container;
+    this.context = this.renderer.context;
   }
 
   LodLive.prototype.init = function(firstUri) {
@@ -105,7 +114,9 @@
     this.mapsMap = {};
     this.infoPanelMap = {};
     this.connection = {};
-    this.ignoreBnodes = this.UI.ignoreBnodes;
+
+    // TODO: this option isn't respected anywhere
+    this.ignoreBnodes = this.options.UI.ignoreBnodes;
 
     // TODO: look these up on the context object as data-lodlive-xxxx attributes
     // store settings on the instance
@@ -302,66 +313,6 @@
     });
   };
 
-  LodLive.prototype.addClick = function(obj, callback) {
-    var inst = this;
-
-    // per ogni nuova risorsa collegata al documento corrente imposto le
-    // azioni "onclick"
-
-    obj.find('.relatedBox').each(function() {
-      var box = $(this);
-      box.attr('relmd5', inst.hashFunc(box.attr('rel')));
-      box.click(function(evt) {
-        box.addClass('exploded');
-        inst.addNewDoc(obj, box);
-        evt.stopPropagation();
-      });
-
-      inst.renderer.hover(box, function() {
-        inst.renderer.msg(box.data('title'), 'show', null, null, box.is('.inverse'));
-      });
-    });
-
-    obj.find('.groupedRelatedBox').each(function() {
-      var box = $(this);
-      box.click(function() {
-        if (box.data('show')) {
-          box.data('show', false);
-          inst.docInfo();
-          box.removeClass('lastClick');
-          obj.find('.' + box.attr('rel')).fadeOut('fast');
-          box.fadeTo('fast', 1);
-          obj.children('.innerPage').hide();
-        } else {
-          box.data('show', true);
-          obj.children('.innerPage').show();
-          inst.docInfo();
-          obj.find('.lastClick').removeClass('lastClick').click();
-          box.addClass('lastClick');
-          obj.find('.' + box.attr('rel') + ':not([class*=exploded])').fadeIn('fast');
-          box.fadeTo('fast', 0.3);
-        }
-      });
-
-      inst.renderer.hover(box, function() {
-        inst.renderer.msg(box.attr('data-title'), 'show', null, null, box.is('.inverse'));
-      });
-    });
-
-    // aggiungo le azioni dei tools
-    obj.on('click', '.actionBox', function(evt) {
-      var el = $(this), handler = el.data('action-handler'), rel = el.attr('rel');
-      if (handler) {
-        handler.call(el, obj, inst, evt);
-      } else {
-        switch(rel) {
-          case 'docInfo':  inst.docInfo(obj); break;
-          case 'tools': inst.renderer.generateTools(el, obj, inst).fadeToggle('fast'); break;
-        }
-      }
-    });
-  };
-
   /**
     * Default function for showing info on a selected node.  Simply opens a panel that displays it's properties.  Calling it without an object will close it.
     * @param {Object=} obj a jquery wrapped DOM element that is a node, or null.  If null is passed then it will close any open doc info panel
@@ -470,11 +421,6 @@
       destBox.append(obj.bnodeNode);
       inst.resolveBnodes(obj.value, URI, obj.spanNode, destBox);
     });
-  };
-
-  LodLive.prototype.getAjaxDataType = function() {
-    // TODO: consider accepting URL as parameter and detect if it requires JSONP or not
-    return this.options.endpoints.jsonp ? 'jsonp' : 'json';
   };
 
   LodLive.prototype.resolveBnodes = function(val, URI, spanNode, destBox) {
@@ -894,7 +840,6 @@
 
     function callback(info) {
       inst.format(destBox.children('.box'), info.values, info.uris, inverses);
-      inst.addClick(destBox);
 
       if (fromInverse && fromInverse.length) {
         $(fromInverse).click();
@@ -980,7 +925,9 @@
     var inst = this;
 
     // TODO: why two options? (useForInverseSameAs and doAutoSameas)
-    if (!inst.options.connection['http:'].useForInverseSameAs) return;
+    if (!inst.options.connection['http:'].useForInverseSameAs) {
+      return setTimeout(function() { callback(); }, 0);
+    }
 
     var start;
     if (inst.debugOn) {
@@ -1068,7 +1015,7 @@
 
 })(jQuery);
 
-},{"../../src/http-client.js":3,"../../src/ref-store.js":4,"../../src/renderer.js":5,"../../src/sparql-client.js":6,"../../src/utils.js":7}],2:[function(require,module,exports){
+},{"../../src/http-client.js":3,"../../src/renderer.js":5,"../../src/sparql-client.js":6,"../../src/utils.js":7}],2:[function(require,module,exports){
 'use strict'
 
 function enableDrag(container, context, draggableSelector, dragStart) {
@@ -1159,18 +1106,26 @@ var httpClientFactory = {
   /*
    * Create a new httpClient instance
    *
-   * @param {String} endpoint - the request endpoint URL
-   * @param {Object|String} defaultParams - the default URL params
-   * @param {String} accepts - accepts header mime-type (from profile)
-   * @param {String} dataType - `json` or `jsonp`
+   * @param {Object} connection - connection configuration
+   * @prop {String} connection.endpoint - the request endpoint URL
+   * @prop {Object|String} connection.defaultParams - the default URL params
+   * @prop {Object} connection.headers - request headers
+   * @prop {Boolean} jsonp - make a JSONP request instead of AJAX
    * @return {Function} an httpClient instance
    */
-  create: function(endpoint, defaultParams, accepts, dataType) {
+  create: function(connection) {
+    if (!connection.endpoint) {
+      throw new Error('missing required connection.endpoint for httpClient');
+    }
 
     function parseParams(params) {
-      // TODO if (typeof defaultParams === 'object') ...
-
-      return defaultParams + '&' + $.param(params)
+      if (!connection.defaultParams) {
+        return $.param(params)
+      } else if (typeof connection.defaultParams === 'object') {
+        return $.param($.extend({}, connection.defaultParams, params))
+      } else {
+        return connection.defaultParams + '&' + $.param(params)
+      }
     }
 
     /**
@@ -1185,16 +1140,14 @@ var httpClientFactory = {
      */
     return function httpClient(params, callbacks) {
 
-      var fullUrl = endpoint + '?' + parseParams(params);
-       var afterSend;
+      var fullUrl = connection.endpoint + '?' + parseParams(params);
+      var afterSend;
 
-       $.ajax({
+      $.ajax({
         url: fullUrl,
         contentType: 'application/json',
-        accepts: accepts,
-        dataType: dataType,
-        // ugly
-        // timeout: callbacks.timeout || null,
+        dataType: connection.jsonp ? 'jsonp': 'json',
+        headers: connection.headers || {},
         beforeSend: function() {
           if (callbacks.beforeSend) afterSend = callbacks.beforeSend();
         },
@@ -1362,6 +1315,7 @@ if (!window.refStoreFactory) {
 'use strict'
 
 var utils = require('./utils.js');
+var refStoreFactory = require('./ref-store.js');
 
 /**
  * Built-in "always on" tools
@@ -1427,12 +1381,18 @@ var _builtins = {
   }
 };
 
-function LodLiveRenderer(arrows, tools, nodeIcons, relationships, refs) {
-  this.arrows = arrows;
-  this.tools = tools;
-  this.nodeIcons = nodeIcons;
-  this.relationships = relationships;
-  this.refs = refs;
+function LodLiveRenderer(options) {
+  if (!(this instanceof LodLiveRenderer)) {
+    return new LodLiveRenderer(options);
+  }
+
+  this.refs = refStoreFactory.create();
+
+  this.hashFunc = options.hashFunc || utils.hashFunc;
+  this.arrows = options.arrows;
+  this.tools = options.tools;
+  this.nodeIcons = options.nodeIcons;
+  this.relationships = options.relationships;
 }
 
 /**
@@ -1453,28 +1413,6 @@ LodLiveRenderer.prototype.loading = function loading(target) {
   return function() {
     loader.remove();
   };
-};
-
-/**
- * Configure hover interactions for `target`
- *
- * Defaults to `renderer.msg(target.attr('data-title'), 'show')`
- *
- * @param {Object} target - jQuery object containing one-or-more elements
- * parma {Function} [showFn] - function to invoke on hover
- */
-LodLiveRenderer.prototype.hover = function hover(target, showFn) {
-  var renderer = this;
-
-  target.each(function() {
-    var el = $(this);
-    el.hover(function() {
-      if (showFn) return showFn();
-      renderer.msg(el.attr('data-title'), 'show');
-    }, function() {
-      renderer.msg(null, 'hide');
-    });
-  });
 };
 
 /**
@@ -1610,11 +1548,9 @@ LodLiveRenderer.prototype.docInfoMissing = function() {
   var sectionNode = $('<div class="section"></div>');
   var textNode = $('<div></div>').text(utils.lang('resourceMissingDoc'));
 
-  // TODO: no text, nothing to show, nothing to hover ...
+  // TODO: no text, nothing to show
   var labelNode = $('<label></label>')
   .attr('data-title',  utils.lang('resourceMissingDoc'));
-
-  renderer.hover(labelNode);
 
   sectionNode.append(labelNode).append(textNode);
 
@@ -1634,8 +1570,6 @@ LodLiveRenderer.prototype.docInfoTypes = function(types) {
 
   // TODO: get types from profile
   var labelNode = $('<label data-title="http://www.w3.org/1999/02/22-rdf-syntax-ns#type">type</label>');
-
-  renderer.hover(labelNode);
 
   var wrapperNode = $('<div></div>');
 
@@ -1737,9 +1671,6 @@ LodLiveRenderer.prototype.docInfoLinks = function(links) {
     .attr('href', value)
     .text(value);
 
-    // TODO: delegate hover
-    renderer.hover(linkNode);
-
     listItemNode.append(linkNode);
     wrapperNode.append(listItemNode);
   });
@@ -1774,8 +1705,6 @@ LodLiveRenderer.prototype.docInfoValues = function(values) {
     .attr('data-title', key)
     .text(shortKey);
 
-    renderer.hover(labelNode);
-
     var textNode = $('<div></div>').text(value);
 
     sectionNode.append(labelNode).append(textNode);
@@ -1804,8 +1733,6 @@ LodLiveRenderer.prototype.docInfoBnodes = function(bnodes) {
     var labelNode = $('<label></label>')
     .attr('data-title', key)
     .text(shortKey);
-
-    renderer.hover(labelNode);
 
     var spanNode = $('<span class="bnode"></span>')
 
@@ -1861,8 +1788,6 @@ LodLiveRenderer.prototype.docInfoNestedBnodes = function(key, spanNode) {
   .attr('data-title', key)
   .text(utils.shortenKey(key))
 
-  renderer.hover(labelNode);
-
   var bnodeNode = $('<span class="bnode"></span>')
 
   wrapperNode.append(labelNode).append(bnodeNode);
@@ -1898,10 +1823,6 @@ LodLiveRenderer.prototype.addBoxTitle = function(title, thisUri, destBox, contai
 
   jResult.attr('data-tooltip', title);
   destBox.append(jResult);
-
-  renderer.hover(destBox, function() {
-    renderer.msg(title, 'show', 'fullInfo', containerBox.attr('data-endpoint'));
-  });
 };
 
 /**
@@ -2037,6 +1958,7 @@ LodLiveRenderer.prototype._createRelatedBox = function _createRelatedBox(predica
   var box = $('<div></div>')
   .addClass('relatedBox ' + renderer.hashFunc(object).toString())
   .attr('rel', object)
+  .attr('relmd5', renderer.hashFunc(object).toString())
   .attr('data-title', predicates + ' \n ' + object)
   .attr('data-circleid', containerBox.attr('id'))
   .attr('data-property', predicates)
@@ -2115,14 +2037,6 @@ LodLiveRenderer.prototype.paginateRelatedBoxes = function(containerBox, objectLi
   if (innerObjectList.length > 0) {
     containerBox.append(innerPage);
   }
-
-  containerBox.children('.page').children('.llpages').click(function() {
-    var llpages = $(this);
-    containerBox.find('.lastClick').removeClass('lastClick').click();
-    llpages.parent().fadeOut('fast', null, function() {
-      $(this).parent().children('.' + llpages.attr('data-page')).fadeIn('fast');
-    });
-  });
 
   containerBox.children('.page1').fadeIn('fast');
 };
@@ -2544,14 +2458,125 @@ LodLiveRenderer.prototype.errorBox = function(destBox) {
   destBox.children('.box').html('');
   var jResult = $('<div class="boxTitle"><span>' + utils.lang('endpointNotAvailable') + '</span></div>');
   destBox.children('.box').append(jResult);
-  destBox.children('.box').hover(function() {
-    renderer.msg(utils.lang('endpointNotAvailableOrSLow'), 'show', 'fullInfo', destBox.attr('data-endpoint'));
-  }, function() {
-    renderer.msg(null, 'hide');
+};
+
+/**
+ * Configure hover interactions
+ */
+LodLiveRenderer.prototype.initHover = function initHover() {
+  var renderer = this;
+
+  // docInfo labels
+  this.container.on('mouseenter mouseleave', '.lodlive-docinfo label, .lodlive-docinfo a', function(event) {
+    if (event.type === 'mouseleave') {
+      return renderer.msg(null, 'hide');
+    }
+
+    renderer.msg($(event.target).data('title'), 'show');
+  });
+
+  // nodes
+  this.container.on('mouseenter mouseleave', '.box', function(event) {
+    if (event.type === 'mouseleave') {
+      return renderer.msg(null, 'hide');
+    }
+
+    var target = $(event.target);
+    var title = target.is('.errorBox') ?
+                utils.lang('endpointNotAvailableOrSLow') :
+                target.children('.boxTitle').data('tooltip');
+
+    renderer.msg(title, 'show', 'fullInfo', target.parent('div').data('endpoint'));
+  });
+
+  // related nodes
+  this.container.on('mouseenter mouseleave', '.relatedBox, .groupedRelatedBox', function(event) {
+    if (event.type === 'mouseleave') {
+      return renderer.msg(null, 'hide');
+    }
+
+    var target = $(event.target);
+    renderer.msg(target.data('title'), 'show', null, null, target.is('.inverse'));
   });
 };
 
-LodLiveRenderer.prototype.init = function(container) {
+/**
+ * Configure click interactions
+ *
+ * @param {LodLive} inst - instance of lodlive
+ */
+LodLiveRenderer.prototype.initClicks = function initClicks(inst) {
+  var renderer = this;
+
+  // tools
+  this.container.on('click', '.actionBox', function(event) {
+    // TODO: why is this not always actionBox, but sometimes a descendant?
+    var target = $(event.target).closest('.actionBox');
+    var node = target.closest('.lodlive-node');
+    var handler = target.data('action-handler');
+
+    if (handler) {
+      return handler.call(target, node, inst, event);
+    }
+
+    switch(target.attr('rel')) {
+      case 'docInfo':
+        inst.docInfo(node);
+        break;
+      case 'tools':
+        renderer.generateTools(target, node, inst).fadeToggle('fast');
+        break;
+      // TODO: default error?
+    }
+  });
+
+  // related nodes
+  this.container.on('click', '.relatedBox', function(event) {
+    var target = $(event.target);
+    var node = target.closest('.lodlive-node');
+
+    target.addClass('exploded');
+    inst.addNewDoc(node, target);
+    // event.stopPropagation();
+  });
+
+  // related node groups
+  this.container.on('click', '.groupedRelatedBox', function(event) {
+    var target = $(event.target);
+    var node = target.closest('.lodlive-node');
+
+    if (target.data('show')) {
+      target.data('show', false);
+      inst.docInfo();
+      target.removeClass('lastClick');
+      node.find('.' + target.attr('rel')).fadeOut('fast');
+      target.fadeTo('fast', 1);
+      node.children('.innerPage').hide();
+    } else {
+      target.data('show', true);
+      node.children('.innerPage').show();
+      inst.docInfo();
+      node.find('.lastClick').removeClass('lastClick').click();
+      target.addClass('lastClick');
+      node.find('.' + target.attr('rel') + ':not([class*=exploded])').fadeIn('fast');
+      target.fadeTo('fast', 0.3);
+    }
+  });
+
+  // pagination
+  this.container.on('click', '.llpages', function(event) {
+    var target = $(event.target);
+    var pageSelector = '.' + target.data('page');
+
+    target.siblings('.lastClick').removeClass('lastClick').click();
+
+    target.parent().fadeOut('fast', null, function() {
+      $(this).parent().children(pageSelector).fadeIn('fast');
+    });
+  });
+};
+
+LodLiveRenderer.prototype.init = function(inst, container) {
   var renderer = this;
 
   if (typeof container === 'string') {
@@ -2574,11 +2599,14 @@ LodLiveRenderer.prototype.init = function(container) {
   draggable(this.container, this.context, '.lodlive-node', function(dragState) {
     return renderer.reDrawLines(dragState.target);
   });
+
+  this.initHover();
+  this.initClicks(inst);
 };
 
 var rendererFactory = {
-  create: function(arrows, tools, nodeIcons, relationships, refs) {
-    return new LodLiveRenderer(arrows, tools, nodeIcons, relationships, refs);
+  create: function(options) {
+    return new LodLiveRenderer(options);
   }
 };
 
@@ -2593,127 +2621,137 @@ if (!window.rendererFactory) {
   window.rendererFactory = rendererFactory;
 }
 
-},{"./draggable.js":2,"./utils.js":7}],6:[function(require,module,exports){
+},{"./draggable.js":2,"./ref-store.js":4,"./utils.js":7}],6:[function(require,module,exports){
 'use strict'
 
-var sparqlClientFactory = {
-  // sparqlProfile = profile.connections['http:'].sparql
-  // defaultSparqlProfile: passed in for now, but should be a static reference ...
-  create: function(sparqlProfile, defaultSparqlProfile, httpClient) {
+var defaultQueries = {
+  documentUri: 'SELECT DISTINCT * WHERE {<{URI}> ?property ?object} ORDER BY ?property',
+  document: 'SELECT DISTINCT * WHERE {<{URI}> ?property ?object}',
+  bnode: 'SELECT DISTINCT *  WHERE {<{URI}> ?property ?object}',
+  inverse: 'SELECT DISTINCT * WHERE {?object ?property <{URI}>.} LIMIT 100',
+  inverseSameAs: 'SELECT DISTINCT * WHERE {{?object <http://www.w3.org/2002/07/owl#sameAs> <{URI}> } UNION { ?object <http://www.w3.org/2004/02/skos/core#exactMatch> <{URI}>}}'
+};
 
-    function getQuery(axis, iri) {
-      var pattern = sparqlProfile && sparqlProfile[axis] ?
-                    sparqlProfile[axis] :
-                    defaultSparqlProfile[axis];
+function parseResults(bindings) {
+  var info = { uris: [], bnodes: [], values: [] };
 
-      // ~~ === bnode; TODO: remove
-      return pattern.replace(/\{URI\}/ig, iri.replace(/^.*~~/, ''));
+  $.each(bindings, function(key, value) {
+    var newVal = {};
+    newVal[value.property.value] = value.object.value;
+    if (value.object.type === 'uri') {
+      info.uris.push(newVal);
+    } else if (value.object.type === 'bnode') {
+      info.bnodes.push(newVal);
+    } else {
+      info.values.push(newVal);
     }
+  });
 
-    function parseResults(bindings) {
-      var info = { uris: [], bnodes: [], values: [] };
+  return info;
+}
 
-      $.each(bindings, function(key, value) {
-        var newVal = {};
-        newVal[value.property.value] = value.object.value;
-        if (value.object.type === 'uri') {
-          info.uris.push(newVal);
-        } else if (value.object.type === 'bnode') {
-          info.bnodes.push(newVal);
-        } else {
-          info.values.push(newVal);
-        }
-      });
+function SparqlClient(httpClientFactory, options) {
+  if (!(this instanceof SparqlClient)) {
+    return new SparqlClient(httpClientFactory, options);
+  }
 
-      return info;
-    }
+  this.httpClient = httpClientFactory.create(options.connection);
 
-    return {
-      document: function(iri, callbacks) {
-        var axis = 'document';
-        var params = { query: getQuery(axis, iri) };
+  this.getQueryTemplate = function(axis) {
+    return options.queries && options.queries[axis] ?
+           options.queries[axis] :
+           defaultQueries[axis];
+  };
+}
 
-        return httpClient(params, {
-          beforeSend: callbacks.beforeSend,
-          error: callbacks.error,
-          success : function(json) {
-            var info;
+SparqlClient.prototype.getQuery = function getQuery(axis, iri) {
+  return this.getQueryTemplate(axis)
+  .replace(/\{URI\}/ig, iri.replace(/^.*~~/, ''));
+};
 
-            if ( !(json && json.results && json.results.bindings) ) {
-              console.error(json);
-              return callbacks.error(new Error('malformed results'));
-            }
+SparqlClient.prototype.document = function document(iri, callbacks) {
+  var axis = 'document';
+  var query = this.getQuery(axis, iri);
 
-            info = parseResults(json.results.bindings);
-            callbacks.success(info);
-          }
-        });
-      },
-      bnode: function(iri, callbacks) {
-        var axis = 'bnode';
-        var params = { query: getQuery(axis, iri) };
-
-        return httpClient(params, {
-          beforeSend: callbacks.beforeSend,
-          error: callbacks.error,
-          success : function(json) {
-            var info;
-
-            if ( !(json && json.results && json.results.bindings) ) {
-              console.error(json);
-              return callbacks.error(new Error('malformed results'));
-            }
-
-            info = parseResults(json.results.bindings);
-            callbacks.success(info);
-          }
-        });
-      },
-      documentUri: function(iri, callbacks) {
-        var axis = 'documentUri';
-        var params = { query: getQuery(axis, iri) };
-
-        return httpClient(params, {
-          beforeSend: callbacks.beforeSend,
-          error: callbacks.error,
-          success : function(json) {
-            var info;
-
-            if ( !(json && json.results && json.results.bindings) ) {
-              console.error(json);
-              return callbacks.error(new Error('malformed results'));
-            }
-
-            info = parseResults(json.results.bindings);
-            callbacks.success(info);
-          }
-        });
-      },
-      inverse: function(iri, callbacks) {
-        var axis = 'inverse';
-        var params = { query: getQuery(axis, iri) };
-
-        return httpClient(params, {
-          beforeSend: callbacks.beforeSend,
-          error: callbacks.error,
-          success : function(json) {
-            var info;
-
-            if ( !(json && json.results && json.results.bindings) ) {
-              console.error(json);
-              return callbacks.error(new Error('malformed results'));
-            }
-
-            info = parseResults(json.results.bindings);
-            callbacks.success(info);
-          }
-        });
-      },
-      inverseSameAs: function(iri, callbacks) {
-        var axis = 'inverseSameAs';
-        return httpClient({ query: getQuery(axis, iri) }, callbacks);
+  return this.httpClient({ query: query }, {
+    beforeSend: callbacks.beforeSend,
+    error: callbacks.error,
+    success : function(json) {
+      if ( !(json && json.results && json.results.bindings) ) {
+        console.error(json);
+        return callbacks.error(new Error('malformed results'));
       }
-    };
+
+      callbacks.success( parseResults(json.results.bindings) );
+    }
+  });
+};
+
+SparqlClient.prototype.bnode = function bnode(iri, callbacks) {
+  var axis = 'bnode';
+  var query = this.getQuery(axis, iri);
+
+  return this.httpClient({ query: query }, {
+    beforeSend: callbacks.beforeSend,
+    error: callbacks.error,
+    success : function(json) {
+      if ( !(json && json.results && json.results.bindings) ) {
+        console.error(json);
+        return callbacks.error(new Error('malformed results'));
+      }
+
+      callbacks.success( parseResults(json.results.bindings) );
+    }
+  });
+};
+
+SparqlClient.prototype.documentUri = function documentUri(iri, callbacks) {
+  var axis = 'documentUri';
+  var query = this.getQuery(axis, iri);
+
+  return this.httpClient({ query: query }, {
+    beforeSend: callbacks.beforeSend,
+    error: callbacks.error,
+    success : function(json) {
+      if ( !(json && json.results && json.results.bindings) ) {
+        console.error(json);
+        return callbacks.error(new Error('malformed results'));
+      }
+
+      callbacks.success( parseResults(json.results.bindings) );
+    }
+  });
+};
+
+SparqlClient.prototype.inverse = function inverse(iri, callbacks) {
+  var axis = 'inverse';
+  var query = this.getQuery(axis, iri);
+
+  return this.httpClient({ query: query }, {
+    beforeSend: callbacks.beforeSend,
+    error: callbacks.error,
+    success : function(json) {
+      if ( !(json && json.results && json.results.bindings) ) {
+        console.error(json);
+        return callbacks.error(new Error('malformed results'));
+      }
+
+      callbacks.success( parseResults(json.results.bindings) );
+    }
+  });
+};
+
+SparqlClient.prototype.inverseSameAs = function inverseSameAs(iri, callbacks) {
+  var axis = 'inverseSameAs';
+  var query = this.getQuery(axis, iri);
+
+  return this.httpClient({ query: query }, callbacks);
+};
+
+
+var sparqlClientFactory = {
+  create: function(httpClientFactory, options) {
+    return new SparqlClient(httpClientFactory, options);
   }
 };
 
@@ -2727,53 +2765,48 @@ if (!window.sparqlClientFactory) {
 },{}],7:[function(require,module,exports){
 'use strict';
 
-var LodLiveUtils = {};
-
 var _translations = {};
 
-LodLiveUtils.getSparqlConf = function(what, where, lodLiveProfile) {
-  return where.sparql && where.sparql[what] ? where.sparql[what] : lodLiveProfile['default'].sparql[what];
-};
-
 /**
-  * Register a set of translations, for example ('en-us', { greeting: 'Hello' })
-**/
-LodLiveUtils.registerTranslation = function(langKey, data) {
+ * Register a set of translations, for example ('en-us', { greeting: 'Hello' })
+ */
+function registerTranslation(langKey, data) {
   _translations[langKey] = data;
-};
+}
 
-LodLiveUtils.setDefaultTranslation = function(langKey) {
+function setDefaultTranslation(langKey) {
   _translations['default'] = _translations[langKey] || _translations['default'];
-};
+}
 
-LodLiveUtils.lang = function(obj, langKey) {
+function lang(obj, langKey) {
   var lang = langKey ? _translations[langKey] || _translations['default'] : _translations['default'];
   return (lang && lang[obj]) || obj;
-};
+}
 
-LodLiveUtils.breakLines = function breakLines(msg) {
+// TODO: remove
+function breakLines(msg) {
   msg = msg.replace(/\//g, '/<span style="font-size:1px"> </span>');
   msg = msg.replace(/&/g, '&<span style="font-size:1px"> </span>');
   msg = msg.replace(/%/g, '%<span style="font-size:1px"> </span>');
   return msg;
-};
+}
 
-LodLiveUtils.hashFunc = function hashFunc(str) {
+function hashFunc(str) {
   if (!str) { return str; }
   for(var r=0, i=0; i<str.length; i++) {
     r = (r<<5) - r+str.charCodeAt(i);
     r &= r;
   }
   return r;
-};
+}
 
-LodLiveUtils.shortenKey = function(str) {
+function shortenKey(str) {
   str = jQuery.trim(str);
   var lastSlash = str.lastIndexOf('/'), lastHash = str.lastIndexOf('#');
   return lastSlash > lastHash ? str.substring(lastSlash + 1) : str.substring(lastHash + 1);
-};
+}
 
-LodLiveUtils.circleChords = function(radius, steps, centerX, centerY, breakAt, onlyElement) {
+function circleChords(radius, steps, centerX, centerY, breakAt, onlyElement) {
   var values = [];
   var i = 0;
   if (onlyElement) {
@@ -2792,6 +2825,16 @@ LodLiveUtils.circleChords = function(radius, steps, centerX, centerY, breakAt, o
     }
   }
   return values;
+}
+
+var LodLiveUtils = {
+  registerTranslation: registerTranslation,
+  setDefaultTranslation: setDefaultTranslation,
+  lang: lang,
+  breakLines: breakLines,
+  hashFunc: hashFunc,
+  shortenKey: shortenKey,
+  circleChords: circleChords
 };
 
 module.exports = LodLiveUtils;
