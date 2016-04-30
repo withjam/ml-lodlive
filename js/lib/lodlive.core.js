@@ -142,6 +142,9 @@
       counter : Math.floor(Math.random() * 13) + 1
     };
 
+    // TODO: remove; replace with renderer.init()
+    this.context.empty();
+
     var firstBox = this.renderer.firstBox(firstUri);
     this.openDoc(firstUri, firstBox);
 
@@ -996,8 +999,10 @@
       // no method defaults to init
       if (!options.method || options.method.toLowerCase() === 'init') {
 
-        ll = new LodLive(ele, options.profile);
-        ele.data('lodlive-instance', ll);
+        if (!ll) {
+          ll = new LodLive(ele, options.profile);
+          ele.data('lodlive-instance', ll);
+        }
         ll.init(options.firstUri); // pass in this element and the complete options
 
       } else if (LodLive.prototype.hasOwnProperty(options.method) && ele.data('lodlive-instance')) {

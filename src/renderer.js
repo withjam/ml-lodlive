@@ -1274,7 +1274,13 @@ LodLiveRenderer.prototype.init = function(inst, container) {
 
   // TODO: move styles to external sheet
   this.container = container.css('position', 'relative');
-  this.context = $('<div class="lodlive-graph-context"></div>');
+
+  // TODO: once renderer.init is called by lodlive.init
+  // if (this.context) {
+  //   this.context.empty();
+  // } else {
+    this.context = $('<div class="lodlive-graph-context"></div>');
+  // }
 
   var graphContainer = $('<div class="lodlive-graph-container"></div>');
 
