@@ -52,6 +52,22 @@ describe('lodlive', function () {
     expect(node.data('endpoint')).to.equal('http://dbpedia.org/sparql');
   });
 
+  it('should safely init multiple times', function () {
+    var firstUri = 'http://dbpedia.org/resource/Will_Smith';
+
+    // disable jsonp to force XHR
+    ExampleProfile.endpoints.jsonp = false;
+    jQuery('#graph').lodlive({ profile: ExampleProfile, firstUri: firstUri });
+
+    expect($('#graph .lodlive-graph-container').length).to.equal(1);
+    expect($('#graph .lodlive-graph-context').length).to.equal(1);
+
+    jQuery('#graph').lodlive({ profile: ExampleProfile, firstUri: firstUri });
+
+    expect($('#graph .lodlive-graph-container').length).to.equal(1);
+    expect($('#graph .lodlive-graph-context').length).to.equal(1);
+  });
+
   it('should render sparql results', function () {
     var firstBox = this.sandbox.spy(LodLiveRenderer.prototype, 'firstBox');
     var openDoc = this.sandbox.spy(LodLive.prototype, 'openDoc');
