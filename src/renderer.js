@@ -1282,7 +1282,7 @@ LodLiveRenderer.prototype.init = function(inst, container) {
 
   var draggable = require('./draggable.js');
 
-  draggable(this.container, this.context, '.lodlive-node', function(dragState) {
+  draggable(this.container, this.context, '.lodlive-node-label', function(dragState) {
     return renderer.reDrawLines(dragState.target);
   });
 
