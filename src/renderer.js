@@ -79,6 +79,7 @@ function LodLiveRenderer(options) {
   this.tools = options.tools;
   this.nodeIcons = options.nodeIcons;
   this.relationships = options.relationships;
+  this.maxRelationshipsToRender = options.maxRelationshipsToRender;
 }
 
 /**
@@ -909,7 +910,23 @@ LodLiveRenderer.prototype.drawLine = function(from, to, canvas, propertyName) {
     .filter(function(value, index, self) {
       return self.indexOf(value) === index;
     })
-    .join(', ');
+      
+    if(this.maxRelationshipsToRender !== undefined && label.length > this.maxRelationshipsToRender) {
+        var labelToRender = "";
+        for(var i = 0; i < this.maxRelationshipsToRender; i++) {
+            labelToRender += label[i]; 
+            if(i < this.maxRelationshipsToRender - 1) {
+                labelToRender += ", ";
+            }
+        }
+        labelToRender += " and " + (label.length - this.maxRelationshipsToRender ) + " more";
+        label = labelToRender;
+    } else {
+        label = label.join(", ");
+    }
+
+    line.label = label;
+    line.lineStyle = lineStyle;
 
     line.label = label;
     line.lineStyle = lineStyle;
