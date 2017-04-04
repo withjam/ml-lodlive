@@ -85,7 +85,7 @@
         nodeIcons: profile.UI.nodeIcons,
         relationships: profile.UI.relationships,
         hashFunc: profile.hashFunc, 
-        maxRelationshipsToRender: profile.maxRelationshipsToRender
+        maxRelationshipsToRender: profile.UI.maxRelationshipsToRender
       };
     }
 
