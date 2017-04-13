@@ -1,3 +1,12 @@
+FORKED ML LodLive
+=========
+
+The ML Lodlive repo has been forked to include some additional minor features while waiting for PRs to be reviewed. Namely: 
+
+* Fixing an issue where the nodes jump around the screen: [https://github.com/withjam/ml-lodlive/issues/52](#52)
+* Preventing too many relationship from being rendered on a single line: [https://github.com/withjam/ml-lodlive/issues/53](#53)
+* Adding a custom rendering hook to the tool buttons for each node. 
+
 ML LodLive
 =========
 
