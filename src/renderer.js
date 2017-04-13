@@ -157,6 +157,7 @@ LodLiveRenderer.prototype.generateNodeIcons = function(anchorBox) {
       obj = $('<div class="actionBox custom"></div>').data('action-handler', opts.handler);
       $('<span></span>').addClass(opts.icon).attr('title',opts.title).appendTo(obj);
     }
+    opts.customRendering && opts.customRendering(obj, anchorBox);
     obj.appendTo(anchorBox);
   });
 };
