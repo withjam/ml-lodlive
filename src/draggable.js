@@ -43,7 +43,7 @@ function enableDrag(container, context, draggableSelector, dragStart) {
 
   container.on('mousedown', draggableSelector, function(event) {
     // mark the node as being dragged using event-delegation
-    dragState.target = $(this);
+    dragState.target = $(this).parent();
     dragState.panning = false;
 
     // store offset of event so node moves properly

@@ -79,6 +79,7 @@ function LodLiveRenderer(options) {
   this.tools = options.tools;
   this.nodeIcons = options.nodeIcons;
   this.relationships = options.relationships;
+  this.maxRelationshipsToRender = options.maxRelationshipsToRender;
 }
 
 /**
@@ -156,6 +157,7 @@ LodLiveRenderer.prototype.generateNodeIcons = function(anchorBox) {
       obj = $('<div class="actionBox custom"></div>').data('action-handler', opts.handler);
       $('<span></span>').addClass(opts.icon).attr('title',opts.title).appendTo(obj);
     }
+    opts.customRendering && opts.customRendering(obj, anchorBox);
     obj.appendTo(anchorBox);
   });
 };
@@ -909,7 +911,23 @@ LodLiveRenderer.prototype.drawLine = function(from, to, canvas, propertyName) {
     .filter(function(value, index, self) {
       return self.indexOf(value) === index;
     })
-    .join(', ');
+      
+    if(this.maxRelationshipsToRender !== undefined && label.length > this.maxRelationshipsToRender) {
+        var labelToRender = "";
+        for(var i = 0; i < this.maxRelationshipsToRender; i++) {
+            labelToRender += label[i]; 
+            if(i < this.maxRelationshipsToRender - 1) {
+                labelToRender += ", ";
+            }
+        }
+        labelToRender += " and " + (label.length - this.maxRelationshipsToRender ) + " more";
+        label = labelToRender;
+    } else {
+        label = label.join(", ");
+    }
+
+    line.label = label;
+    line.lineStyle = lineStyle;
 
     line.label = label;
     line.lineStyle = lineStyle;
@@ -1282,7 +1300,7 @@ LodLiveRenderer.prototype.init = function(inst, container) {
 
   var draggable = require('./draggable.js');
 
-  draggable(this.container, this.context, '.lodlive-node', function(dragState) {
+  draggable(this.container, this.context, '.lodlive-node-label', function(dragState) {
     return renderer.reDrawLines(dragState.target);
   });
 
